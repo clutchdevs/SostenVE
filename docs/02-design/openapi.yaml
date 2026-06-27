@@ -1,0 +1,361 @@
+openapi: 3.1.0
+info:
+  title: Sostén — API de apoyo psicológico post-terremoto
+  version: 0.1.0
+  description: >
+    API REST de la plataforma Sostén. Recibe solicitudes de apoyo, ejecuta triage
+    determinístico, deriva a líneas de crisis ante riesgo alto, asigna casos a psicólogos
+    voluntarios o los encola, y permite el registro de notas clínicas. Datos clínicos
+    cifrados en reposo y en tránsito (ver ADR-0004).
+servers:
+  - url: https://api.sosten.example
+    description: Producción (placeholder — proveedor por definir, ADR-0006)
+
+tags:
+  - name: solicitudes
+  - name: casos
+  - name: auth
+  - name: coordinacion
+  - name: lineas-crisis
+
+paths:
+  /solicitudes:
+    post:
+      tags: [solicitudes]
+      summary: Crear una solicitud de apoyo (formulario público)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaSolicitud'
+      responses:
+        '201':
+          description: Caso creado con su nivel de riesgo y, si aplica, líneas de crisis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoSolicitud'
+
+  /casos/{id}/estado:
+    get:
+      tags: [casos]
+      summary: Consultar estado de un caso (sin contenido clínico)
+      parameters:
+        - $ref: '#/components/parameters/CasoId'
+      responses:
+        '200':
+          description: Estado del caso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoCaso'
+        '404':
+          description: Caso no encontrado.
+
+  /lineas-crisis:
+    get:
+      tags: [lineas-crisis]
+      summary: Listar líneas de crisis/respaldo activas
+      responses:
+        '200':
+          description: Lista de líneas activas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LineaCrisis'
+    post:
+      tags: [lineas-crisis]
+      summary: Crear una línea de crisis/respaldo (administrador)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LineaCrisis'
+      responses:
+        '201':
+          description: Línea creada.
+
+  /lineas-crisis/{id}:
+    put:
+      tags: [lineas-crisis]
+      summary: Editar una línea (administrador)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecursoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LineaCrisis'
+      responses:
+        '200':
+          description: Línea actualizada.
+    delete:
+      tags: [lineas-crisis]
+      summary: Desactivar una línea (administrador)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecursoId'
+      responses:
+        '204':
+          description: Línea desactivada.
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login de psicólogo/coordinador/administrador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credenciales'
+      responses:
+        '200':
+          description: Token de sesión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenSesion'
+        '401':
+          description: Credenciales inválidas.
+
+  /casos:
+    get:
+      tags: [casos]
+      summary: Listar casos (psicólogo = propios; coordinador/admin = todos)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: asignados
+          in: query
+          schema: { type: string, enum: [me] }
+        - name: estado
+          in: query
+          schema: { $ref: '#/components/schemas/EstadoCasoEnum' }
+        - name: prioridad
+          in: query
+          schema: { $ref: '#/components/schemas/NivelRiesgo' }
+      responses:
+        '200':
+          description: Lista de casos (sin contenido clínico en el listado).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResumenCaso'
+
+  /casos/{id}:
+    get:
+      tags: [casos]
+      summary: Detalle de un caso propio (incluye notas)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CasoId'
+      responses:
+        '200':
+          description: Detalle del caso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CasoDetalle'
+        '403':
+          description: El caso no pertenece al psicólogo autenticado.
+    patch:
+      tags: [casos]
+      summary: Actualizar estado de un caso propio (p. ej. cerrar)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CasoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
+      responses:
+        '200':
+          description: Caso actualizado.
+
+  /casos/{id}/notas:
+    post:
+      tags: [casos]
+      summary: Registrar una nota clínica en un caso propio
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CasoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaNotaClinica'
+      responses:
+        '201':
+          description: Nota registrada.
+
+  /capacidad:
+    get:
+      tags: [coordinacion]
+      summary: Panel de capacidad (coordinador)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Métricas de cola y capacidad en tiempo real.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capacidad'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CasoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    RecursoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  schemas:
+    NivelRiesgo:
+      type: string
+      enum: [riesgo_alto, riesgo_moderado, seguimiento]
+    EstadoCasoEnum:
+      type: string
+      enum: [pendiente, asignado, en_seguimiento, cerrado]
+    TipoSolicitante:
+      type: string
+      enum: [victima, familiar, voluntario]
+    Modalidad:
+      type: string
+      enum: [presencial, distancia]
+
+    NuevaSolicitud:
+      type: object
+      required: [contacto, tipo_solicitante, respuestas_triage]
+      properties:
+        nombre: { type: string }
+        contacto: { type: string, description: "Teléfono u otro medio (dato sensible)" }
+        tipo_solicitante: { $ref: '#/components/schemas/TipoSolicitante' }
+        en_nombre_de_tercero: { type: boolean, default: false }
+        zona: { type: string }
+        modalidad: { $ref: '#/components/schemas/Modalidad' }
+        respuestas_triage:
+          type: object
+          additionalProperties: { type: boolean }
+          description: "Respuestas a las preguntas de triage (ver sección 6 del plan)."
+
+    ResultadoSolicitud:
+      type: object
+      properties:
+        caso_id: { type: string }
+        nivel_riesgo: { $ref: '#/components/schemas/NivelRiesgo' }
+        lineas_crisis:
+          type: array
+          items: { $ref: '#/components/schemas/LineaCrisis' }
+          description: "Presentes y mostradas de inmediato si nivel_riesgo = riesgo_alto."
+        mensaje_espera:
+          type: string
+          description: "Mensaje honesto si el caso entra en cola sin asignación inmediata."
+
+    EstadoCaso:
+      type: object
+      properties:
+        caso_id: { type: string }
+        estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
+        en_cola: { type: boolean }
+
+    ResumenCaso:
+      type: object
+      properties:
+        caso_id: { type: string }
+        nivel_riesgo: { $ref: '#/components/schemas/NivelRiesgo' }
+        estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
+        creado_en: { type: string, format: date-time }
+
+    CasoDetalle:
+      allOf:
+        - $ref: '#/components/schemas/ResumenCaso'
+        - type: object
+          properties:
+            nombre: { type: string }
+            contacto: { type: string }
+            zona: { type: string }
+            modalidad: { $ref: '#/components/schemas/Modalidad' }
+            notas:
+              type: array
+              items: { $ref: '#/components/schemas/NotaClinica' }
+
+    NuevaNotaClinica:
+      type: object
+      required: [contenido]
+      properties:
+        diagnostico: { type: string, description: "Dato restringido (cifrado en reposo)." }
+        contenido: { type: string, description: "Dato restringido (cifrado en reposo)." }
+
+    NotaClinica:
+      allOf:
+        - $ref: '#/components/schemas/NuevaNotaClinica'
+        - type: object
+          properties:
+            autor_id: { type: string }
+            creada_en: { type: string, format: date-time }
+
+    LineaCrisis:
+      type: object
+      required: [nombre, contacto]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        contacto: { type: string }
+        cobertura: { type: string }
+        prioridad: { type: integer }
+        activa: { type: boolean, default: true }
+
+    Credenciales:
+      type: object
+      required: [usuario, contrasena]
+      properties:
+        usuario: { type: string }
+        contrasena: { type: string, format: password }
+
+    TokenSesion:
+      type: object
+      properties:
+        token: { type: string }
+        rol: { type: string, enum: [psicologo, coordinador, administrador] }
+
+    Capacidad:
+      type: object
+      properties:
+        casos_sin_asignar: { type: integer }
+        riesgo_alto_sin_atender: { type: integer }
+        en_cola_por_categoria:
+          type: object
+          additionalProperties: { type: integer }
