@@ -45,7 +45,8 @@ proceso persistente. El triage sigue el PRD de la Federación ("Sistema PPV 2026
 ## Privacidad y seguridad
 - **Responsable y dueña de los datos:** la Federación de Psicólogos de Venezuela (ADR-0003). El equipo de desarrollo es proveedor de la plataforma, no operador de datos.
 - **Datos clínicos = restringidos:** cifrado en tránsito (HTTPS) y en reposo por columna (ADR-0004).
-- Control de acceso por rol, respaldos automáticos diarios, alta de voluntarios solo vía psicólogo verificador.
+- **Seudonimización de PII** (tabla separada + ID hash SHA-256 con salt, ADR-0011) y **bitácora de auditoría inmutable** de accesos (ADR-0012), según NFR 6.1 de la Federación.
+- Control de acceso por rol, respaldos (NFR 6.2: cada 6 h), alta de voluntarios validada contra la BD de la FPV.
 - Ver [`docs/00-project/data-classification.md`](docs/00-project/data-classification.md) y [`docs/02-design/threat-model.md`](docs/02-design/threat-model.md).
 
 ## Metodología y documentación
@@ -71,19 +72,33 @@ CHANGELOG.md  LICENSE  README.md
 |---|---|---|
 | 00 · Project | — | ✅ Charter, glosario, clasificación de datos |
 | 01 · Requirements | Gate 0 | ✅ PRD del flujo central con escenarios de riesgo |
-| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0010, contrato OpenAPI (alcance ampliado: PRD FPV + Vercel/Supabase) |
+| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0012, contrato OpenAPI (PRD FPV + Vercel/Supabase + NFRs fase 2) |
 | 03 · Implementation | Gate 2 | ⬜ Pendiente (estructura creada) |
 | 04-06 | Gates 3-5 | ⬜ Pendiente (estructura creada) |
 
 > Objetivo del primer sprint: dejar firmes `00-project` y `01-requirements`.
 
+## Decisiones de alcance frente al PRD de la Federación
+Decisiones de alcance **explícitas y documentadas** (no omisiones): el cronograma de la Federación
+las ubica dentro de su MVP, pero las posponemos por depender de terceros fuera del control de este
+equipo. Detalle en [`docs/01-requirements/flujo-central.md`](docs/01-requirements/flujo-central.md).
+
+| Ítem | Cronograma FPV | Nuestra decisión | Por qué |
+|---|---|---|---|
+| Webhook de Rescate Activo (RF-3.4) | Dentro del MVP (hito 3) | Fase 3, fuera del MVP | Depende de integración institucional con Defensa Civil/Bomberos |
+| SMS de dos vías (2wT, RF-5.1) | Dentro del MVP (hito 3) | Fuera del MVP | Requiere pasarela SMS (costo + contrato + integración) |
+| Redes LoRa/Meshtastic (RF-5.2) | Ya excluido por la FPV | Fuera del MVP | Sin discrepancia |
+
 ## Decisiones abiertas (Human-in-the-Loop)
 Las define la Federación; no se inventan en este repo:
 - Esquema de turnos de coordinación.
-- Política de retención de historias clínicas.
-- Texto de consentimiento informado.
+- Política de retención de historias clínicas (y de la bitácora de auditoría, ADR-0012).
+- Texto de consentimiento informado (debe mostrarse en **cada** interfaz del solicitante).
 - **Plan de Supabase (gratuito vs. pago):** el plan gratuito pausa el proyecto por inactividad y **no
-  incluye respaldos automáticos**, inaceptable para datos clínicos (ver ADR-0002).
+  incluye respaldos automáticos**; el NFR 6.2 de la propia Federación exige **respaldo cada 6 h**,
+  que el plan gratuito no cumple (ver ADR-0002).
+- **Alcance del Módulo 4** (expediente clínico): versión simple vs. completa offline-first con
+  SQLCipher (ADR/anexo). A resolver antes de pasar de diseño a implementación.
 - Nombre definitivo del proyecto.
 
 > Ya resueltas (antes abiertas): lenguaje de backend = **Node.js** (ADR-0001) y hosting =

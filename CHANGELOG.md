@@ -7,6 +7,29 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 
+## [0.3.0] - 2026-06-28
+### Añadido
+- ADR-0011: seudonimización de PII (tabla separada + ID hash SHA-256 con salt, NFR 6.1).
+- ADR-0012: bitácora de auditoría inmutable de accesos a expedientes (NFR 6.1).
+- `flujo-central.md`: tabla de **discrepancias de alcance** con el cronograma de la Federación
+  (Webhook RF-3.4 y SMS 2wT RF-5.1 fuera del MVP por dependencias externas); Módulo 4 marcado como
+  `<TODO — Alcance Pendiente>` con dos niveles (simple vs. offline-first); RF-4.3 (bloqueo de
+  diagnóstico TEPT <4 semanas) incluido en el MVP; consentimiento informado en cada interfaz.
+- README: sección "Decisiones de alcance frente al PRD de la Federación".
+- Glosario: seudonimización, ID seudonimizado, bitácora de auditoría inmutable, offline-first,
+  sincronización por deltas, PAP, SMAPS, mhGAP.
+
+### Cambiado
+- ADR-0002: se cita el NFR 6.2 (respaldo cada 6 h) como requisito explícito de la FPV que el plan
+  gratuito de Supabase no cumple.
+- ADR-0004: refinado por ADR-0011 (la seudonimización complementa el cifrado en reposo).
+- `threat-model.md`: auditoría inmutable (repudio) y seudonimización (divulgación) como mitigaciones.
+
+### Notas
+- **Webhook de Rescate Activo (RF-3.4)** y **SMS de dos vías (RF-5.1)** confirmados **fuera del MVP**
+  como decisión de alcance documentada (dependen de terceros fuera del control del equipo).
+- **Alcance del Módulo 4** queda como decisión abierta a resolver antes de implementar.
+
 ## [0.2.0] - 2026-06-28
 ### Añadido
 - ADR-0009: despliegue serverless en Vercel (SLA y escalamiento vía Vercel Cron Jobs).
