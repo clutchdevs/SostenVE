@@ -1,0 +1,57 @@
+# SostenVE — non-secret application configuration (versioned).
+# Secrets live in .env (see .env.example). Loaded once by the config singleton
+# in apps/api/src/config and validated with Zod. No module reads this file directly.
+
+default: &default
+  app:
+    name: "SostenVE"
+    locale: "es-VE"
+
+  triage:
+    orange_tags_threshold_for_escalation: 3 # interruption rule (3+ orange -> high risk)
+    likert_critical_option: 1
+
+  sla:
+    high_risk_assignment_minutes: 10
+    cron_check_interval_minutes: 2
+
+  crisis_lines:
+    routing:
+      - name: "LAPSI"
+        start_hour: 8
+        end_hour: 26 # represents 2:00 AM next day, no overlap with start_hour
+        phone: "+584242907338"
+      - name: "Colegio de Psicólogos de Miranda"
+        start_hour: 2
+        end_hour: 8
+        phone: "04127840112"
+    backup_lines:
+      - name: "VEN-911"
+        phone: "911"
+
+  clinical_records:
+    tept_diagnosis_block_days: 30 # RF-4.3
+
+  rbac:
+    roles: ["requester", "psychologist", "coordinator", "admin"]
+
+  security:
+    cors:
+      development_origins: ["http://localhost:3000"]
+      production_origins: ["https://sostenve.app"] # placeholder, confirm final domain
+    rate_limit:
+      intake_requests_per_minute: 10
+      login_attempts_before_lockout: 5
+      login_lockout_minutes: 15
+    jwt:
+      access_token_ttl_minutes: 15
+      refresh_token_ttl_days: 7
+
+development:
+  <<: *default
+  app:
+    name: "SostenVE (dev)"
+    locale: "es-VE"
+
+production:
+  <<: *default
