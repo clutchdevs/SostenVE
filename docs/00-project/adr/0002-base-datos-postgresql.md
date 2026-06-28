@@ -1,22 +1,27 @@
-# ADR-0002 — Base de datos PostgreSQL
+# ADR-0002 — Base de datos PostgreSQL (en Supabase)
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
-> **Fecha:** 2026-06-27  ·  **Responsable:** equipo de desarrollo
+> **Fecha:** 2026-06-27 (actualizado 2026-06-28)  ·  **Responsable:** equipo de desarrollo
 
 ## Contexto
 El proyecto maneja relaciones claras entre entidades (casos, voluntarios, usuarios, asignaciones,
 notas clínicas) y datos de salud sensibles que requieren cifrado. Se necesita una base de datos
-madura, ampliamente documentada y de bajo costo de hosting administrado.
+madura, gestionada y de bajo costo. Ver `docs/00-project/decisiones-infraestructura.md` para el
+análisis completo de por qué se descartó alojarla en el cPanel de la Federación.
 
 ## Decisión
-Usar **PostgreSQL** como base de datos. Decisión ya tomada por el equipo y confirmada aquí.
+Usar **PostgreSQL alojado en Supabase** (gestionado), **separado** del hosting cPanel de la
+Federación por motivos de seguridad. No autoalojado ni compartido con el sistema PHP/Symfony
+existente de la FPV.
 
 ## Alternativas consideradas
-- **PostgreSQL** — relacional, robusta, soporte de cifrado a nivel de columna, planes administrados económicos. Elegida.
-- **MySQL/MariaDB** — válida, pero el equipo tiene mayor afinidad con PostgreSQL y su soporte de tipos/cifrado.
-- **Base NoSQL (MongoDB)** — descartada: el dominio es fuertemente relacional (caso–voluntario–nota) y se beneficia de integridad referencial.
+- **PostgreSQL gestionado en Supabase** — gestionado, client oficial para Next.js/Vercel, bajo costo. Elegida.
+- **MySQL en el cPanel de la Federación** — descartada: riesgo de compartir credenciales/tablas con el sistema existente y límites de recursos del plan cPanel (ver ADR-0006 y `decisiones-infraestructura.md`).
+- **Base NoSQL (MongoDB)** — descartada: el dominio es fuertemente relacional (caso–voluntario–nota).
 
 ## Consecuencias
-- **Positivas:** integridad referencial; cifrado a nivel de columna para campos clínicos (ver ADR-0004); ecosistema y respaldos maduros.
-- **Negativas / costos:** requiere base administrada o gestión de respaldos propia (ver ADR-0006).
-- **Pendientes:** ninguno.
+- **Positivas:** integridad referencial; cifrado a nivel de columna para campos clínicos (ver ADR-0004); aislamiento del sistema existente de la FPV.
+- **Negativas / costos:**
+  - Desde funciones serverless (ADR-0009) **debe usarse el connection pooler de Supabase**, no la conexión directa: las funciones abren/cierran conexiones constantemente y agotarían el límite de conexiones directas.
+  - **Riesgo abierto del plan gratuito:** pausa el proyecto tras 7 días de inactividad y **no incluye respaldos automáticos**. Con 300+ solicitudes/día el proyecto no estará inactivo, pero la falta de respaldos sigue siendo inaceptable para datos clínicos.
+- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` la Federación debe decidir plan gratuito vs. pago de Supabase, dado el riesgo de pausa y la ausencia de respaldos automáticos en el plan gratuito.

@@ -1,24 +1,28 @@
 # ADR-0001 — Stack de backend
 
-> **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta (decisión abierta sobre el lenguaje)
-> **Fecha:** 2026-06-27  ·  **Responsable:** equipo de desarrollo
+> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
+> **Fecha:** 2026-06-27 (actualizado 2026-06-28)  ·  **Responsable:** equipo de desarrollo
 
 ## Contexto
-Hay una sola persona con experiencia general en desarrollo web/bases de datos disponible. El factor
-crítico es la velocidad de construcción y mantenimiento bajo presión de tiempo (3-4 semanas), no la
-sofisticación del stack. Cualquier lenguaje moderno funciona bien con PostgreSQL (ver ADR-0002).
+El factor crítico es la velocidad de construcción y mantenimiento bajo presión de tiempo, no la
+sofisticación del stack. Cualquier lenguaje moderno funciona bien con PostgreSQL (ver ADR-0002). Con
+la decisión de desplegar en Vercel (ADR-0009), el backend debe poder ejecutarse como **funciones
+serverless**, no como un proceso persistente.
 
 ## Decisión
-El backend será Node.js (Express o NestJS) **o** Python (FastAPI/Django). La elección final la hace
-el desarrollador disponible según lo que **ya domine**; no se aprende un stack nuevo bajo presión.
-Esta decisión queda explícitamente abierta y se documenta el **criterio**, no una opción forzada.
+El backend será **Node.js**, escrito para ejecutarse como **funciones serverless en Vercel**
+(`/api/*` en Next.js o Vercel Functions standalone), **no** como un servidor Express/NestJS
+tradicional con estado en memoria persistente.
 
 ## Alternativas consideradas
-- **Node.js (Express/NestJS)** — ecosistema amplio, buen soporte PostgreSQL; válido si es lo conocido.
-- **Python (FastAPI/Django)** — Django aporta admin y auth de fábrica; FastAPI es ligero; válido si es lo conocido.
-- **Aprender un stack nuevo "mejor"** — descartado: el costo de aprendizaje no es aceptable dado el timeline y el riesgo de bus factor 1.
+- **Node.js serverless en Vercel** — integración natural con Vercel/Supabase, equipo familiarizado. Elegida.
+- **Python (FastAPI/Django)** — válido técnicamente, pero el equipo va con Node.js por afinidad con el despliegue elegido.
+- **Servidor Node.js persistente (Express/NestJS) en VPS** — descartado por costo/mantenimiento y por no alinear con Vercel (ver ADR-0006 y ADR-0009).
 
 ## Consecuencias
-- **Positivas:** máxima velocidad; mantenimiento por la persona que ya conoce la herramienta.
-- **Negativas / costos:** el `.gitignore` y parte del scaffolding dependen del lenguaje elegido.
-- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` confirmar lenguaje final (Node.js vs. Python) según quién programe.
+- **Positivas:** despliegue conjunto con el frontend vía Git; sin servidor que mantener.
+- **Negativas / costos:**
+  - El motor de triage y de asignación deben ser **stateless**: todo el estado vive en Supabase, no en memoria del proceso.
+  - El **temporizador de SLA de 10 minutos (RF-3.2)** no puede vivir como un `setTimeout` en memoria (el proceso no persiste entre invocaciones). Se resuelve con un **Vercel Cron Job** que revisa periódicamente la BD (ver ADR-0009).
+  - Posible **cold-start**: la pantalla de líneas de crisis no debe depender de la latencia del backend (ver `threat-model.md`).
+- **Pendientes:** ninguno (lenguaje confirmado).

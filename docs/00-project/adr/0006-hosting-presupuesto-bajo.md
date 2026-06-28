@@ -1,24 +1,28 @@
-# ADR-0006 — Hosting de bajo costo
+# ADR-0006 — Hosting de bajo costo: Vercel + Supabase
 
-> **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta (proveedor por cotizar)
-> **Fecha:** 2026-06-27  ·  **Responsable:** equipo de desarrollo
+> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
+> **Fecha:** 2026-06-27 (actualizado 2026-06-28)  ·  **Responsable:** equipo de desarrollo
 
 ## Contexto
-La Federación puede cubrir un costo mensual pequeño (hosting, dominio), pero no hay presupuesto para
-infraestructura compleja. El volumen esperado (300+ solicitudes el primer día) es manejable por una
-arquitectura modesta; no se justifica una que escale el costo innecesariamente.
+La Federación puede cubrir un costo mensual pequeño, pero no hay presupuesto para infraestructura
+compleja. El volumen esperado (300+ solicitudes el primer día) es manejable por una arquitectura
+modesta. La Federación ya cuenta con un hosting cPanel para su sistema existente, lo que abrió la
+pregunta de si reutilizarlo para este proyecto. Ver
+`docs/00-project/decisiones-infraestructura.md` para el análisis completo.
 
 ## Decisión
-Elegir un **proveedor económico con base de datos PostgreSQL administrada** (p. ej. un VPS pequeño,
-o una plataforma tipo Render/Railway con BD gestionada). Priorizar: respaldo automático incluido,
-HTTPS sencillo y costo mensual bajo y predecible. Cotizar 2-3 opciones antes de fijar el proveedor.
+- **Backend y frontend en Vercel** (plan gratuito/hobby inicialmente), con el backend como funciones serverless (ver ADR-0009).
+- **Base de datos PostgreSQL en Supabase** (ver ADR-0002).
+- Se **descarta** usar el hosting cPanel existente de la Federación para este proyecto.
 
 ## Alternativas consideradas
-- **PaaS con BD administrada (Render/Railway/similar)** — respaldos y HTTPS simples; buen punto de partida.
-- **VPS pequeño autogestionado** — más barato pero exige gestionar respaldos/seguridad a mano.
-- **Nube grande (AWS/GCP/Azure) con arquitectura elaborada** — descartada: sobredimensionada y de costo difícil de predecir para este volumen.
+- **Vercel + Supabase** — bajo costo, despliegue conjunto vía Git, integración natural. Elegida.
+- **cPanel de la Federación ("Setup Node.js App" + MySQL existente)** — descartado por:
+  - **(a) Seguridad:** compartir credenciales/tablas de MySQL con el sistema PHP/Symfony existente amplía la superficie de ataque sobre datos clínicos.
+  - **(b) Recursos:** límites del plan cPanel observado (4 GB RAM, 40 entry processes) frente al volumen esperado.
+- **VPS económico con proceso persistente / PaaS tipo Render/Railway** — válidos, pero Vercel+Supabase gana por familiaridad del equipo e integración.
 
 ## Consecuencias
-- **Positivas:** costo bajo y predecible; respaldos administrados reducen riesgo de pérdida de datos.
-- **Negativas / costos:** límites de escalado del plan económico; migrar de proveedor implica trabajo si se subestima el crecimiento.
-- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` proveedor definitivo, pendiente de cotizar 2-3 opciones.
+- **Positivas:** costo bajo y predecible; aislamiento del sistema existente de la FPV; despliegue simple.
+- **Negativas / costos:** limitaciones del plan gratuito de Supabase (respaldos, pausa por inactividad — ver ADR-0002); las restricciones serverless aplican al backend (ver ADR-0001 y ADR-0009).
+- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` plan de Supabase (gratuito vs. pago).
