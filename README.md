@@ -31,6 +31,11 @@ atención y registrar diagnóstico, notas clínicas y contacto de cada caso.
 | `cerrado` | Caso atendido y finalizado | Archivado, sujeto a retención de la Federación |
 
 ## Arquitectura
+Aplicación web (PWA) **serverless**: frontend y backend en **Vercel** (backend como funciones
+`/api/*`, ADR-0009), base de datos **PostgreSQL gestionada en Supabase** (ADR-0002, aislada del
+cPanel de la Federación), y el **SLA de 10 min** resuelto con un **Vercel Cron Job** en vez de un
+proceso persistente. El triage sigue el PRD de la Federación ("Sistema PPV 2026", ADR-0010).
+
 - Contexto: [`docs/architecture/c4-context.md`](docs/architecture/c4-context.md)
 - Contenedores: [`docs/architecture/c4-container.md`](docs/architecture/c4-container.md)
 - Componentes — triage: [`docs/architecture/c4-component-triage.md`](docs/architecture/c4-component-triage.md)
@@ -66,13 +71,20 @@ CHANGELOG.md  LICENSE  README.md
 |---|---|---|
 | 00 · Project | — | ✅ Charter, glosario, clasificación de datos |
 | 01 · Requirements | Gate 0 | ✅ PRD del flujo central con escenarios de riesgo |
-| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0008, contrato OpenAPI |
+| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0010, contrato OpenAPI (alcance ampliado: PRD FPV + Vercel/Supabase) |
 | 03 · Implementation | Gate 2 | ⬜ Pendiente (estructura creada) |
 | 04-06 | Gates 3-5 | ⬜ Pendiente (estructura creada) |
 
 > Objetivo del primer sprint: dejar firmes `00-project` y `01-requirements`.
 
 ## Decisiones abiertas (Human-in-the-Loop)
-Las define la Federación; no se inventan en este repo: esquema de turnos, política de retención de
-historias clínicas, texto de consentimiento informado, lenguaje de backend final, proveedor de
-hosting y nombre definitivo del proyecto.
+Las define la Federación; no se inventan en este repo:
+- Esquema de turnos de coordinación.
+- Política de retención de historias clínicas.
+- Texto de consentimiento informado.
+- **Plan de Supabase (gratuito vs. pago):** el plan gratuito pausa el proyecto por inactividad y **no
+  incluye respaldos automáticos**, inaceptable para datos clínicos (ver ADR-0002).
+- Nombre definitivo del proyecto.
+
+> Ya resueltas (antes abiertas): lenguaje de backend = **Node.js** (ADR-0001) y hosting =
+> **Vercel + Supabase** (ADR-0006/0009).
