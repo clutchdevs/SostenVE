@@ -25,7 +25,8 @@ Ver `docs/architecture/architecture.md` y `docs/architecture/c4-container.md`.
 | **S**poofing | Alguien se hace pasar por un psicólogo verificado | Auth / registro | Validación automática contra BD de la FPV (Módulo 2), contraseñas hasheadas; a futuro 2FA |
 | **S**poofing | Invocación falsa del endpoint de cron para disparar escalamientos | `/api/cron/*` | **Secreto compartido** verificado en cada invocación, solo en variables de entorno de Vercel |
 | **T**ampering | Modificación de notas clínicas o del score de triage | API / BD | Control de acceso por rol; solo el autor escribe sus notas; integridad de BD |
-| **R**epudiation | Un usuario niega haber escrito/leído una nota | API / BD | Registro de autor y fecha; logs de acceso a datos restringidos |
+| **R**epudiation | Un usuario niega haber escrito/leído/consultado un expediente | API / BD | **Bitácora de auditoría inmutable** de solo-inserción (ADR-0012): `usuario_id`, `rol`, `registro_afectado_id`, `tipo_accion`, `timestamp`; no editable ni por el admin de BD |
+| **I**nformation disclosure | La identidad queda junto al contenido clínico en la misma fila | BD | **Seudonimización** de PII (ADR-0011): tabla de PII separada, vinculada por ID hash SHA-256 + salt |
 | **I**nformation disclosure | Exposición de notas por acceso insuficiente o volcado de BD | Supabase / paneles | Cifrado en reposo por columna (ADR-0004), HTTPS, acceso por rol, BD aislada del cPanel de la FPV (ADR-0002) |
 | **D**enial of service | Saturación por el volumen del primer día o abuso del intake | Intake / API | Cola con prioridad (ADR-0008), rate limiting, mensaje honesto, escalado serverless |
 | **E**levation of privilege | Un psicólogo accede a casos ajenos o a funciones de admin | API / autorización | Autorización estricta por rol y por propiedad del caso |

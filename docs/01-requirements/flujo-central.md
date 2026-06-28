@@ -10,11 +10,51 @@ Este documento refleja el flujo del PRD de la Federación, que **reemplaza** el 
 
 ## Fuera de alcance del MVP
 Confirmado fuera del MVP (Fase 2 o Fase 3 según se indique):
-- **Webhook de Rescate Activo (RF-3.4)** — **Fase 3**, no se construye en el MVP.
+- **Webhook de Rescate Activo (RF-3.4)** — **Fase 3**, no se construye en el MVP (ver discrepancias abajo).
+- **SMS de dos vías / 2wT (RF-5.1)** — **fuera del MVP** (ver discrepancias abajo).
+- **Redes LoRa/Meshtastic (RF-5.2)** — fuera del MVP (la propia Federación ya lo excluye, doc 7.1).
+- **Restricciones GIS del panel del coordinador (mapas OSM/Leaflet, sección 5)** — fase futura, ligada al Webhook/georreferenciación.
 - **Notificaciones push de la PWA** — en MVP la notificación al voluntario es por **correo electrónico** (ver ADR-0007 para el canal de contacto al solicitante).
 - **Notas confidenciales del coordinador sobre voluntarios** — Fase 2.
 - **Geo-clustering avanzado** — Fase 2.
 - **Analizador léxico-semántico (RF-1.4)** — Fase 2 (documentado aquí como parte de la Rama Roja).
+
+## Discrepancias documentadas con el cronograma de la Federación
+Estas son **decisiones de alcance explícitas**, no omisiones accidentales. El cronograma de la
+Federación las ubica dentro de su MVP; nosotros las posponemos por depender de terceros fuera del
+control de este equipo de desarrollo:
+
+| Ítem | Cronograma FPV | Nuestra decisión | Por qué |
+|---|---|---|---|
+| Webhook de Rescate Activo (RF-3.4) | Hito 3, semana 5-6, dentro del MVP | Fuera del MVP; diseño para Fase 3 | Depende de integración/negociación institucional con Defensa Civil/Bomberos que no controla este equipo; fijar fecha sería irresponsable |
+| SMS de dos vías (2wT, RF-5.1) | Hito 3, semana 5-6, dentro del MVP | Fuera del MVP | Requiere pasarela SMS (Twilio/proveedor local): costo + contrato + integración; misma dependencia externa |
+| Redes LoRa/Meshtastic (RF-5.2) | La FPV ya lo excluye de su MVP | Fuera del MVP | Sin discrepancia: coincidimos con la Federación |
+
+## Módulo 4 — Expediente clínico `<TODO — Alcance Pendiente>`
+El PRD "fase 2" detalla el Módulo 4 completo (RF-4.1 a RF-4.4, con RF-4.2.1 a RF-4.2.9). **No está
+decidido** si entra completo, parcial o pospuesto. Se documentan **dos niveles separables**, sin
+asumir ninguno:
+
+- **(a) Versión simple** (ya contemplada en el flujo original): el psicólogo ve sus casos
+  asignados, registra diagnóstico/notas y cierra el caso, **sin** offline-first.
+- **(b) Versión completa offline-first** (este PRD): RF-4.1 SQLCipher en el navegador (AES-256),
+  formularios de cierre detallados, reglas de psicosis, y RF-4.4 sincronización por deltas.
+
+Notas de diseño a tener en cuenta al decidir:
+- **RF-4.1 (SQLCipher/AES-256 offline-first):** ingeniería no trivial; offline-first con datos
+  clínicos merece diseño propio y no debería apurarse para el MVP.
+- **RF-4.2.9 (Crisis Psicótica Aguda):** fuerza el campo de derivación a "Urgente", bloquea su
+  edición y genera alerta roja persistente en el panel del coordinador. Es lógica de seguridad
+  crítica (en el espíritu de la regla de interrupción de la Rama Roja); si se incluye el Módulo 4,
+  esta regla debe entrar junto al resto del flujo de seguridad, no suelta.
+- **RF-4.4 (deltas):** depende de construir RF-4.1; si el Módulo 4 se recorta a la versión simple,
+  no aplica todavía.
+
+### RF-4.3 — Bloqueo de diagnóstico de TEPT antes de 4 semanas (**incluido en el MVP**)
+Independiente de qué nivel del Módulo 4 se elija. Es una **validación simple** (no requiere
+infraestructura nueva) y de **alto valor clínico/epidemiológico** (alineada con el marco
+internacional): el sistema impide registrar un diagnóstico de TEPT antes de las 4 semanas del
+evento. Se incluye en el MVP por ser barata de construir y clínicamente importante.
 
 ## 1. Módulo 1 — Intake y triage (baja fricción)
 
@@ -92,6 +132,8 @@ ponderado resultante define la prioridad.
 - [ ] Un caso de riesgo alto sin aceptar en 10 min se escala automáticamente vía cron job.
 - [ ] El registro de un voluntario se valida contra la BD de la FPV.
 - [ ] Las líneas de crisis se muestran aun con el backend frío.
+- [ ] No se puede registrar un diagnóstico de TEPT antes de 4 semanas del evento (RF-4.3).
+- [ ] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (sección 8 ética del PRD FPV).
 
 ## 7. Decisiones abiertas (Human-in-the-Loop)
 - `<TODO — Human-in-the-Loop>` Pesos/umbrales finales de los tags clínicos (valida la FPV).
