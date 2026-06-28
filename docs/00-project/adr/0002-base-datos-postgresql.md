@@ -24,4 +24,6 @@ existente de la FPV.
 - **Negativas / costos:**
   - Desde funciones serverless (ADR-0009) **debe usarse el connection pooler de Supabase**, no la conexión directa: las funciones abren/cierran conexiones constantemente y agotarían el límite de conexiones directas.
   - **Riesgo abierto del plan gratuito:** pausa el proyecto tras 7 días de inactividad y **no incluye respaldos automáticos**. Con 300+ solicitudes/día el proyecto no estará inactivo, pero la falta de respaldos sigue siendo inaceptable para datos clínicos.
-- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` la Federación debe decidir plan gratuito vs. pago de Supabase, dado el riesgo de pausa y la ausencia de respaldos automáticos en el plan gratuito.
+  - **Requisito explícito de la Federación (NFR 6.2):** respaldos automáticos **cada 6 horas** con snapshots geodistribuidos. El plan gratuito de Supabase **no cumple** este requisito, lo que convierte la advertencia anterior de "recomendación nuestra" en "requisito pedido por escrito por la Federación": exige un plan de pago de Supabase o un mecanismo de respaldo externo igual de confiable.
+  - Sobre esta BD se construyen además la seudonimización de PII (ADR-0011) y la bitácora de auditoría inmutable (ADR-0012).
+- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` la Federación debe decidir plan gratuito vs. pago de Supabase; el NFR 6.2 (respaldo cada 6 h) hace que el plan gratuito no sea viable para producción.

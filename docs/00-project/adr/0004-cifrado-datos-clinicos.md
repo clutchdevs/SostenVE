@@ -13,6 +13,10 @@ un requisito mínimo dado el tipo de dato y la responsabilidad institucional (AD
 - **Cifrado en reposo:** las columnas de diagnóstico y notas clínicas se almacenan cifradas.
 - La gestión de claves no se acopla al código fuente; las claves viven en variables de entorno/secret manager del hosting.
 
+> **Refinado por ADR-0011 (seudonimización de PII):** además del cifrado en reposo, la PII se
+> separa en una tabla propia y se vincula al contenido clínico mediante un ID seudonimizado
+> (SHA-256 + salt). La seudonimización complementa este cifrado, no lo reemplaza.
+
 ## Alternativas consideradas
 - **Cifrado en tránsito + en reposo por columna** — protege el dato más sensible incluso ante acceso a la BD. Elegida.
 - **Solo HTTPS, sin cifrado en reposo** — descartada: un volcado de BD expondría historias clínicas en claro.

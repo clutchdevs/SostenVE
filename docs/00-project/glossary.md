@@ -30,3 +30,11 @@
 | **Nota clínica** | Registro de diagnóstico y evolución de un caso, escrito por el psicólogo asignado. Dato restringido (cifrado). |
 | **Federación** | Federación de Psicólogos de Venezuela: dueña y responsable legal de los datos. |
 | **Administrador** | Rol técnico con la "llave" de soporte y la capacidad de editar líneas de respaldo. Definido por el equipo de desarrollo. |
+| **Seudonimización** | Tratamiento que separa la identidad de la persona de su contenido clínico, de modo que el dato clínico no identifica directamente a nadie (NFR 6.1, ADR-0011). |
+| **ID seudonimizado (hash con salt)** | Identificador que vincula la tabla de PII con la de datos clínicos, generado con hash SHA-256 + salt aleatorio (no cifrado reversible). |
+| **Bitácora de auditoría inmutable** | Tabla de solo-inserción que registra cada acceso/modificación a un expediente (`usuario_id`, `rol`, `registro_afectado_id`, `tipo_accion`, `timestamp`); no editable ni por el administrador de BD (NFR 6.1, ADR-0012). |
+| **Offline-first** | Enfoque en que la app funciona sin conexión y sincroniza después; en el Módulo 4 implicaría cifrado local (SQLCipher/AES-256). Alcance pendiente. |
+| **Sincronización por deltas** | Sincronización que transmite solo los cambios (RF-4.4); depende de construir offline-first real (RF-4.1). |
+| **PAP (Primeros Auxilios Psicológicos)** | Marco de intervención inicial de apoyo psicológico en emergencias. |
+| **SMAPS** | Salud Mental y Apoyo Psicosocial; marco de referencia del dominio. |
+| **mhGAP (OMS)** | Programa de acción de la OMS para reducir la brecha en salud mental; marco clínico de referencia. |
