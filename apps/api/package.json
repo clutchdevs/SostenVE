@@ -1,0 +1,26 @@
+{
+  "name": "@sostenve/api",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "SostenVE backend — serverless Hono API on Vercel + Supabase",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "hono": "^4.6.5",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.1",
+    "vitest": "^2.1.3"
+  }
+}
