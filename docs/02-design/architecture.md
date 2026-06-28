@@ -1,65 +1,73 @@
 # Arquitectura — Proyecto Sostén
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta
-> **Decisiones relacionadas:** ADR-0001 (stack), ADR-0002 (PostgreSQL), ADR-0004 (cifrado),
-> ADR-0005 (auth), ADR-0006 (hosting), ADR-0008 (cola).
+> **Decisiones relacionadas:** ADR-0001 (Node.js serverless), ADR-0002 (PostgreSQL/Supabase),
+> ADR-0004 (cifrado), ADR-0005 (auth), ADR-0006 (Vercel+Supabase), ADR-0008 (cola),
+> ADR-0009 (Vercel serverless), ADR-0010 (triage PRD FPV).
 
 ## 1. Estilo arquitectónico
-Aplicación web monolítica simple, en capas, mantenible por una sola persona:
+Aplicación web (PWA) **serverless**, mantenible por una sola persona. Frontend y backend en Vercel;
+estado en Supabase. No hay proceso persistente: todo es request-response salvo un cron job.
 
 ```
 Solicitante / Psicólogo / Coordinador
         │  (HTTPS)
         ▼
 ┌──────────────────────────────────────────────┐
-│ Frontend (formulario + paneles)              │
+│ Vercel — Frontend (PWA: formulario + paneles)│
+│   · Líneas de crisis cacheadas en cliente    │
 └──────────────────────────────────────────────┘
         │  (REST/JSON sobre HTTPS)
         ▼
 ┌──────────────────────────────────────────────┐
-│ API / Backend                                │
+│ Vercel — Backend (funciones serverless /api/*)│
 │  ├─ Autenticación y control de acceso (rol)  │
-│  ├─ Motor de triage (reglas determinísticas) │
-│  ├─ Motor de asignación / cola               │
-│  └─ Gestión de líneas de crisis/respaldo     │
+│  ├─ Motor de triage (tags + score ponderado) │
+│  ├─ Motor de asignación / cola (stateless)   │
+│  ├─ Validación de psicólogos contra BD FPV   │
+│  └─ Gestión de líneas de crisis (ruteo/hora) │
 └──────────────────────────────────────────────┘
-        │  (cifrado de columnas sensibles)
+        │  (connection pooler, TLS)
         ▼
 ┌──────────────────────────────────────────────┐
-│ PostgreSQL (+ respaldo automático diario)    │
+│ Supabase — PostgreSQL (cifrado de columnas)  │
+└──────────────────────────────────────────────┘
+        ▲
+        │  cada 1-2 min
+┌──────────────────────────────────────────────┐
+│ Vercel Cron Job — Motor de SLA               │
+│   revisa casos > 10 min y escala (RF-3.3)    │
 └──────────────────────────────────────────────┘
 ```
 
-El detalle de capas/componentes corresponde a la sección 3 del plan de trabajo ya acordado.
-
 ## 2. Componentes principales
-- **Frontend:** web app simple (React/Vue o server-rendered). Prioridad: carga rápida con conexión
-  intermitente y guardado local/reintento del formulario, no sofisticación visual.
-- **API/Backend:** expone los endpoints REST (ver `api-contracts.md`), aplica control de acceso por
-  rol y orquesta triage, asignación y cola.
-- **Motor de triage:** función **determinística sobre las respuestas del formulario** (reglas, no un
-  modelo de ML). A diferencia del repo de referencia, que usa biometría/face-match para emparejar
-  personas, **este dominio no requiere ML ni biometría y no debe inventarlos**.
-- **Motor de asignación/cola:** aplica la prioridad del ADR-0008 (riesgo alto primero; resto FIFO
-  por categoría) y produce asignación o entrada en cola con mensaje honesto.
-- **PostgreSQL:** almacena casos, usuarios, asignaciones, notas (cifradas) y líneas de respaldo.
+- **Frontend (Vercel):** PWA. Prioridad: carga rápida con conexión intermitente, guardado
+  local/reintento del formulario, y **líneas de crisis cacheadas en el cliente** para no depender
+  de la latencia del backend en el momento crítico.
+- **Backend (Vercel, funciones serverless):** expone `/api/*`, **stateless** (todo el estado en
+  Supabase). Orquesta triage, asignación/cola, validación de voluntarios y ruteo de líneas de crisis.
+- **Motor de triage:** embudo de baja fricción con **tags clínicos ponderados** y score de urgencia
+  (ADR-0010), determinístico. No es ML; el analizador léxico-semántico (RF-1.4) es Fase 2.
+- **Motor de asignación/cola:** prioridad del ADR-0008; stateless.
+- **Motor de SLA (Vercel Cron Job):** único componente periódico; revisa la BD cada 1-2 min y
+  dispara el escalamiento de casos de riesgo alto no aceptados en 10 minutos (ADR-0009).
+- **Supabase (PostgreSQL):** casos, usuarios, asignaciones, notas (cifradas), líneas de respaldo.
+  Acceso vía **connection pooler** desde las funciones serverless (ADR-0002).
 
 ## 3. Modelo de datos (alto nivel)
-- **usuarios** — psicólogos y coordinadores: nombre, cédula profesional, especialidad, contacto, disponibilidad, rol (psicólogo/coordinador/administrador), credenciales (hash).
-- **casos** — solicitante (nombre, contacto, tipo), nivel de riesgo, estado (pendiente/asignado/en seguimiento/cerrado), zona, modalidad preferida, fecha de creación.
-- **asignaciones** — relación caso–psicólogo, fecha, canal de contacto usado.
+- **usuarios** — psicólogos y coordinadores: nombre, cédula profesional, especialidad, contacto, disponibilidad, rol, credenciales (hash), estado de validación contra BD FPV.
+- **casos** — solicitante (nombre, contacto, tipo), rama (roja/verde), **tags seleccionados + score ponderado**, nivel de riesgo, estado, zona, modalidad, fecha de creación, marca de tiempo para el SLA.
+- **asignaciones** — relación caso–psicólogo, fecha, canal de contacto, marca de "aceptado".
 - **notas_clinicas** — caso, psicólogo autor, fecha, diagnóstico, contenido (campo cifrado).
-- **lineas_de_respaldo** — nombre del servicio, número, horario de cobertura, prioridad; editable sin tocar código.
+- **lineas_de_respaldo** — nombre, número, **cobertura horaria** (para el ruteo dinámico), prioridad; editable sin tocar código.
 
 ## 4. Control de acceso
-- Un psicólogo solo ve y escribe notas de los casos asignados.
-- El coordinador ve el estado de todos los casos, pero no necesariamente el contenido clínico de
-  cada nota (`<TODO — Human-in-the-Loop>` según defina la Federación).
-- Rol de administrador con acceso completo: definido por el equipo de desarrollo; quién lo ocupa,
-  `<TODO — Human-in-the-Loop>`.
+- Un psicólogo solo ve y escribe notas de sus casos asignados.
+- El coordinador ve el estado de todos los casos, pero no necesariamente el contenido clínico (`<TODO — Human-in-the-Loop>`).
+- El endpoint de cron (`/api/cron/...`) se protege con **secreto compartido**, no auth de usuario (ADR-0009).
 
 ## 5. Atributos de calidad
-- **Seguridad:** cifrado en tránsito y reposo (ADR-0004), control de acceso por rol, respaldos diarios.
-- **Resiliencia a conectividad:** guardado local y reintento en el formulario.
-- **Costo/operación:** stack simple y hosting económico (ADR-0006); mantenible por una persona.
+- **Seguridad:** cifrado en tránsito y reposo (ADR-0004); control de acceso por rol; aislamiento de la BD respecto del sistema existente de la FPV (ADR-0002).
+- **Resiliencia:** guardado local/reintento; líneas de crisis cacheadas ante cold-start.
+- **Costo/operación:** Vercel + Supabase en plan económico (ADR-0006); sin servidor que mantener.
 - **Disponibilidad:** dimensionado para 300+ solicitudes/día sin sobre-ingeniería.

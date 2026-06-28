@@ -1,46 +1,63 @@
 # Contratos de API — Proyecto Sostén
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta
-> Resumen legible de los endpoints REST. La especificación formal está en `openapi.yaml`
-> (OpenAPI 3.1). Todos los endpoints son HTTPS; los que manejan datos clínicos requieren rol.
+> Resumen legible de los endpoints REST (funciones serverless `/api/*` en Vercel, ver ADR-0009). La
+> especificación formal está en `openapi.yaml` (OpenAPI 3.1). Todos son HTTPS; los que manejan datos
+> clínicos requieren rol.
 
 ## Convenciones
 - Formato: JSON. Autenticación: sesión/JWT tras login (ADR-0005).
-- Roles: `solicitante` (anónimo, sin login), `psicologo`, `coordinador`, `administrador`.
+- Roles: `solicitante` (anónimo, sin login), `psicologo`, `coordinador`, `administrador`, `cron` (interno).
 - Niveles de riesgo: `riesgo_alto`, `riesgo_moderado`, `seguimiento`, `cerrado`.
+- Triage según ADR-0010: rama (`roja`/`verde`), tags clínicos y score ponderado.
 
 ## Endpoints
 
-### Público (sin autenticación)
+### Intake / público (sin autenticación)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/solicitudes` | Crear una solicitud (formulario). Devuelve el caso creado, su nivel de riesgo y, si es `riesgo_alto`, las líneas de crisis. |
-| `GET` | `/casos/{id}/estado` | Consultar el estado de un caso por su identificador/código (sin exponer contenido clínico). |
-| `GET` | `/lineas-crisis` | Listar las líneas de crisis/respaldo activas (para mostrarlas en la app). |
+| `POST` | `/api/intake/triage-inicial` | Pregunta Likert inicial, **sin datos personales**. Devuelve la rama (`roja`/`verde`). |
+| `POST` | `/api/intake/rama-roja` | Sub-canal elegido: `llamar` / `recibir-llamada` / `whatsapp-silencioso`. |
+| `POST` | `/api/intake/rama-verde` | Formulario conversacional completo con tags clínicos; calcula el score y crea el caso. |
+| `GET` | `/api/lineas-crisis/activa` | Devuelve la línea correcta según la **hora del sistema** (ruteo dinámico, RF-1.2.1). |
+| `GET` | `/api/lineas-crisis` | Listar todas las líneas activas (para cachear en el cliente). |
+| `GET` | `/api/casos/{id}/estado` | Estado de un caso por su código (sin contenido clínico). |
+
+### Voluntarios
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/api/voluntarios/registro` | Registro que dispara la **validación automática contra la BD de la FPV** (Módulo 2). |
+| `POST` | `/api/auth/login` | Login de psicólogo/coordinador/admin. |
 
 ### Psicólogo (rol `psicologo`)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/auth/login` | Login de psicólogo/coordinador/admin. |
-| `GET` | `/casos?asignados=me` | Listar los casos asignados al psicólogo autenticado. |
-| `GET` | `/casos/{id}` | Ver el detalle de un caso propio (incluye notas). |
-| `POST` | `/casos/{id}/notas` | Registrar una nota clínica (diagnóstico/evolución) en un caso propio. |
-| `PATCH` | `/casos/{id}` | Actualizar estado de un caso propio (p. ej. cerrar). |
+| `GET` | `/api/casos?asignados=me` | Listar los casos asignados al psicólogo autenticado. |
+| `GET` | `/api/casos/{id}` | Ver el detalle de un caso propio (incluye notas). |
+| `POST` | `/api/casos/{id}/aceptar` | El voluntario **acepta el caso**; detiene el temporizador de SLA (RF-3.2). |
+| `POST` | `/api/casos/{id}/notas` | Registrar una nota clínica en un caso propio. |
+| `PATCH` | `/api/casos/{id}` | Actualizar estado de un caso propio (p. ej. cerrar). |
 
 ### Coordinador (rol `coordinador`)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `GET` | `/casos?estado=&prioridad=` | Listar todos los casos filtrando por estado/prioridad; prioridad visual de riesgo alto sin atender. |
-| `GET` | `/capacidad` | Panel de capacidad: número de casos sin asignar en tiempo real. |
+| `GET` | `/api/casos?estado=&prioridad=` | Listar todos los casos; prioridad visual de riesgo alto sin atender. |
+| `GET` | `/api/capacidad` | Panel de capacidad: casos sin asignar en tiempo real. |
 
 ### Administrador (rol `administrador`)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/lineas-crisis` | Crear una línea de crisis/respaldo. |
-| `PUT` | `/lineas-crisis/{id}` | Editar una línea de crisis/respaldo. |
-| `DELETE` | `/lineas-crisis/{id}` | Desactivar una línea de crisis/respaldo. |
+| `POST` | `/api/lineas-crisis` | Crear una línea de crisis/respaldo (incluye cobertura horaria). |
+| `PUT` | `/api/lineas-crisis/{id}` | Editar una línea de crisis/respaldo. |
+| `DELETE` | `/api/lineas-crisis/{id}` | Desactivar una línea de crisis/respaldo. |
+
+### Interno (Vercel Cron Job)
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/api/cron/revisar-slas-vencidos` | Invocado por **Vercel Cron** cada 1-2 min. Detecta casos de riesgo alto > 10 min sin aceptar y dispara el escalamiento (RF-3.3). **No** es para usuarios. |
 
 ## Notas de seguridad
-- `/casos` y `/casos/{id}` aplican autorización por **propiedad** (psicólogo) y por **rol** (coordinador/admin).
+- `/api/casos` y `/api/casos/{id}` aplican autorización por **propiedad** (psicólogo) y por **rol** (coordinador/admin).
 - El contenido de `notas_clinicas` viaja cifrado en reposo y solo se devuelve al psicólogo asignado.
-- La gestión de líneas de respaldo está restringida al rol `administrador` (no requiere cambios de código).
+- `/api/cron/revisar-slas-vencidos` se protege con un **secreto compartido** (header verificado contra una variable de entorno de Vercel), **no** con autenticación de usuario (ADR-0009).
+- `GET /api/lineas-crisis` está pensado para **cachearse en el cliente**, de modo que las líneas de crisis se muestren aun con el backend frío (cold-start).

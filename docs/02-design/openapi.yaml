@@ -1,62 +1,97 @@
 openapi: 3.1.0
 info:
   title: Sostén — API de apoyo psicológico post-terremoto
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    API REST de la plataforma Sostén. Recibe solicitudes de apoyo, ejecuta triage
-    determinístico, deriva a líneas de crisis ante riesgo alto, asigna casos a psicólogos
-    voluntarios o los encola, y permite el registro de notas clínicas. Datos clínicos
-    cifrados en reposo y en tránsito (ver ADR-0004).
+    API REST de la plataforma Sostén, desplegada como funciones serverless en Vercel
+    (ver ADR-0009) sobre PostgreSQL en Supabase (ADR-0002). Implementa el flujo de triage
+    del PRD de la Federación ("Sistema PPV 2026", ADR-0010): pantalla Likert, ramas roja/verde,
+    tags clínicos ponderados, validación de psicólogos contra la BD de la FPV, y SLA de 10 min
+    con escalamiento vía Vercel Cron Job. Datos clínicos cifrados en reposo y tránsito (ADR-0004).
 servers:
-  - url: https://api.sosten.example
-    description: Producción (placeholder — proveedor por definir, ADR-0006)
+  - url: https://sosten.example/api
+    description: Producción en Vercel (placeholder)
 
 tags:
-  - name: solicitudes
-  - name: casos
-  - name: auth
-  - name: coordinacion
+  - name: intake
   - name: lineas-crisis
+  - name: voluntarios
+  - name: auth
+  - name: casos
+  - name: coordinacion
+  - name: cron
 
 paths:
-  /solicitudes:
+  /intake/triage-inicial:
     post:
-      tags: [solicitudes]
-      summary: Crear una solicitud de apoyo (formulario público)
+      tags: [intake]
+      summary: Pregunta Likert inicial (sin datos personales)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NuevaSolicitud'
+              $ref: '#/components/schemas/TriageInicial'
+      responses:
+        '200':
+          description: Rama resultante del triage inicial.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoTriageInicial'
+
+  /intake/rama-roja:
+    post:
+      tags: [intake]
+      summary: Sub-canal de la Rama Roja (riesgo alto)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RamaRoja'
+      responses:
+        '200':
+          description: Confirmación del sub-canal y líneas de crisis a mostrar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoRamaRoja'
+
+  /intake/rama-verde:
+    post:
+      tags: [intake]
+      summary: Formulario conversacional con tags clínicos (Rama Verde)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RamaVerde'
       responses:
         '201':
-          description: Caso creado con su nivel de riesgo y, si aplica, líneas de crisis.
+          description: Caso creado con su score y nivel de riesgo.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultadoSolicitud'
 
-  /casos/{id}/estado:
+  /lineas-crisis/activa:
     get:
-      tags: [casos]
-      summary: Consultar estado de un caso (sin contenido clínico)
-      parameters:
-        - $ref: '#/components/parameters/CasoId'
+      tags: [lineas-crisis]
+      summary: Línea de crisis correcta según la hora del sistema (ruteo dinámico RF-1.2.1)
       responses:
         '200':
-          description: Estado del caso.
+          description: Línea activa para la hora actual.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EstadoCaso'
-        '404':
-          description: Caso no encontrado.
+                $ref: '#/components/schemas/LineaCrisis'
 
   /lineas-crisis:
     get:
       tags: [lineas-crisis]
-      summary: Listar líneas de crisis/respaldo activas
+      summary: Listar líneas activas (pensado para cachear en el cliente)
       responses:
         '200':
           description: Lista de líneas activas.
@@ -108,6 +143,24 @@ paths:
       responses:
         '204':
           description: Línea desactivada.
+
+  /voluntarios/registro:
+    post:
+      tags: [voluntarios]
+      summary: Registro de voluntario con validación automática contra la BD de la FPV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroVoluntario'
+      responses:
+        '202':
+          description: Registro recibido; validación contra BD de la FPV en curso o resuelta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoRegistro'
 
   /auth/login:
     post:
@@ -191,6 +244,18 @@ paths:
         '200':
           description: Caso actualizado.
 
+  /casos/{id}/aceptar:
+    post:
+      tags: [casos]
+      summary: El voluntario acepta el caso; detiene el temporizador de SLA (RF-3.2)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CasoId'
+      responses:
+        '200':
+          description: Caso aceptado; SLA detenido.
+
   /casos/{id}/notas:
     post:
       tags: [casos]
@@ -223,12 +288,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Capacidad'
 
+  /cron/revisar-slas-vencidos:
+    post:
+      tags: [cron]
+      summary: Revisión de SLAs vencidos (invocado por Vercel Cron, no por usuarios)
+      description: >
+        Detecta casos de riesgo alto con más de 10 minutos sin aceptar y dispara el
+        escalamiento (RF-3.3). Protegido con secreto compartido, no con auth de usuario.
+      security:
+        - cronSecret: []
+      responses:
+        '200':
+          description: Resultado de la revisión (casos escalados).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoCron'
+        '401':
+          description: Secreto de cron inválido o ausente.
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    cronSecret:
+      type: apiKey
+      in: header
+      name: X-Cron-Secret
+      description: Secreto compartido configurado en variables de entorno de Vercel.
 
   parameters:
     CasoId:
@@ -246,9 +335,18 @@ components:
     NivelRiesgo:
       type: string
       enum: [riesgo_alto, riesgo_moderado, seguimiento]
+    Rama:
+      type: string
+      enum: [roja, verde]
+    SeveridadTag:
+      type: string
+      enum: [rojo, naranja, amarillo]
+    SubCanalRamaRoja:
+      type: string
+      enum: [llamar, recibir-llamada, whatsapp-silencioso]
     EstadoCasoEnum:
       type: string
-      enum: [pendiente, asignado, en_seguimiento, cerrado]
+      enum: [pendiente, asignado, aceptado, en_seguimiento, cerrado]
     TipoSolicitante:
       type: string
       enum: [victima, familiar, voluntario]
@@ -256,48 +354,85 @@ components:
       type: string
       enum: [presencial, distancia]
 
-    NuevaSolicitud:
+    TriageInicial:
       type: object
-      required: [contacto, tipo_solicitante, respuestas_triage]
+      required: [respuesta_likert]
+      properties:
+        respuesta_likert:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Respuesta a la pregunta única de entrada (sin datos personales).
+
+    ResultadoTriageInicial:
+      type: object
+      properties:
+        rama: { $ref: '#/components/schemas/Rama' }
+
+    RamaRoja:
+      type: object
+      required: [sub_canal]
+      properties:
+        sub_canal: { $ref: '#/components/schemas/SubCanalRamaRoja' }
+        contacto:
+          type: string
+          description: Requerido si el sub-canal implica devolver la llamada o WhatsApp.
+
+    ResultadoRamaRoja:
+      type: object
+      properties:
+        sub_canal: { $ref: '#/components/schemas/SubCanalRamaRoja' }
+        linea_crisis:
+          $ref: '#/components/schemas/LineaCrisis'
+          description: Línea correcta según la hora (ruteo dinámico).
+
+    TagClinico:
+      type: object
+      properties:
+        codigo: { type: string }
+        severidad: { $ref: '#/components/schemas/SeveridadTag' }
+        peso: { type: number }
+
+    RamaVerde:
+      type: object
+      required: [contacto, tipo_solicitante, tags]
       properties:
         nombre: { type: string }
-        contacto: { type: string, description: "Teléfono u otro medio (dato sensible)" }
+        contacto: { type: string, description: "Dato sensible." }
         tipo_solicitante: { $ref: '#/components/schemas/TipoSolicitante' }
         en_nombre_de_tercero: { type: boolean, default: false }
         zona: { type: string }
         modalidad: { $ref: '#/components/schemas/Modalidad' }
-        respuestas_triage:
-          type: object
-          additionalProperties: { type: boolean }
-          description: "Respuestas a las preguntas de triage (ver sección 6 del plan)."
+        tags:
+          type: array
+          items: { $ref: '#/components/schemas/TagClinico' }
+          description: Tags clínicos seleccionados; el backend calcula el score ponderado.
 
     ResultadoSolicitud:
       type: object
       properties:
         caso_id: { type: string }
+        rama: { $ref: '#/components/schemas/Rama' }
         nivel_riesgo: { $ref: '#/components/schemas/NivelRiesgo' }
+        score_urgencia: { type: number }
         lineas_crisis:
           type: array
           items: { $ref: '#/components/schemas/LineaCrisis' }
-          description: "Presentes y mostradas de inmediato si nivel_riesgo = riesgo_alto."
+          description: Presentes si el caso escaló a Rama Roja (1 tag rojo o 3+ naranja).
         mensaje_espera:
           type: string
-          description: "Mensaje honesto si el caso entra en cola sin asignación inmediata."
-
-    EstadoCaso:
-      type: object
-      properties:
-        caso_id: { type: string }
-        estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
-        en_cola: { type: boolean }
+          description: Mensaje honesto si el caso entra en cola sin asignación inmediata.
 
     ResumenCaso:
       type: object
       properties:
         caso_id: { type: string }
+        rama: { $ref: '#/components/schemas/Rama' }
         nivel_riesgo: { $ref: '#/components/schemas/NivelRiesgo' }
+        score_urgencia: { type: number }
         estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
         creado_en: { type: string, format: date-time }
+        sla_vence_en: { type: string, format: date-time, description: "Solo riesgo alto." }
 
     CasoDetalle:
       allOf:
@@ -308,6 +443,9 @@ components:
             contacto: { type: string }
             zona: { type: string }
             modalidad: { $ref: '#/components/schemas/Modalidad' }
+            tags:
+              type: array
+              items: { $ref: '#/components/schemas/TagClinico' }
             notas:
               type: array
               items: { $ref: '#/components/schemas/NotaClinica' }
@@ -334,9 +472,26 @@ components:
         id: { type: string }
         nombre: { type: string }
         contacto: { type: string }
-        cobertura: { type: string }
+        cobertura: { type: string, description: "Cobertura horaria, base del ruteo dinámico." }
         prioridad: { type: integer }
         activa: { type: boolean, default: true }
+
+    RegistroVoluntario:
+      type: object
+      required: [nombre, cedula_profesional]
+      properties:
+        nombre: { type: string }
+        cedula_profesional: { type: string, description: "Se valida contra la BD de la FPV." }
+        especialidad: { type: string }
+        contacto: { type: string }
+
+    ResultadoRegistro:
+      type: object
+      properties:
+        estado_validacion:
+          type: string
+          enum: [pendiente, validado, rechazado]
+          description: Resultado de la validación automática contra la BD de la FPV.
 
     Credenciales:
       type: object
@@ -356,6 +511,13 @@ components:
       properties:
         casos_sin_asignar: { type: integer }
         riesgo_alto_sin_atender: { type: integer }
+        slas_por_vencer: { type: integer }
         en_cola_por_categoria:
           type: object
           additionalProperties: { type: integer }
+
+    ResultadoCron:
+      type: object
+      properties:
+        revisados: { type: integer }
+        escalados: { type: integer }

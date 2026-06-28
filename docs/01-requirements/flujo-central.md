@@ -1,66 +1,99 @@
-# PRD — Flujo central de Sostén
+# PRD — Flujo central de Sostén (Sistema PPV 2026)
 
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** aprobado para diseño
-> **Autor:** equipo de desarrollo  ·  **Fecha:** 2026-06-27
+> **Autor:** equipo de desarrollo, sobre el PRD "Sistema PPV 2026" de la Federación
+> **Fecha:** 2026-06-27 (reescrito 2026-06-28 — ver ADR-0010)
 
-## 1. Problema
-Las personas afectadas por el terremoto necesitan apoyo psicológico y el gremio no tiene forma
-eficiente de recibir solicitudes, detectar riesgo vital y conectar cada caso con un voluntario. Este
-PRD describe el flujo completo de extremo a extremo, desde la solicitud hasta el cierre del caso.
+Este documento refleja el flujo del PRD de la Federación, que **reemplaza** el flujo original de
+"formulario con 4 preguntas". El cambio de enfoque está registrado en
+[`../00-project/adr/0010-triage-prd-federacion.md`](../00-project/adr/0010-triage-prd-federacion.md).
 
-## 2. Usuarios y actores
-Solicitante, Psicólogo voluntario, Psicólogo verificador, Coordinador de turno, Federación/Admin
-(ver `docs/00-project/glossary.md` para las definiciones).
+## Fuera de alcance del MVP
+Confirmado fuera del MVP (Fase 2 o Fase 3 según se indique):
+- **Webhook de Rescate Activo (RF-3.4)** — **Fase 3**, no se construye en el MVP.
+- **Notificaciones push de la PWA** — en MVP la notificación al voluntario es por **correo electrónico** (ver ADR-0007 para el canal de contacto al solicitante).
+- **Notas confidenciales del coordinador sobre voluntarios** — Fase 2.
+- **Geo-clustering avanzado** — Fase 2.
+- **Analizador léxico-semántico (RF-1.4)** — Fase 2 (documentado aquí como parte de la Rama Roja).
 
-## 3. Flujo principal (happy path)
-1. **Solicitud.** El solicitante (o alguien en su nombre) completa el formulario dentro de la app:
-   datos de contacto, tipo de necesidad, preguntas de triage de riesgo, modalidad preferida
-   (presencial/distancia) y zona. El formulario tolera conexión intermitente (guardado local y
-   reintento de envío).
-2. **Triage.** El motor clasifica el caso de forma determinística en `riesgo_alto`,
-   `riesgo_moderado` o `seguimiento` según las respuestas.
-3. **Riesgo alto → líneas de crisis.** Si el triage marca riesgo alto, la app muestra de inmediato
-   la pantalla con las líneas de crisis, **antes e independientemente** de cualquier intento de
-   asignación. El caso se marca como urgente en el panel del coordinador.
-4. **Riesgo moderado/seguimiento → asignación o cola.** El backend busca un psicólogo con
-   especialidad y disponibilidad compatibles y genera la asignación. Si no hay disponibilidad
-   inmediata, el caso entra en la cola visible con un mensaje honesto de espera (ver ADR-0008).
-5. **Atención.** El psicólogo asignado se autentica, ve el caso, contacta al solicitante por el
-   canal acordado (ver ADR-0007) y registra diagnóstico y notas clínicas en la plataforma.
-6. **Coordinación.** El coordinador de turno revisa el panel general y prioriza el riesgo alto sin
-   atender.
-7. **Cierre.** Cuando el caso se resuelve, el psicólogo (o coordinador) lo marca como `cerrado`;
-   queda archivado sujeto a la política de retención de la Federación.
+## 1. Módulo 1 — Intake y triage (baja fricción)
 
-## 4. Reglas de negocio
-- Las líneas de crisis nunca dependen de que haya un voluntario disponible.
-- Riesgo alto siempre primero en la cola; el resto, FIFO dentro de su categoría.
+### 1.1 Pantalla única Likert
+La persona entra a una **pantalla única** con una pregunta tipo Likert, **sin pedir datos
+personales primero**. Según la respuesta, el sistema bifurca en **Rama Roja** o **Rama Verde**.
+
+### 1.2 Rama Roja (riesgo alto)
+Despliegue inmediato de apoyo, **antes e independientemente** de cualquier asignación. Tres
+sub-canales a elección de la persona:
+1. **Llamar yo mismo** — con **ruteo dinámico de línea de crisis por hora** (RF-1.2.1): el sistema
+   muestra el número correcto según la hora del sistema (cobertura horaria de cada línea).
+2. **Recibir una llamada**.
+3. **WhatsApp silencioso** (contacto discreto).
+
+La pantalla de líneas de crisis debe poder mostrarse **desde el cliente sin depender de la latencia
+del backend** (números cacheados localmente), por el riesgo de cold-start serverless (ver
+`../02-design/threat-model.md` y ADR-0009).
+
+### 1.3 Rama Verde (resto de casos)
+Formulario **conversacional** que recoge **tags clínicos táctiles** con peso. El score de urgencia
+ponderado resultante define la prioridad.
+
+### 1.4 Tags clínicos por severidad
+> Categorías clínicas tomadas del PRD de la Federación; no se alteran. Los **pesos/umbrales finales
+> los valida un psicólogo de la FPV** (`<TODO — Human-in-the-Loop>`, ver ADR-0010).
+
+| Severidad | Significado | Peso relativo |
+|---|---|---|
+| **Rojo** | Señal de riesgo vital (ideación suicida, brote psicótico) | Máximo |
+| **Naranja** | Señal de alta angustia sin riesgo vital inmediato | Alto |
+| **Amarillo** | Malestar que requiere apoyo no urgente | Moderado |
+
+### 1.5 Regla de interrupción y reenrutamiento
+- **1 tag rojo** → escalar de inmediato a **Rama Roja**.
+- **3+ tags naranja** → escalar a **Rama Roja**.
+
+## 2. Módulo 2 — Registro y validación de psicólogos
+- El voluntario se registra en la plataforma.
+- **Validación automática contra la BD de la FPV**: el sistema verifica que el voluntario esté en el
+  padrón de la Federación antes de habilitarlo. No hay autoregistro abierto que active una cuenta sin
+  esta validación.
+
+## 3. Módulo 3 — Asignación, SLA y escalamiento
+1. Un caso clasificado entra al motor de asignación (riesgo alto primero; resto por orden de llegada
+   dentro de su categoría — ver ADR-0008).
+2. **SLA de 10 minutos (RF-3.2):** desde que un caso de riesgo alto queda disponible, un voluntario
+   tiene 10 minutos para presionar **"Aceptar caso"**.
+3. **Escalamiento automático (RF-3.3):** si nadie acepta en 10 minutos, el sistema escala. El
+   temporizador **no** vive en memoria: un **Vercel Cron Job** revisa la BD cada 1-2 minutos y
+   dispara el escalamiento (ver ADR-0009).
+4. **Webhook de Rescate Activo (RF-3.4):** **fuera del MVP — diseño de Fase 3.**
+
+## 4. Reglas de negocio (invariantes)
+- Las líneas de crisis nunca dependen de que haya un voluntario disponible (principio no negociable del charter).
+- Riesgo alto siempre primero; el resto FIFO dentro de su categoría.
 - El sistema comunica honestamente la saturación; no promete tiempos de respuesta.
 - Un psicólogo solo ve y escribe notas de sus casos asignados.
-- El alta de voluntarios es controlada (psicólogo verificador), no por autoregistro.
+- El alta de voluntarios pasa por la validación automática contra la BD de la FPV.
 
 ## 5. Escenarios de borde, abuso y riesgo
-| Escenario | Comportamiento esperado del sistema |
+| Escenario | Comportamiento esperado |
 |---|---|
-| Alguien reporta **riesgo alto en nombre de un tercero** sin su consentimiento | El sistema igual muestra líneas de crisis y crea el caso; el contacto humano valida la situación. Se registra que la solicitud la hizo un tercero. El texto de consentimiento es `<TODO — Human-in-the-Loop>`. |
-| **Voluntario no verificado** intenta registrarse como psicólogo | No hay autoregistro: el alta solo ocurre vía el psicólogo verificador. El intento no crea una cuenta activa. |
-| **Saturación total de la cola** el primer día (300+ solicitudes) | La app mantiene la prioridad de riesgo alto, muestra mensaje honesto de espera al resto y expone el panel de capacidad al coordinador. |
-| **Pérdida de conexión a mitad del formulario** | Los datos ingresados se guardan localmente; al recuperar señal, el envío se reintenta sin perder lo escrito. |
-| **Riesgo alto sin coordinador mirando el panel** | Las líneas de crisis ya se mostraron; el resto es responsabilidad organizativa (turnos) de la Federación. |
+| Reporte de **riesgo alto en nombre de un tercero** | Se muestran líneas de crisis y se crea el caso; el contacto humano valida. Texto de consentimiento: `<TODO — Human-in-the-Loop>`. |
+| **Voluntario no verificado** intenta registrarse | La validación contra la BD de la FPV no lo habilita; no se activa cuenta. |
+| **Saturación** el primer día (300+ solicitudes) | Prioridad de riesgo alto; mensaje honesto de espera; panel de capacidad para el coordinador. |
+| **Pérdida de conexión** a mitad del formulario | Datos guardados localmente; reintento de envío sin perder lo escrito. |
+| **Cold-start** del backend al mostrar líneas de crisis | Las líneas se muestran desde caché del cliente, sin esperar al backend. |
+| **SLA vencido** sin voluntario que acepte | El cron job detecta el caso > 10 min y dispara el escalamiento automático. |
 
 ## 6. Criterios de aceptación
-- [ ] Un caso de riesgo alto muestra líneas de crisis antes de cualquier llamada de asignación.
-- [ ] El triage clasifica de forma determinística y reproducible las mismas respuestas.
-- [ ] Un caso sin voluntario disponible entra en cola con mensaje honesto y reaparición de líneas de crisis.
-- [ ] El formulario recupera datos tras una pérdida de conexión.
-- [ ] Un psicólogo no puede ver casos que no le fueron asignados.
-- [ ] El coordinador ve todos los casos con prioridad visual del riesgo alto sin atender.
+- [ ] La pantalla Likert bifurca correctamente en Rama Roja / Rama Verde.
+- [ ] 1 tag rojo o 3+ naranja escalan a Rama Roja.
+- [ ] La línea de crisis mostrada corresponde a la hora del sistema (ruteo dinámico).
+- [ ] Un caso de riesgo alto sin aceptar en 10 min se escala automáticamente vía cron job.
+- [ ] El registro de un voluntario se valida contra la BD de la FPV.
+- [ ] Las líneas de crisis se muestran aun con el backend frío.
 
-## 7. Fuera de alcance
-- Canal de mensajería propio; esquema de turnos; política de retención; verificación de voluntarios
-  (organización interna de la Federación).
-
-## 8. Decisiones abiertas (Human-in-the-Loop)
-- `<TODO — Human-in-the-Loop>` Texto de consentimiento informado mostrado antes de registrar datos.
+## 7. Decisiones abiertas (Human-in-the-Loop)
+- `<TODO — Human-in-the-Loop>` Pesos/umbrales finales de los tags clínicos (valida la FPV).
+- `<TODO — Human-in-the-Loop>` Texto de consentimiento informado.
 - `<TODO — Human-in-the-Loop>` Umbral de tiempo de espera aceptable por categoría.
-- `<TODO — Human-in-the-Loop>` Validación final de las preguntas de triage por un psicólogo del gremio.
