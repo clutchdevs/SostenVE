@@ -10,6 +10,7 @@ import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
 import { createCronRouter } from '../src/interfaces/http/v1/cron.controller';
 import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller';
 import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller';
+import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).
@@ -27,7 +28,12 @@ const corsOrigins =
 
 export const app = new Hono().basePath('/api/v1');
 
-app.use('*', buildSecurityHeaders());
+// Strict security headers everywhere except the Swagger UI page, which needs a
+// relaxed CSP to load its assets (the /docs route sets its own CSP).
+const securityHeaders = buildSecurityHeaders();
+app.use('*', (c, next) =>
+  c.req.path.endsWith('/docs') ? next() : securityHeaders(c, next),
+);
 app.use('*', buildCors(corsOrigins));
 app.onError(errorHandler);
 
@@ -42,5 +48,6 @@ app.route('/volunteers', createVolunteerRouter());
 app.route('/cases', createCasesRouter());
 app.route('/coordinator', createCoordinatorRouter());
 app.route('/cron', createCronRouter());
+app.route('/', createDocsRouter());
 
 export default app;

@@ -1,9 +1,13 @@
 # Contratos de API — Proyecto Sostén
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta
-> Resumen legible de los endpoints REST (funciones serverless `/api/*` en Vercel, ver ADR-0009). La
-> especificación formal está en `openapi.yaml` (OpenAPI 3.1). Todos son HTTPS; los que manejan datos
-> clínicos requieren rol.
+> Resumen legible de los endpoints REST (funciones serverless `/api/*` en Vercel, ver ADR-0009). Todos
+> son HTTPS; los que manejan datos clínicos requieren rol.
+>
+> **Contrato vivo e interactivo (runtime):** `GET /api/v1/docs` (Swagger UI) y `GET /api/v1/openapi.json`
+> exponen el OpenAPI 3.1 generado por la API a partir de los esquemas Zod reales — es la fuente de
+> verdad de los endpoints implementados. Este `api-contracts.md` y `openapi.yaml` son artefactos de
+> **diseño** y pueden ir por detrás del runtime.
 
 ## Convenciones
 - Formato: JSON. Autenticación: sesión/JWT tras login (ADR-0005).
