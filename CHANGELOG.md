@@ -28,6 +28,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
+- **Bloque 4 — Registro y validación de psicólogos:** `POST /api/v1/volunteers/register` con
+  validación contra la FPV vía **Adapter** (`DummyFpvVerifier` always-OK + esqueleto
+  `HttpFpvVerifier`, seleccionable por config), **Circuit Breaker** (caída del servicio → registro a
+  `pending_approval`) y **Chain of Responsibility**; `POST /api/v1/auth/login` (JWT access+refresh,
+  rate-limited); endpoints de admin (`GET /volunteers`, `approve`, `reject` con `bumpTokenVersion`);
+  notificaciones vía `LogNotifier` (stand-in del email). Migración: columna `email` en `volunteers`.
+  Documentado en ADR-0013.
 - **Bloque 3 — Endpoints del Intake (Rama Roja / Rama Verde):** `POST /api/v1/intake/triage`
   (bifurcación Likert), `GET /api/v1/crisis-lines/active` (ruteo por hora desde config, sin BD),
   `POST /api/v1/intake/red-branch` (caso de riesgo alto + líneas de crisis, **idempotente** por
