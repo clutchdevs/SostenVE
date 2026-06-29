@@ -82,6 +82,24 @@ Detalle de estrategia, checklist del threat model y plan de piloto: [`docs/04-te
    revisa el **portal del psicólogo** y el **panel del coordinador**.
 5. **Asignación/SLA**: invoca el cron `POST /api/v1/cron/check-sla` con el header `X-Cron-Secret`.
 
+## Rutas de la aplicación web
+| Ruta | Para quién | Descripción | Sesión |
+|---|---|---|---|
+| `/` | Todos | Bienvenida con dos caminos: solicitar apoyo o acceso de personal | No |
+| `/intake` | Solicitante | Pregunta Likert (triage de baja fricción) | No |
+| `/intake/roja` | Solicitante | Rama Roja: líneas de crisis + sub-canales | No |
+| `/intake/verde` | Solicitante | Rama Verde: tags de síntomas y envío | No |
+| `/login` | Personal | Inicio de sesión (enruta por rol) | No |
+| `/psicologo` | Psicólogo | Lista de casos asignados | Sí (psicólogo) |
+| `/psicologo/casos/[id]` | Psicólogo | Detalle del caso, notas, aceptar/cerrar | Sí (psicólogo) |
+| `/coordinador` | Coordinador / Admin | Panel de casos (prioridad + SLA) y capacidad | Sí (coordinador/admin) |
+
+> Al iniciar sesión, el coordinador/admin va a `/coordinador` y el psicólogo a `/psicologo`. Las
+> pantallas de personal tienen un encabezado con navegación y **Cerrar sesión**.
+
+**API / Swagger:** `GET /api/v1/docs` (Swagger UI interactivo) y `GET /api/v1/openapi.json`
+(documento OpenAPI). Health: `GET /api/v1/health`.
+
 ## Puertos
 | Servicio | URL |
 |---|---|
