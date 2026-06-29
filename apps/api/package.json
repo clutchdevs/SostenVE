@@ -6,6 +6,7 @@
   "description": "SostenVE backend — serverless Hono API on Vercel + Supabase",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch dev.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
@@ -20,6 +21,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@hono/node-server": "^1.13.7",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.7.5",
     "tsx": "^4.19.1",
