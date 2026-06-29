@@ -6,6 +6,90 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Añadido
+- **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
+  **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**
+  correcta (aceptar solo desde `asignado` y una vez; cierre terminal; `cerrado` en solo lectura) con
+  guardas 409 en el backend; **cierre clínico estructurado** (RF-4.2): contactabilidad Sí/No → cierre
+  rápido o flujo clínico (sexo, síntomas, técnicas SMAPS, derivación tipo+destino, horas, comentario).
+  Nueva tabla `case_closures` (RLS, comentario cifrado); endpoint `POST /cases/:id/close` (reemplaza el
+  PATCH genérico). La ideación suicida registra alerta de seguimiento.
+- **Seed de pruebas local** (`supabase/seed.sql`, se carga con `db reset`): coordinador y psicólogo
+  de prueba (login funcional, hashes argon2id) + casos de ejemplo (uno de riesgo alto en cola y uno
+  asignado al psicólogo). Credenciales documentadas en `docs/04-testing/seed-data.md`.
+- **Swagger UI / OpenAPI runtime:** `GET /api/v1/docs` (Swagger UI interactivo) y
+  `GET /api/v1/openapi.json` (OpenAPI 3.1 generado en código, reutilizando los esquemas Zod) con todos
+  los endpoints implementados. La CSP estricta se relaja solo en la página `/docs`.
+- **Tooling de desarrollo local:** `docker-compose.yml` (servicios `installer` + `api` + `web`) que
+  levanta la app apuntando al Supabase local; scripts `npm run dev:up` / `dev:down` / `dev:reset` que
+  orquestan Supabase + la app en un comando; y `DEVELOPMENT.md` con la guía de arranque, base de
+  datos, pruebas y troubleshooting.
+- **Bloque 0 — Fundaciones:** monorepo npm workspaces (`apps/api`, `apps/web`), TypeScript estricto
+  compartido, ESLint + Prettier, config singleton (`config/app.config.yml` validado con Zod),
+  cliente Supabase lazy, app Hono con `GET /api/v1/health`, shell Next.js (App Router), CI en
+  GitHub Actions y `CONTRIBUTING.md`.
+- **Bloque 1 — Dominio de triage (núcleo de seguridad):** value objects `Severity`, `RiskLevel`,
+  `SymptomTag`; clasificación de riesgo por estrategias (regla de interrupción 1 rojo / 3+ naranja);
+  índice de urgencia ponderado (RF-1.5); reglas clínicas RF-4.3 (bloqueo de diagnóstico TEPT < 30
+  días) y RF-4.2.9 (Crisis Psicótica Aguda fuerza derivación URGENTE); catálogo de tags provisional
+  (pendiente FPV). Dominio puro, sin dependencias de infraestructura.
+- **Bloque 1.5 — Seguridad transversal de API:** hashing argon2id, JWT con `jose` (access/refresh,
+  revocación por token version + denylist), rate limiter con store inyectable, jerarquía de errores
+  de API, y middlewares Hono (CORS estricto, security headers, rate limit, validación Zod en el
+  borde, auth por rol, manejo central de errores).
+
+- **Bloque 2 — Datos en Supabase + seudonimización y auditoría:** migraciones SQL versionadas
+  (`supabase/migrations`) con el esquema (`cases`, `case_contacts` PII separada, `volunteers`,
+  `assignments`, `clinical_notes`, `crisis_lines`, `audit_log`); políticas RLS por rol; `audit_log`
+  inmutable (RLS + trigger); generador de ID seudonimizado HMAC-SHA256 (ADR-0011); cifrado de
+  columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
+  de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
+
+- **Bloque 7 — Pruebas integrales, carga y piloto:** scaffold de **Playwright** (`apps/web/e2e/`) con
+  specs del camino crítico —incluido `crisis-failsafe` que verifica que las líneas de crisis se
+  muestran aunque la API esté caída—; prueba de **carga** con **autocannon** (`scripts/load-test.mjs`,
+  `npm run load-test`) sobre el intake; y `docs/04-testing/README.md` con la estrategia de pruebas,
+  el **checklist del threat model** (verificación manual) y el plan de piloto. Los e2e/carga se corren
+  en CI/preview (no descargan navegadores en este repo).
+- **Bloque 6 — Frontend (PWA) + endpoints de casos/coordinador:**
+  - Backend: endpoints `GET /api/v1/cases` (psicólogo→propios; coordinador/admin→todos, riesgo alto
+    primero), `GET /cases/:id` (detalle + notas, solo asignado), `POST /cases/:id/notes` (RF-4.3 bloquea
+    TEPT < 4 semanas; RF-4.2.9 crisis psicótica → derivación urgente + sube riesgo + auditoría),
+    `PATCH /cases/:id` (cerrar) y `GET /coordinator/capacity`. Config `clinical_records.event_date`.
+  - Frontend (`apps/web`, Next.js + Tailwind): intake (Likert → ramas roja/verde con tags táctiles),
+    portal del psicólogo (casos, detalle, notas, aceptar/cerrar), panel del coordinador (prioridad de
+    riesgo alto + SLA + capacidad, polling), login. **Fail-safe de líneas de crisis** en el cliente
+    (caché + lista embebida: siempre se muestran aunque la API falle). Servidor de API local
+    (`@hono/node-server`) para desarrollo. asignación de casos `pendiente` a
+  voluntarios activos por compatibilidad (prioridad infantil para menores), cola honesta cuando no
+  hay voluntario; `POST /api/v1/cases/:id/accept` (detiene el SLA); `GET|POST /api/v1/cron/check-sla`
+  protegido por `CRON_SECRET` que asigna pendientes y **escala** casos de riesgo alto vencidos (revoca,
+  vuelve a la cola, notifica a coordinadores); `vercel.json` con el cron cada 2 min. Las consultas del
+  cron sirven de ping anti-pausa de Supabase (ADR-0002).
+- **Bloque 4 — Registro y validación de psicólogos:** `POST /api/v1/volunteers/register` con
+  validación contra la FPV vía **Adapter** (`DummyFpvVerifier` always-OK + esqueleto
+  `HttpFpvVerifier`, seleccionable por config), **Circuit Breaker** (caída del servicio → registro a
+  `pending_approval`) y **Chain of Responsibility**; `POST /api/v1/auth/login` (JWT access+refresh,
+  rate-limited); endpoints de admin (`GET /volunteers`, `approve`, `reject` con `bumpTokenVersion`);
+  notificaciones vía `LogNotifier` (stand-in del email). Migración: columna `email` en `volunteers`.
+  Documentado en ADR-0013.
+- **Bloque 3 — Endpoints del Intake (Rama Roja / Rama Verde):** `POST /api/v1/intake/triage`
+  (bifurcación Likert), `GET /api/v1/crisis-lines/active` (ruteo por hora desde config, sin BD),
+  `POST /api/v1/intake/red-branch` (caso de riesgo alto + líneas de crisis, **idempotente** por
+  `Idempotency-Key`) y `POST /api/v1/intake/green-branch` (clasificación por tags con escalamiento a
+  riesgo alto). Casos de uso (Use Case/Command) sobre los repos del Bloque 2, validación Zod y rate
+  limiting del Bloque 1.5. Migración: columna `age` y tabla `idempotency_keys`. Las respuestas de
+  riesgo alto siempre incluyen líneas de crisis (principio no negociable).
+- **Bloque 2.5 — Secretos, dependencias y logging seguro:** logger central con **redacción
+  automática de PII/datos clínicos** (Facade); regla ESLint que prohíbe `console` en `apps/api/src`;
+  gate de CI `npm audit --omit=dev --audit-level=high` (falla ante high/critical en producción);
+  Dependabot (npm + GitHub Actions); versiones **ancladas** de libs críticas (argon2, jose, zod);
+  procedimiento de rotación de secretos en `CONTRIBUTING.md`.
+
+### Cambiado
+- ADR-0005: fijados argon2id (parámetros explícitos) y `jose` para JWT con estrategia de revocación.
+- ADR-0002: decisión operativa de usar el plan gratuito de Supabase en el MVP (mitigación de pausa,
+  deuda técnica de respaldos vs NFR 6.2, reevaluación antes de masificar). README marca la deuda.
 
 ## [0.3.0] - 2026-06-28
 ### Añadido

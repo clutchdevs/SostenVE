@@ -1,0 +1,34 @@
+/**
+ * External-service ports for the volunteer feature (Adapter pattern). Concrete
+ * adapters live in infrastructure; the use cases depend only on these interfaces.
+ */
+
+export interface FpvVerificationInput {
+  professionalId: string;
+  fullName: string;
+}
+
+export interface FpvVerificationResult {
+  valid: boolean;
+  reason?: string;
+}
+
+/**
+ * Point-in-time verifier against the FPV registry. The real HTTP contract is not
+ * defined yet, so the default implementation is a documented dummy that always
+ * approves; swap it via config when the contract exists (see ADR-0013).
+ */
+export interface FpvVerifier {
+  verify(input: FpvVerificationInput): Promise<FpvVerificationResult>;
+}
+
+export interface RegistrationNotification {
+  email?: string;
+  fullName: string;
+}
+
+/** Sends volunteer registration notifications (Adapter; LogNotifier for now). */
+export interface Notifier {
+  notifyRegistrationApproved(notification: RegistrationNotification): Promise<void>;
+  notifyRegistrationPending(notification: RegistrationNotification): Promise<void>;
+}

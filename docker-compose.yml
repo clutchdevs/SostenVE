@@ -1,0 +1,81 @@
+# SostenVE — local app stack (API + Web).
+#
+# The database is the Supabase local stack, managed by the Supabase CLI
+# (`supabase start`), NOT this compose file — reproducing all of Supabase here
+# would be heavy and brittle. Use `npm run dev:up` to start Supabase AND this
+# compose in one command (and `npm run dev:down` to stop both).
+#
+# Cross-platform deps: an `installer` service runs `npm ci` into named volumes so
+# native modules (e.g. @node-rs/argon2) are built for Linux regardless of the
+# host OS. API/Web reuse those volumes and just run their dev servers.
+#
+# Default secrets/keys below are LOCAL-DEV ONLY (Supabase CLI demo values).
+
+x-node-env: &node-env
+  SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
+  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
+  DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:54322/postgres}
+  JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-at-least-32-bytes!!}
+  PSEUDONYMIZATION_SALT: ${PSEUDONYMIZATION_SALT:-local-dev-pseudonym-salt}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-bG9jYWwtZGV2LTMyLWJ5dGUtZW5jcnlwdGlvbi1rZXkh}
+  CRON_SECRET: ${CRON_SECRET:-local-dev-cron-secret}
+
+services:
+  installer:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm ci"
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+  api:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm run dev --workspace @sostenve/api"
+    environment:
+      <<: *node-env
+      PORT: 3001
+    ports:
+      - '3001:3001'
+    depends_on:
+      installer:
+        condition: service_completed_successfully
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+  web:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm run dev --workspace @sostenve/web -- -H 0.0.0.0"
+    environment:
+      # The browser calls the API on the host-published port.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+      # Reliable file watching for HMR on bind mounts (Windows/Docker).
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - '3000:3000'
+    depends_on:
+      installer:
+        condition: service_completed_successfully
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+volumes:
+  root_node_modules:
+  api_node_modules:
+  web_node_modules:
