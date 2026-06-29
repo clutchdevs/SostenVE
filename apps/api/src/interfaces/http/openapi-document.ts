@@ -2,12 +2,12 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ZodType } from 'zod';
 import {
   addNoteSchema,
+  caseClosureSchema,
   greenBranchSchema,
   loginSchema,
   redBranchSchema,
   registerVolunteerSchema,
   triageInitialSchema,
-  updateCaseSchema,
 } from './v1/schemas';
 
 /**
@@ -158,27 +158,37 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/cases/{id}': {
         get: {
           tags: ['cases'],
-          summary: 'Detalle de un caso con notas (psicólogo asignado)',
+          summary: 'Detalle de un caso con identidad, notas y cierre (psicólogo asignado)',
           security: bearer,
           parameters: [idParam],
-          responses: { '200': { description: 'Detalle + notas' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
-        },
-        patch: {
-          tags: ['cases'],
-          summary: 'Actualizar estado del caso (cerrar / seguimiento)',
-          security: bearer,
-          parameters: [idParam],
-          requestBody: jsonBody(updateCaseSchema),
-          responses: { '200': { description: 'Actualizado' }, '403': { description: 'Caso ajeno' } },
+          responses: { '200': { description: 'Detalle + identidad + notas + cierre' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
         },
       },
       '/cases/{id}/accept': {
         post: {
           tags: ['cases'],
-          summary: 'El voluntario acepta el caso (detiene el SLA)',
+          summary: 'El voluntario acepta el caso (solo desde "asignado"; detiene el SLA)',
           security: bearer,
           parameters: [idParam],
-          responses: { '200': { description: 'Aceptado' }, '403': { description: 'Caso ajeno' } },
+          responses: {
+            '200': { description: 'Aceptado' },
+            '403': { description: 'Caso ajeno' },
+            '409': { description: 'El caso no puede aceptarse en su estado actual' },
+          },
+        },
+      },
+      '/cases/{id}/close': {
+        post: {
+          tags: ['cases'],
+          summary: 'Cierre clínico estructurado del caso (Módulo 4; solo desde "aceptado", terminal)',
+          security: bearer,
+          parameters: [idParam],
+          requestBody: jsonBody(caseClosureSchema),
+          responses: {
+            '201': { description: 'Caso cerrado con expediente' },
+            '403': { description: 'Caso ajeno' },
+            '409': { description: 'Estado inválido o ya cerrado' },
+          },
         },
       },
       '/cases/{id}/notes': {

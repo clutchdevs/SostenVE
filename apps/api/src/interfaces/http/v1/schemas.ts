@@ -44,12 +44,27 @@ export const addNoteSchema = z.object({
   crisis_psicotica_aguda: z.boolean().optional(),
 });
 
-export const updateCaseSchema = z.object({
-  estado: z.enum(['en_seguimiento', 'cerrado']),
+export const caseClosureSchema = z.object({
+  contacto: z.boolean(),
+  motivo_no_contacto: z
+    .enum(['abandono', 'problemas_conexion', 'solo_primer_contacto', 'solicitud_tercero'])
+    .optional(),
+  sexo: z.enum(['femenino', 'masculino', 'lgbtq', 'no_binario']).optional(),
+  sintomas: z.array(z.string().min(1)).default([]),
+  otro_sintoma: z.string().max(150).optional(),
+  medio_contacto: z.enum(['celular', 'whatsapp', 'linea_fija']).optional(),
+  tecnicas: z.array(z.string().min(1)).default([]),
+  motivo_cierre: z.string().min(1).optional(),
+  derivacion_tipo: z.enum(['urgente', 'seguimiento', 'ninguna']).optional(),
+  derivacion_destino: z
+    .enum(['psicologia', 'psiquiatria', 'ambos', 'medicina', 'proteccion_ninos', 'proteccion_mujer'])
+    .optional(),
+  horas: z.number().min(0).max(1000),
+  comentario: z.string().max(1500).optional(),
 });
 
 export type AddNoteBody = z.infer<typeof addNoteSchema>;
-export type UpdateCaseBody = z.infer<typeof updateCaseSchema>;
+export type CaseClosureBody = z.infer<typeof caseClosureSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
 export type RedBranchBody = z.infer<typeof redBranchSchema>;
 export type GreenBranchBody = z.infer<typeof greenBranchSchema>;

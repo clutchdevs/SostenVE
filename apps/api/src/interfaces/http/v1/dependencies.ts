@@ -6,6 +6,7 @@ import { SupabaseVolunteerRepository } from '../../../infrastructure/repositorie
 import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
+import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { LogNotifier } from '../../../infrastructure/notifications/log-notifier';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
@@ -102,8 +103,10 @@ export function getCaseDeps(): CaseDeps {
     const client = forService();
     caseCached = {
       cases: new SupabaseCaseRepository(client),
+      contacts: new SupabaseCaseContactRepository(client),
       assignments: new SupabaseAssignmentRepository(client),
       notes: new SupabaseClinicalNoteRepository(client),
+      closures: new SupabaseCaseClosureRepository(client),
       audit: new SupabaseAuditLogRepository(client),
       config: getConfig(),
     };

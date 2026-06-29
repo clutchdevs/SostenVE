@@ -3,13 +3,12 @@ import { acceptCase } from '../../../application/assignment/accept-case';
 import { addClinicalNote } from '../../../application/cases/add-note';
 import { getCaseForVolunteer } from '../../../application/cases/get-case';
 import { listAllCases, listAssignedCases } from '../../../application/cases/list-cases';
-import { updateCaseStatus } from '../../../application/cases/close-case';
-import { statusFromDb } from '../../../infrastructure/repositories/enum-maps';
+import { recordCaseClosure } from '../../../application/cases/record-case-closure';
 import { getAuthUser, requireAuth } from '../middleware/auth';
 import { getValidated, validateBody } from '../middleware/validate';
 import { getAssignmentDeps, getCaseDeps } from './dependencies';
-import { presentCaseSummary, presentNote } from './presenters';
-import { addNoteSchema, updateCaseSchema, type AddNoteBody, type UpdateCaseBody } from './schemas';
+import { presentCaseClosure, presentCaseContact, presentCaseSummary, presentNote } from './presenters';
+import { addNoteSchema, caseClosureSchema, type AddNoteBody, type CaseClosureBody } from './schemas';
 
 const STAFF_ROLES = ['psychologist', 'coordinator', 'admin'];
 
@@ -28,14 +27,19 @@ export function createCasesRouter(): Hono {
     return c.json(cases.map(presentCaseSummary));
   });
 
-  // Case detail with notes — assigned psychologist only.
+  // Case detail with identity, notes and closure — assigned psychologist only.
   router.get('/:id', requireAuth({ roles: ['psychologist'] }), async (c) => {
     const user = getAuthUser(c);
     const detail = await getCaseForVolunteer(c.req.param('id'), user.sub, getCaseDeps());
-    return c.json({ caso: presentCaseSummary(detail.case), notas: detail.notes.map(presentNote) });
+    return c.json({
+      caso: presentCaseSummary(detail.case),
+      contacto: presentCaseContact(detail.contact),
+      notas: detail.notes.map(presentNote),
+      cierre: presentCaseClosure(detail.closure),
+    });
   });
 
-  // Volunteer accepts an assigned case (stops the SLA).
+  // Volunteer accepts an assigned case (only from the `asignado` state).
   router.post('/:id/accept', requireAuth({ roles: ['psychologist'] }), async (c) => {
     const user = getAuthUser(c);
     await acceptCase(c.req.param('id'), user.sub, getAssignmentDeps());
@@ -61,27 +65,38 @@ export function createCasesRouter(): Hono {
         },
         getCaseDeps(),
       );
-      return c.json(
-        { nota: presentNote(result.note), derivacion: result.referral },
-        201,
-      );
+      return c.json({ nota: presentNote(result.note), derivacion: result.referral }, 201);
     },
   );
 
-  // Update case status (e.g. follow-up / close) — assigned psychologist only.
-  router.patch(
-    '/:id',
+  // Structured clinical closure (Module 4) — only from `aceptado`, terminal.
+  router.post(
+    '/:id/close',
     requireAuth({ roles: ['psychologist'] }),
-    validateBody(updateCaseSchema),
+    validateBody(caseClosureSchema),
     async (c) => {
       const user = getAuthUser(c);
-      const body = getValidated<UpdateCaseBody>(c, 'body');
-      const status = statusFromDb[body.estado];
-      if (!status) {
-        return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid status' } }, 400);
-      }
-      await updateCaseStatus(c.req.param('id'), user.sub, status, getCaseDeps());
-      return c.json({ ok: true });
+      const body = getValidated<CaseClosureBody>(c, 'body');
+      const closure = await recordCaseClosure(
+        c.req.param('id'),
+        user.sub,
+        {
+          contacted: body.contacto,
+          noContactReason: body.motivo_no_contacto,
+          sex: body.sexo,
+          symptoms: body.sintomas,
+          otherSymptom: body.otro_sintoma,
+          contactMedium: body.medio_contacto,
+          techniques: body.tecnicas,
+          closeReason: body.motivo_cierre,
+          referralType: body.derivacion_tipo,
+          referralDestination: body.derivacion_destino,
+          hours: body.horas,
+          comment: body.comentario,
+        },
+        getCaseDeps(),
+      );
+      return c.json({ cierre: presentCaseClosure(closure) }, 201);
     },
   );
 

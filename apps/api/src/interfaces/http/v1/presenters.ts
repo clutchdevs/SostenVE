@@ -7,8 +7,9 @@ import {
 } from '../../../infrastructure/repositories/enum-maps';
 import type { ActiveCrisisLine } from '../../../application/intake/crisis-line-routing';
 import type { IntakeCaseResult } from '../../../application/intake/types';
-import type { CaseRecord } from '../../../domain/case/case';
+import type { CaseContact, CaseRecord } from '../../../domain/case/case';
 import type { ClinicalNote } from '../../../domain/clinical/clinical-note';
+import type { CaseClosure } from '../../../domain/clinical/case-closure';
 
 /** Maps domain results to the Spanish contract values (see openapi.yaml). */
 
@@ -49,5 +50,30 @@ export function presentNote(note: ClinicalNote) {
     contenido: note.content,
     autor_id: note.authorVolunteerId,
     creada_en: note.createdAt.toISOString(),
+  };
+}
+
+export function presentCaseContact(contact: CaseContact | null) {
+  if (!contact) return null;
+  return { nombre: contact.name ?? null, contacto: contact.contact };
+}
+
+export function presentCaseClosure(closure: CaseClosure | null) {
+  if (!closure) return null;
+  return {
+    contacto: closure.contacted,
+    motivo_no_contacto: closure.noContactReason ?? null,
+    sexo: closure.sex ?? null,
+    destinatario: closure.recipient ?? null,
+    sintomas: closure.symptoms,
+    otro_sintoma: closure.otherSymptom ?? null,
+    medio_contacto: closure.contactMedium ?? null,
+    tecnicas: closure.techniques,
+    motivo_cierre: closure.closeReason ?? null,
+    derivacion_tipo: closure.referralType ?? null,
+    derivacion_destino: closure.referralDestination ?? null,
+    horas: closure.hours,
+    comentario: closure.comment ?? null,
+    creada_en: closure.createdAt.toISOString(),
   };
 }
