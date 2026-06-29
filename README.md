@@ -59,13 +59,16 @@ Proyecto documentado con **AI-DLC** (markdown versionable, en español, con gate
 
 ```
 .ai-dlc/            Gates y plantillas (AI-DLC)
-apps/               Código (pendiente; solo README por ahora)
+apps/
+  api/              Backend Hono (Clean Architecture/DDD), serverless en Vercel
+  web/              Frontend Next.js (App Router) + Tailwind, PWA
+supabase/           Migraciones SQL (esquema, RLS, auditoría inmutable)
 docs/
   00-project/       Charter, glosario, clasificación de datos, ADRs
   01-requirements/  PRD del flujo central
   02-design/        Arquitectura, threat model, contratos de API, OpenAPI
-  03-implementation/  (pendiente)
-  04-testing/         (pendiente)
+  03-implementation/  Backlog de implementación
+  04-testing/         Estrategia de pruebas, checklist del threat model, plan piloto
   05-deployment/      (pendiente)
   06-monitoring/      (pendiente)
   architecture/     Diagramas C4 (Mermaid)
@@ -73,15 +76,19 @@ CHANGELOG.md  LICENSE  README.md
 ```
 
 ## Estado
-| Fase | Gate | Estado al generar este repo |
+| Fase | Gate | Estado |
 |---|---|---|
 | 00 · Project | — | ✅ Charter, glosario, clasificación de datos |
 | 01 · Requirements | Gate 0 | ✅ PRD del flujo central con escenarios de riesgo |
-| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0012, contrato OpenAPI (PRD FPV + Vercel/Supabase + NFRs fase 2) |
-| 03 · Implementation | Gate 2 | ⬜ Pendiente (estructura creada) |
-| 04-06 | Gates 3-5 | ⬜ Pendiente (estructura creada) |
+| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0013, contrato OpenAPI |
+| 03 · Implementation | Gate 2 | ✅ API (Hono/DDD), migraciones Supabase (RLS + auditoría inmutable), frontend Next.js/PWA con fail-safe de líneas de crisis. Módulo 4 offline-first pendiente de decisión de alcance |
+| 04 · Testing | Gate 3 | ✅ Tests de unidad/integración (API), Playwright e2e (incl. fail-safe de crisis) y carga con autocannon |
+| 05 · Deployment | Gate 4 | ⬜ Pendiente |
+| 06 · Monitoring | Gate 5 | ⬜ Pendiente |
 
-> Objetivo del primer sprint: dejar firmes `00-project` y `01-requirements`.
+> Próximo foco: cerrar las decisiones abiertas con la FPV (alcance del Módulo 4, verificador FPV real,
+> texto de consentimiento), preparar el despliegue (fase 05) y la observabilidad (fase 06).
+> Backlog detallado en [`docs/03-implementation/backlog.md`](docs/03-implementation/backlog.md).
 
 ## Decisiones de alcance frente al PRD de la Federación
 Decisiones de alcance **explícitas y documentadas** (no omisiones): el cronograma de la Federación
