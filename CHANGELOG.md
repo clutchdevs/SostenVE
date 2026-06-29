@@ -6,6 +6,23 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Añadido
+- **Bloque 0 — Fundaciones:** monorepo npm workspaces (`apps/api`, `apps/web`), TypeScript estricto
+  compartido, ESLint + Prettier, config singleton (`config/app.config.yml` validado con Zod),
+  cliente Supabase lazy, app Hono con `GET /api/v1/health`, shell Next.js (App Router), CI en
+  GitHub Actions y `CONTRIBUTING.md`.
+- **Bloque 1 — Dominio de triage (núcleo de seguridad):** value objects `Severity`, `RiskLevel`,
+  `SymptomTag`; clasificación de riesgo por estrategias (regla de interrupción 1 rojo / 3+ naranja);
+  índice de urgencia ponderado (RF-1.5); reglas clínicas RF-4.3 (bloqueo de diagnóstico TEPT < 30
+  días) y RF-4.2.9 (Crisis Psicótica Aguda fuerza derivación URGENTE); catálogo de tags provisional
+  (pendiente FPV). Dominio puro, sin dependencias de infraestructura.
+- **Bloque 1.5 — Seguridad transversal de API:** hashing argon2id, JWT con `jose` (access/refresh,
+  revocación por token version + denylist), rate limiter con store inyectable, jerarquía de errores
+  de API, y middlewares Hono (CORS estricto, security headers, rate limit, validación Zod en el
+  borde, auth por rol, manejo central de errores).
+
+### Cambiado
+- ADR-0005: fijados argon2id (parámetros explícitos) y `jose` para JWT con estrategia de revocación.
 
 ## [0.3.0] - 2026-06-28
 ### Añadido
