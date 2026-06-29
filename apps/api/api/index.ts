@@ -3,6 +3,8 @@ import { getConfig } from '../src/config';
 import { buildCors } from '../src/interfaces/http/middleware/cors';
 import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security-headers';
 import { errorHandler } from '../src/interfaces/http/middleware/error-handler';
+import { createIntakeRouter } from '../src/interfaces/http/v1/intake.controller';
+import { createCrisisLinesRouter } from '../src/interfaces/http/v1/crisis-lines.controller';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).
@@ -27,5 +29,8 @@ app.onError(errorHandler);
 app.get('/health', (c) => {
   return c.json({ status: 'ok', app: config.app.name });
 });
+
+app.route('/intake', createIntakeRouter());
+app.route('/crisis-lines', createCrisisLinesRouter());
 
 export default app;
