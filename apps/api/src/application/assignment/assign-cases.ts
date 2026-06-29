@@ -14,7 +14,11 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
     return 0;
   }
 
-  const available: Volunteer[] = await deps.volunteers.listByStatus('active');
+  // Only psychologists receive cases — coordinators/admins are active staff but
+  // are not part of the assignment pool.
+  const available: Volunteer[] = (await deps.volunteers.listByStatus('active')).filter(
+    (v) => v.role === 'psychologist',
+  );
   let assigned = 0;
 
   for (const caseRecord of pending) {
