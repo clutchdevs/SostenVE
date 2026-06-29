@@ -22,8 +22,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Psicólogo Voluntario
 - ✅ Portal exclusivo (`/psicologo`).
 - ✅ Ver **solo** sus casos asignados (RLS + verificación de propiedad).
-- ⚠️ Registrar diagnóstico/notas — básico; falta el formulario clínico detallado (RF-4.2.x).
-- ⚠️ Formulario de cierre — solo cambia estado; falta el flujo "¿contactó? Sí/No" del PRD.
+- ✅ Ver la **identidad** del solicitante (nombre/teléfono/edad) de su caso asignado (PRD §2.1).
+- ✅ Registrar diagnóstico/notas + **expediente de cierre estructurado** (RF-4.2 online).
+- ✅ Formulario de cierre con flujo "¿contactó? Sí/No" → cierre rápido o clínico completo.
+- ✅ **Máquina de estados** correcta: aceptar solo desde `asignado` (una vez); cierre terminal; `cerrado` solo lectura.
 - ❌ Portal **offline-first** con SQLCipher (RF-4.1) — decisión: fuera del MVP.
 - ❌ Presencia en tiempo real (heartbeat/Redis, RF-2.5).
 
@@ -82,12 +84,15 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron.
 - ⚠️ Notificación — `LogNotifier`; faltan push PWA y correo reales.
 
-### Módulo 4 — Panel del psicólogo y expediente clínico
+### Módulo 4 — Panel del psicólogo y expediente clínico (versión online ✅)
 - ❌ RF-4.1 Offline-first + SQLCipher — fuera del MVP.
-- ⚠️ RF-4.2 Registro clínico — notas básicas + cierre simple; ✅ RF-4.3 (bloqueo TEPT < 4 semanas) y
-  ✅ RF-4.2.9 (crisis psicótica → derivación urgente + sube riesgo). Faltan: contactabilidad Sí/No,
-  sexo/demografía, sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas.
-- ❌ RF-4.3 (toggle disponibilidad) y RF-4.4 (sync por deltas).
+- ✅ RF-4.2 Registro clínico / cierre estructurado (online): contactabilidad Sí/No, demografía (sexo,
+  destinatario derivado), sintomatología-chips, medio de contacto, técnicas SMAPS, motivo de cierre,
+  **derivación tipo+destino**, horas y comentario. Identidad del solicitante visible para el asignado.
+- ✅ RF-4.3 (bloqueo TEPT < 4 semanas) y ✅ RF-4.2.9 (crisis psicótica → derivación urgente + sube riesgo).
+- ✅ Máquina de estados: aceptar (solo `asignado`, una vez) → aceptado → cierre (terminal) → solo lectura.
+- ✅ RF-4.2.4: la ideación suicida registra alerta de seguimiento (auditoría).
+- ❌ RF-4.3 PWA (toggle disponibilidad) y RF-4.4 (sync por deltas) — pendientes (presencia/offline).
 
 ## 4. Brechas — TODO
 
@@ -107,8 +112,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
 - [ ] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV.
-- [ ] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
-      sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas.
+- [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
+      sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
       voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
 - [ ] **Endpoints admin:** CRUD de líneas de crisis (que el ruteo lea de BD) y consulta de auditoría.

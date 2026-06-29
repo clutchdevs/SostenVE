@@ -7,6 +7,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
+  **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**
+  correcta (aceptar solo desde `asignado` y una vez; cierre terminal; `cerrado` en solo lectura) con
+  guardas 409 en el backend; **cierre clínico estructurado** (RF-4.2): contactabilidad Sí/No → cierre
+  rápido o flujo clínico (sexo, síntomas, técnicas SMAPS, derivación tipo+destino, horas, comentario).
+  Nueva tabla `case_closures` (RLS, comentario cifrado); endpoint `POST /cases/:id/close` (reemplaza el
+  PATCH genérico). La ideación suicida registra alerta de seguimiento.
 - **Seed de pruebas local** (`supabase/seed.sql`, se carga con `db reset`): coordinador y psicólogo
   de prueba (login funcional, hashes argon2id) + casos de ejemplo (uno de riesgo alto en cola y uno
   asignado al psicólogo). Credenciales documentadas en `docs/04-testing/seed-data.md`.
