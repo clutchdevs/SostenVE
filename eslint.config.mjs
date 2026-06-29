@@ -35,4 +35,16 @@ export default tseslint.config(
       'no-console': 'error',
     },
   },
+  {
+    // Node scripts (plain JS): provide Node globals so no-undef is satisfied.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+  },
 );
