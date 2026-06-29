@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { CaseList } from '../../src/features/shared/case-list';
-import { apiFetch } from '../../src/lib/api-client';
+import { AuthRequired } from '../../src/components/auth-required';
+import { apiFetch, ApiError } from '../../src/lib/api-client';
 import type { Capacity, CaseSummary } from '../../src/lib/types';
 
 export default function CoordinatorPanel() {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [capacity, setCapacity] = useState<Capacity | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -22,8 +24,13 @@ export default function CoordinatorPanel() {
           setCases(list);
           setCapacity(cap);
         }
-      } catch {
-        if (active) setError('No se pudieron cargar los datos. ¿Iniciaste sesión?');
+      } catch (err) {
+        if (!active) return;
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          setNeedsAuth(true);
+        } else {
+          setError('No se pudieron cargar los datos. Intenta de nuevo.');
+        }
       }
     }
     void refresh();
@@ -33,6 +40,10 @@ export default function CoordinatorPanel() {
       clearInterval(timer);
     };
   }, []);
+
+  if (needsAuth) {
+    return <AuthRequired />;
+  }
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
