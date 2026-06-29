@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
@@ -28,7 +29,11 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="text-xl font-bold text-brand">Acceso de personal</h1>
+      <Link href="/" className="text-sm text-brand underline">
+        ← Volver al inicio
+      </Link>
+      <h1 className="mt-4 text-xl font-bold text-brand">Acceso de personal</h1>
+      <p className="mt-1 text-sm text-slate-600">Psicólogos y coordinadores de la FPV.</p>
       <form
         className="mt-6 space-y-3"
         onSubmit={(e) => {
