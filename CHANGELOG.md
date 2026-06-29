@@ -21,8 +21,17 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   de API, y middlewares Hono (CORS estricto, security headers, rate limit, validación Zod en el
   borde, auth por rol, manejo central de errores).
 
+- **Bloque 2 — Datos en Supabase + seudonimización y auditoría:** migraciones SQL versionadas
+  (`supabase/migrations`) con el esquema (`cases`, `case_contacts` PII separada, `volunteers`,
+  `assignments`, `clinical_notes`, `crisis_lines`, `audit_log`); políticas RLS por rol; `audit_log`
+  inmutable (RLS + trigger); generador de ID seudonimizado HMAC-SHA256 (ADR-0011); cifrado de
+  columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
+  de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
+
 ### Cambiado
 - ADR-0005: fijados argon2id (parámetros explícitos) y `jose` para JWT con estrategia de revocación.
+- ADR-0002: decisión operativa de usar el plan gratuito de Supabase en el MVP (mitigación de pausa,
+  deuda técnica de respaldos vs NFR 6.2, reevaluación antes de masificar). README marca la deuda.
 
 ## [0.3.0] - 2026-06-28
 ### Añadido

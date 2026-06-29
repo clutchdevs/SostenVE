@@ -46,8 +46,13 @@ proceso persistente. El triage sigue el PRD de la Federación ("Sistema PPV 2026
 - **Responsable y dueña de los datos:** la Federación de Psicólogos de Venezuela (ADR-0003). El equipo de desarrollo es proveedor de la plataforma, no operador de datos.
 - **Datos clínicos = restringidos:** cifrado en tránsito (HTTPS) y en reposo por columna (ADR-0004).
 - **Seudonimización de PII** (tabla separada + ID hash SHA-256 con salt, ADR-0011) y **bitácora de auditoría inmutable** de accesos (ADR-0012), según NFR 6.1 de la Federación.
-- Control de acceso por rol, respaldos (NFR 6.2: cada 6 h), alta de voluntarios validada contra la BD de la FPV.
+- Control de acceso por rol (RLS en Supabase), alta de voluntarios validada contra la BD de la FPV.
 - Ver [`docs/00-project/data-classification.md`](docs/00-project/data-classification.md) y [`docs/02-design/threat-model.md`](docs/02-design/threat-model.md).
+
+> **⚠️ Deuda técnica (MVP):** el MVP usa el **plan gratuito de Supabase**, que **no incluye respaldos
+> automáticos** y, por tanto, **no cumple el NFR 6.2** (respaldo cada 6 h) de la Federación. Debe
+> resolverse antes de operar con datos clínicos reales a escala. Ver
+> [ADR-0002](docs/00-project/adr/0002-base-datos-postgresql.md).
 
 ## Metodología y documentación
 Proyecto documentado con **AI-DLC** (markdown versionable, en español, con gates por fase).
