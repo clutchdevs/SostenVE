@@ -3,12 +3,25 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { NoteForm, type NoteSubmission } from '../../../../src/features/psychologist-portal/note-form';
+import {
+  ClinicalClosureForm,
+  type ClosureSubmission,
+} from '../../../../src/features/psychologist-portal/clinical-closure-form';
+import { CaseIdentityCard } from '../../../../src/features/psychologist-portal/case-identity-card';
+import { ClosureSummary } from '../../../../src/features/psychologist-portal/closure-summary';
 import { apiFetch } from '../../../../src/lib/api-client';
-import type { CaseSummary, ClinicalNoteView } from '../../../../src/lib/types';
+import type {
+  CaseClosureView,
+  CaseContactView,
+  CaseSummary,
+  ClinicalNoteView,
+} from '../../../../src/lib/types';
 
 interface CaseDetail {
   caso: CaseSummary;
+  contacto: CaseContactView | null;
   notas: ClinicalNoteView[];
+  cierre: CaseClosureView | null;
 }
 
 export default function CaseDetailPage() {
@@ -28,9 +41,13 @@ export default function CaseDetailPage() {
   }, [load]);
 
   async function accept() {
-    await apiFetch(`/cases/${id}/accept`, { method: 'POST' });
-    setMessage('Caso aceptado.');
-    load();
+    try {
+      await apiFetch(`/cases/${id}/accept`, { method: 'POST' });
+      setMessage('Caso aceptado.');
+      load();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'No se pudo aceptar el caso.');
+    }
   }
 
   async function addNote(note: NoteSubmission) {
@@ -43,10 +60,14 @@ export default function CaseDetailPage() {
     }
   }
 
-  async function close() {
-    await apiFetch(`/cases/${id}`, { method: 'PATCH', body: { estado: 'cerrado' } });
-    setMessage('Caso cerrado.');
-    load();
+  async function close(closure: ClosureSubmission) {
+    try {
+      await apiFetch(`/cases/${id}/close`, { method: 'POST', body: closure });
+      setMessage('Caso cerrado.');
+      load();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'No se pudo cerrar el caso.');
+    }
   }
 
   if (!detail) {
@@ -57,42 +78,63 @@ export default function CaseDetailPage() {
     );
   }
 
+  const status = detail.caso.estado;
+
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-brand">Caso</h1>
-        <span className="rounded-full bg-slate-200 px-3 py-1 text-sm">{detail.caso.estado}</span>
-      </header>
-
-      <p className="text-slate-600">
-        {detail.caso.nivel_riesgo} · score {detail.caso.score_urgencia}
-      </p>
+      <CaseIdentityCard caso={detail.caso} contacto={detail.contacto} />
 
       {message && <p className="rounded-md bg-emerald-50 p-3 text-emerald-800">{message}</p>}
 
-      <div className="flex gap-2">
-        <button onClick={accept} className="rounded-md bg-brand px-4 py-2 text-white" type="button">
+      {status === 'asignado' && (
+        <button onClick={accept} className="w-full rounded-md bg-brand px-4 py-3 font-semibold text-white" type="button">
           Aceptar caso
         </button>
-        <button onClick={close} className="rounded-md border px-4 py-2" type="button">
-          Cerrar caso
-        </button>
-      </div>
+      )}
 
-      <section>
-        <h2 className="font-semibold">Notas</h2>
-        <ul className="mt-2 space-y-2">
-          {detail.notas.map((note) => (
-            <li key={note.id} className="rounded-md border bg-white p-3 text-sm">
-              {note.diagnostico && <p className="font-medium">{note.diagnostico}</p>}
-              <p>{note.contenido}</p>
-            </li>
-          ))}
-          {detail.notas.length === 0 && <li className="text-slate-500">Sin notas aún.</li>}
-        </ul>
-      </section>
+      {status === 'pendiente' && (
+        <p className="rounded-md bg-amber-50 p-3 text-amber-800">
+          Este caso aún no te ha sido asignado para aceptar.
+        </p>
+      )}
 
-      <NoteForm onSubmit={addNote} />
+      {status === 'aceptado' && (
+        <>
+          <section>
+            <h2 className="font-semibold">Notas</h2>
+            <NotesList notes={detail.notas} />
+          </section>
+          <NoteForm onSubmit={addNote} />
+          <ClinicalClosureForm onSubmit={close} />
+        </>
+      )}
+
+      {status === 'cerrado' && (
+        <>
+          <p className="rounded-md bg-slate-100 p-3 text-slate-700">
+            Caso cerrado. Esta vista es de solo lectura.
+          </p>
+          {detail.cierre && <ClosureSummary cierre={detail.cierre} />}
+          <section>
+            <h2 className="font-semibold">Notas</h2>
+            <NotesList notes={detail.notas} />
+          </section>
+        </>
+      )}
     </main>
+  );
+}
+
+function NotesList({ notes }: { notes: ClinicalNoteView[] }) {
+  if (notes.length === 0) return <p className="mt-2 text-slate-500">Sin notas aún.</p>;
+  return (
+    <ul className="mt-2 space-y-2">
+      {notes.map((note) => (
+        <li key={note.id} className="rounded-md border bg-white p-3 text-sm">
+          {note.diagnostico && <p className="font-medium">{note.diagnostico}</p>}
+          <p>{note.contenido}</p>
+        </li>
+      ))}
+    </ul>
   );
 }

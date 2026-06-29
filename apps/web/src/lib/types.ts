@@ -21,6 +21,28 @@ export interface ClinicalNoteView {
   creada_en: string;
 }
 
+export interface CaseContactView {
+  nombre: string | null;
+  contacto: string;
+}
+
+export interface CaseClosureView {
+  contacto: boolean;
+  motivo_no_contacto: string | null;
+  sexo: string | null;
+  destinatario: string | null;
+  sintomas: string[];
+  otro_sintoma: string | null;
+  medio_contacto: string | null;
+  tecnicas: string[];
+  motivo_cierre: string | null;
+  derivacion_tipo: string | null;
+  derivacion_destino: string | null;
+  horas: number;
+  comentario: string | null;
+  creada_en: string;
+}
+
 export interface Capacity {
   casos_sin_asignar: number;
   riesgo_alto_sin_atender: number;
