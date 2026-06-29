@@ -43,9 +43,11 @@ export interface CaseRepository {
   create(input: NewCase): Promise<CaseRecord>;
   findById(id: string): Promise<CaseRecord | null>;
   listByStatus(status: CaseStatus): Promise<CaseRecord[]>;
+  listAll(): Promise<CaseRecord[]>;
   /** High-risk cases still `assigned` (not accepted) whose SLA has expired. */
   listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]>;
   updateStatus(id: string, status: CaseStatus): Promise<void>;
+  updateRiskLevel(id: string, riskLevel: RiskLevel): Promise<void>;
 }
 
 /** Separated PII (ADR-0011), linked to a case by pseudonymId. */

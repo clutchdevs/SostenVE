@@ -48,6 +48,15 @@ export class SupabaseAssignmentRepository implements AssignmentRepository {
     return (data as AssignmentRow[]).map(toDomain);
   }
 
+  async findByVolunteerId(volunteerId: string): Promise<Assignment[]> {
+    const { data, error } = await this.client
+      .from('assignments')
+      .select()
+      .eq('volunteer_id', volunteerId);
+    if (error) throw new Error(`Failed to list assignments: ${error.message}`);
+    return (data as AssignmentRow[]).map(toDomain);
+  }
+
   async markAccepted(id: string, acceptedAt: Date): Promise<void> {
     const { error } = await this.client
       .from('assignments')

@@ -96,6 +96,23 @@ export class SupabaseCaseRepository implements CaseRepository {
     return (data as CaseRow[]).map(toDomain);
   }
 
+  async listAll(): Promise<CaseRecord[]> {
+    const { data, error } = await this.client
+      .from('cases')
+      .select()
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(`Failed to list cases: ${error.message}`);
+    return (data as CaseRow[]).map(toDomain);
+  }
+
+  async updateRiskLevel(id: string, riskLevel: RiskLevel): Promise<void> {
+    const { error } = await this.client
+      .from('cases')
+      .update({ risk_level: riskToDb[riskLevel] })
+      .eq('id', id);
+    if (error) throw new Error(`Failed to update case risk level: ${error.message}`);
+  }
+
   async listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]> {
     const { data, error } = await this.client
       .from('cases')

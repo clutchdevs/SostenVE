@@ -20,6 +20,7 @@ export interface NewAssignment {
 export interface AssignmentRepository {
   create(input: NewAssignment): Promise<Assignment>;
   findByCaseId(caseId: string): Promise<Assignment[]>;
+  findByVolunteerId(volunteerId: string): Promise<Assignment[]>;
   markAccepted(id: string, acceptedAt: Date): Promise<void>;
   /** Revokes (deletes) all assignments for a case, e.g. on SLA escalation. */
   deleteByCaseId(caseId: string): Promise<void>;

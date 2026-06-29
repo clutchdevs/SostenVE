@@ -37,6 +37,7 @@ export const appConfigSchema = z.object({
   }),
   clinical_records: z.object({
     tept_diagnosis_block_days: z.number().int().nonnegative(),
+    event_date: z.string().min(1),
   }),
   fpv: z.object({
     verifier: z.enum(['dummy', 'http']),

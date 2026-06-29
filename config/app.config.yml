@@ -31,6 +31,7 @@ default: &default
 
   clinical_records:
     tept_diagnosis_block_days: 30 # RF-4.3
+    event_date: "2026-06-24" # earthquake date; reference for the RF-4.3 TEPT block
 
   fpv:
     verifier: "dummy" # dummy | http (http pending the real FPV API contract)
