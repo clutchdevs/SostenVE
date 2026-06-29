@@ -37,6 +37,19 @@ export const loginSchema = z.object({
   contrasena: z.string().min(1),
 });
 
+export const addNoteSchema = z.object({
+  contenido: z.string().min(1),
+  diagnostico: z.string().min(1).optional(),
+  tept_diagnostico: z.boolean().optional(),
+  crisis_psicotica_aguda: z.boolean().optional(),
+});
+
+export const updateCaseSchema = z.object({
+  estado: z.enum(['en_seguimiento', 'cerrado']),
+});
+
+export type AddNoteBody = z.infer<typeof addNoteSchema>;
+export type UpdateCaseBody = z.infer<typeof updateCaseSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
 export type RedBranchBody = z.infer<typeof redBranchSchema>;
 export type GreenBranchBody = z.infer<typeof greenBranchSchema>;

@@ -9,6 +9,7 @@ import { createVolunteerRouter } from '../src/interfaces/http/v1/volunteer.contr
 import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
 import { createCronRouter } from '../src/interfaces/http/v1/cron.controller';
 import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller';
+import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).
@@ -39,6 +40,7 @@ app.route('/crisis-lines', createCrisisLinesRouter());
 app.route('/auth', createAuthRouter());
 app.route('/volunteers', createVolunteerRouter());
 app.route('/cases', createCasesRouter());
+app.route('/coordinator', createCoordinatorRouter());
 app.route('/cron', createCronRouter());
 
 export default app;

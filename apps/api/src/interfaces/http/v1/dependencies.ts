@@ -5,10 +5,12 @@ import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/s
 import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository';
 import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
+import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { LogNotifier } from '../../../infrastructure/notifications/log-notifier';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
 import type { AssignmentDeps } from '../../../application/assignment/ports';
+import type { CaseDeps } from '../../../application/cases/ports';
 import type { IdempotencyStore } from '../../../application/intake/idempotency';
 import type { IntakeDeps } from '../../../application/intake/types';
 import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer';
@@ -91,4 +93,20 @@ export function getAssignmentDeps(): AssignmentDeps {
     };
   }
   return assignmentCached;
+}
+
+let caseCached: CaseDeps | null = null;
+
+export function getCaseDeps(): CaseDeps {
+  if (caseCached === null) {
+    const client = forService();
+    caseCached = {
+      cases: new SupabaseCaseRepository(client),
+      assignments: new SupabaseAssignmentRepository(client),
+      notes: new SupabaseClinicalNoteRepository(client),
+      audit: new SupabaseAuditLogRepository(client),
+      config: getConfig(),
+    };
+  }
+  return caseCached;
 }
