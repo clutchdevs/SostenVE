@@ -27,4 +27,12 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // No console in API source: use the central PII-redacting logger
+    // (apps/api/src/shared/logger.ts). See CONTRIBUTING.md.
+    files: ['apps/api/src/**/*.ts'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
 );

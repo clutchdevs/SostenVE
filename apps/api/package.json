@@ -12,12 +12,12 @@
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@node-rs/argon2": "^2.0.2",
+    "@node-rs/argon2": "2.0.2",
     "@supabase/supabase-js": "^2.45.4",
     "hono": "^4.6.5",
-    "jose": "^5.9.6",
+    "jose": "5.10.0",
     "js-yaml": "^4.1.0",
-    "zod": "^3.23.8"
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
