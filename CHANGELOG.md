@@ -7,6 +7,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Swagger UI / OpenAPI runtime:** `GET /api/v1/docs` (Swagger UI interactivo) y
+  `GET /api/v1/openapi.json` (OpenAPI 3.1 generado en código, reutilizando los esquemas Zod) con todos
+  los endpoints implementados. La CSP estricta se relaja solo en la página `/docs`.
+- **Tooling de desarrollo local:** `docker-compose.yml` (servicios `installer` + `api` + `web`) que
+  levanta la app apuntando al Supabase local; scripts `npm run dev:up` / `dev:down` / `dev:reset` que
+  orquestan Supabase + la app en un comando; y `DEVELOPMENT.md` con la guía de arranque, base de
+  datos, pruebas y troubleshooting.
 - **Bloque 0 — Fundaciones:** monorepo npm workspaces (`apps/api`, `apps/web`), TypeScript estricto
   compartido, ESLint + Prettier, config singleton (`config/app.config.yml` validado con Zod),
   cliente Supabase lazy, app Hono con `GET /api/v1/health`, shell Next.js (App Router), CI en
