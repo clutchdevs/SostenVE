@@ -2,15 +2,26 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
-import { saveSession } from '../../src/lib/session';
+import { getRole, homePathForRole, isSessionActive, saveSession } from '../../src/lib/session';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(true);
+
+  // An active (non-expired) session shouldn't see the login form again; send the
+  // user to their portal. Only an expired or cleared session shows the form.
+  useEffect(() => {
+    if (isSessionActive()) {
+      router.replace(homePathForRole(getRole()));
+    } else {
+      setChecking(false);
+    }
+  }, [router]);
 
   async function submit() {
     setError('');
@@ -21,11 +32,13 @@ export default function LoginPage() {
         body: { email, contrasena: password },
       });
       saveSession(res.token, res.rol);
-      router.push(res.rol === 'coordinator' || res.rol === 'admin' ? '/coordinador' : '/psicologo');
+      router.replace(homePathForRole(res.rol));
     } catch {
       setError('Credenciales inválidas');
     }
   }
+
+  if (checking) return null;
 
   return (
     <main className="mx-auto max-w-sm px-4 py-12">
