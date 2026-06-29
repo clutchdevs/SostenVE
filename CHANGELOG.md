@@ -28,7 +28,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
-- **Bloque 5 — Motor de asignación y SLA (Vercel Cron):** asignación de casos `pendiente` a
+- **Bloque 6 — Frontend (PWA) + endpoints de casos/coordinador:**
+  - Backend: endpoints `GET /api/v1/cases` (psicólogo→propios; coordinador/admin→todos, riesgo alto
+    primero), `GET /cases/:id` (detalle + notas, solo asignado), `POST /cases/:id/notes` (RF-4.3 bloquea
+    TEPT < 4 semanas; RF-4.2.9 crisis psicótica → derivación urgente + sube riesgo + auditoría),
+    `PATCH /cases/:id` (cerrar) y `GET /coordinator/capacity`. Config `clinical_records.event_date`.
+  - Frontend (`apps/web`, Next.js + Tailwind): intake (Likert → ramas roja/verde con tags táctiles),
+    portal del psicólogo (casos, detalle, notas, aceptar/cerrar), panel del coordinador (prioridad de
+    riesgo alto + SLA + capacidad, polling), login. **Fail-safe de líneas de crisis** en el cliente
+    (caché + lista embebida: siempre se muestran aunque la API falle). Servidor de API local
+    (`@hono/node-server`) para desarrollo. asignación de casos `pendiente` a
   voluntarios activos por compatibilidad (prioridad infantil para menores), cola honesta cuando no
   hay voluntario; `POST /api/v1/cases/:id/accept` (detiene el SLA); `GET|POST /api/v1/cron/check-sla`
   protegido por `CRON_SECRET` que asigna pendientes y **escala** casos de riesgo alto vencidos (revoca,
