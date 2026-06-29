@@ -28,8 +28,9 @@ values
   )
 on conflict (id) do nothing;
 
--- Caso de riesgo alto en cola (visible y resaltado en el panel del coordinador).
-insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, sla_expires_at)
+-- Caso de riesgo alto en cola (resaltado en el panel del coordinador). Menor de
+-- edad: al asignarlo por el cron, prioriza al psicólogo con especialidad infantil.
+insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone, age, sla_expires_at)
 values (
   '33333333-3333-3333-3333-333333333333',
   'seed-pseudo-pendiente',
@@ -37,12 +38,16 @@ values (
   'riesgo_alto',
   100,
   'pendiente',
+  'familiar',
+  'Yaracuy',
+  9,
   now() + interval '10 minutes'
 )
 on conflict (id) do nothing;
 
--- Caso asignado al psicólogo de prueba (para ver el portal con datos).
-insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone)
+-- Caso asignado al psicólogo de prueba (para ver el portal con datos). Menor de
+-- edad → la tarjeta muestra "12 años" y el cierre deriva destinatario indirecta_nino.
+insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone, age)
 values (
   '44444444-4444-4444-4444-444444444444',
   'seed-pseudo-asignado',
@@ -51,7 +56,8 @@ values (
   10,
   'asignado',
   'familiar',
-  'Yaracuy'
+  'Yaracuy',
+  12
 )
 on conflict (id) do nothing;
 

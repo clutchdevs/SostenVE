@@ -21,14 +21,16 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 - Ambos quedan en estado **`active`** (pueden iniciar sesión de inmediato).
 
 ## Casos de ejemplo
-| Caso | Estado | Riesgo | Notas |
-|---|---|---|---|
-| `seed-pseudo-pendiente` | `pendiente` | `riesgo_alto` | En cola; se resalta como "riesgo alto sin atender" en el panel del coordinador. SLA a 10 min. |
-| `seed-pseudo-asignado` | `asignado` | `riesgo_moderado` | Asignado al psicólogo de prueba; aparece en su portal con contacto "Ana de Prueba". |
+| Caso | Estado | Riesgo | Edad | Notas |
+|---|---|---|---|---|
+| `seed-pseudo-pendiente` | `pendiente` | `riesgo_alto` | 9 | En cola; se resalta como "riesgo alto sin atender" en el panel del coordinador (SLA 10 min). Menor → al asignarlo por el cron, prioriza al psicólogo con especialidad infantil. |
+| `seed-pseudo-asignado` | `asignado` | `riesgo_moderado` | 12 | Asignado al psicólogo de prueba; contacto "Ana de Prueba". Menor → la tarjeta muestra "12 años" y el cierre deriva destinatario `indirecta_nino`. |
 
 Así, al iniciar sesión:
 - **Coordinador** → ve ambos casos (con el de riesgo alto priorizado) y la tarjeta de capacidad.
-- **Psicólogo** → ve el caso asignado, puede abrirlo, **aceptar**, registrar **notas** y **cerrar**.
+- **Psicólogo** → ve el caso asignado con la **identidad del solicitante** (Ana de Prueba + teléfono);
+  puede **aceptar** (una vez), registrar **notas** y completar el **expediente de cierre** (Módulo 4).
+  Tras cerrar, la vista queda en **solo lectura** y no se puede re-tomar.
 
 ## Probar rápido
 1. `npm run dev:up` (Supabase + API + Web) y `npm run dev:reset` la primera vez.
