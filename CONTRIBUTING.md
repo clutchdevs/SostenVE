@@ -26,10 +26,24 @@ Conventions that every contributor and every pull request must follow. Several o
   `application`/`domain`. Never trust that the frontend already validated.
 - **No string concatenation in SQL**, ever — not even in migrations or ad-hoc reports. All database
   access goes through the official Supabase client/query builder.
-- **Never log PII or clinical data.** Logging clinical/domain objects must go through the central
-  redacting logger (added in Block 2.5). No raw `console.log` of `Case`/`ClinicalNote`.
-- **Secrets** live only as environment variables (Vercel in production, local `.env` in dev).
-  Rotate `JWT_SECRET`, `CRON_SECRET` and Supabase credentials periodically.
+- **Never log PII or clinical data.** Logging goes through the central redacting logger
+  (`apps/api/src/shared/logger.ts`). `console.*` is banned in `apps/api/src` (enforced by ESLint);
+  never log `Case`/`ClinicalNote`/`Volunteer` objects raw.
+- **Dependencies:** the lockfile is committed; security-critical libraries (hashing, JWT, validation)
+  are pinned to exact versions. CI fails on high/critical advisories in production dependencies
+  (`npm audit --omit=dev --audit-level=high`); Dependabot tracks the rest.
+
+## Secrets
+- Secrets live **only** as environment variables: Vercel project settings in production, a local
+  `.env` (gitignored) in development. Never commit a real `.env`. Only `.env.example` (empty values)
+  is versioned.
+- **Rotate periodically:** `JWT_SECRET`, `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` and the database
+  credentials can be rotated freely (invalidate sessions / update Vercel env, then redeploy).
+- **Rotate with care — these affect existing data:**
+  - `PSEUDONYMIZATION_SALT`: rotating it changes future pseudonym ids, breaking the link to PII
+    stored under the old salt. Requires a migration plan if data exists.
+  - `ENCRYPTION_KEY`: rotating it makes previously encrypted clinical columns undecryptable. Requires
+    re-encryption of existing rows. Never rotate in place on a database with real data without a plan.
 
 ## API versioning
 - Every HTTP route is prefixed with `/api/v1/...` from the very first endpoint. No unversioned
