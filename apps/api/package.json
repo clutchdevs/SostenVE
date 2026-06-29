@@ -13,12 +13,14 @@
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@hono/swagger-ui": "^0.6.1",
     "@node-rs/argon2": "2.0.2",
     "@supabase/supabase-js": "^2.45.4",
     "hono": "^4.6.5",
     "jose": "5.10.0",
     "js-yaml": "^4.1.0",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@hono/node-server": "^1.13.7",
