@@ -7,6 +7,9 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Seed de pruebas local** (`supabase/seed.sql`, se carga con `db reset`): coordinador y psicólogo
+  de prueba (login funcional, hashes argon2id) + casos de ejemplo (uno de riesgo alto en cola y uno
+  asignado al psicólogo). Credenciales documentadas en `docs/04-testing/seed-data.md`.
 - **Swagger UI / OpenAPI runtime:** `GET /api/v1/docs` (Swagger UI interactivo) y
   `GET /api/v1/openapi.json` (OpenAPI 3.1 generado en código, reutilizando los esquemas Zod) con todos
   los endpoints implementados. La CSP estricta se relaja solo en la página `/docs`.
