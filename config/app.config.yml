@@ -32,6 +32,12 @@ default: &default
   clinical_records:
     tept_diagnosis_block_days: 30 # RF-4.3
 
+  fpv:
+    verifier: "dummy" # dummy | http (http pending the real FPV API contract)
+    circuit_breaker:
+      failure_threshold: 3
+      cooldown_seconds: 30
+
   rbac:
     roles: ["requester", "psychologist", "coordinator", "admin"]
 

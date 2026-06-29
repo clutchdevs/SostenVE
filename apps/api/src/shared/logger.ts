@@ -18,6 +18,7 @@ const SENSITIVE_KEYS = new Set(
     'full_name',
     'contact',
     'phone',
+    'email',
     'cedula',
     'professionalId',
     'professional_id',

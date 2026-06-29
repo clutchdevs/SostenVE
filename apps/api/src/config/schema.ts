@@ -38,6 +38,13 @@ export const appConfigSchema = z.object({
   clinical_records: z.object({
     tept_diagnosis_block_days: z.number().int().nonnegative(),
   }),
+  fpv: z.object({
+    verifier: z.enum(['dummy', 'http']),
+    circuit_breaker: z.object({
+      failure_threshold: z.number().int().positive(),
+      cooldown_seconds: z.number().int().positive(),
+    }),
+  }),
   rbac: z.object({
     roles: z.array(z.string().min(1)).min(1),
   }),
