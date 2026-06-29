@@ -1,18 +1,27 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Critical intake path: the Likert screen routes to a branch. Resilient to the
- * API being down (the page falls back to client-side routing for severe answers).
+ * Critical intake path through the new landing: home → "Necesito apoyo" → Likert
+ * → branch. Resilient to the API being down (client-side fallback routing).
  */
-test('the Likert screen routes the most severe answer to the red branch', async ({ page }) => {
+test('home routes to intake and the most severe answer reaches the red branch', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('link', { name: /necesito apoyo/i }).click();
+  await expect(page).toHaveURL(/\/intake$/);
+
   await page.getByRole('button', { name: /en crisis/i }).click();
   await expect(page).toHaveURL(/\/intake\/roja/);
   await expect(page.getByText('Si estás en peligro, llama ahora')).toBeVisible();
 });
 
-test('the Likert screen routes a mild answer to the green branch', async ({ page }) => {
-  await page.goto('/');
+test('a mild answer routes to the green branch', async ({ page }) => {
+  await page.goto('/intake');
   await page.getByRole('button', { name: /acompañamiento preventivo/i }).click();
   await expect(page).toHaveURL(/\/intake\/verde/);
+});
+
+test('the landing offers staff access', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /psicólogo o coordinador/i }).click();
+  await expect(page).toHaveURL(/\/login/);
 });
