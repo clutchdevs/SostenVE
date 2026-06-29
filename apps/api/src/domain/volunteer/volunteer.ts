@@ -10,6 +10,7 @@ export interface Volunteer {
   id: string;
   fullName: string;
   professionalId: string;
+  email?: string;
   specialty?: string;
   availability?: string;
   role: VolunteerRole;
@@ -21,6 +22,7 @@ export interface Volunteer {
 export interface NewVolunteer {
   fullName: string;
   professionalId: string;
+  email?: string;
   specialty?: string;
   availability?: string;
   role?: VolunteerRole;
@@ -32,6 +34,8 @@ export interface VolunteerRepository {
   create(input: NewVolunteer): Promise<Volunteer>;
   findById(id: string): Promise<Volunteer | null>;
   findByProfessionalId(professionalId: string): Promise<Volunteer | null>;
+  findByEmail(email: string): Promise<Volunteer | null>;
+  listByStatus(status: VolunteerStatus): Promise<Volunteer[]>;
   /** Returns the stored password hash for authentication, or null. */
   getPasswordHash(id: string): Promise<string | null>;
   setStatus(id: string, status: VolunteerStatus): Promise<void>;

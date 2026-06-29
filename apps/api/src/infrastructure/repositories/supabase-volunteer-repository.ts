@@ -11,6 +11,7 @@ interface VolunteerRow {
   id: string;
   full_name: string;
   professional_id: string;
+  email: string | null;
   specialty: string | null;
   availability: string | null;
   role: string;
@@ -24,6 +25,7 @@ function toDomain(row: VolunteerRow): Volunteer {
     id: row.id,
     fullName: row.full_name,
     professionalId: row.professional_id,
+    email: row.email ?? undefined,
     specialty: row.specialty ?? undefined,
     availability: row.availability ?? undefined,
     role: row.role as VolunteerRole,
@@ -42,6 +44,7 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
       .insert({
         full_name: input.fullName,
         professional_id: input.professionalId,
+        email: input.email ?? null,
         specialty: input.specialty ?? null,
         availability: input.availability ?? null,
         role: input.role ?? 'psychologist',
@@ -72,6 +75,22 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
       .maybeSingle();
     if (error) throw new Error(`Failed to load volunteer: ${error.message}`);
     return data ? toDomain(data as VolunteerRow) : null;
+  }
+
+  async findByEmail(email: string): Promise<Volunteer | null> {
+    const { data, error } = await this.client
+      .from('volunteers')
+      .select()
+      .eq('email', email)
+      .maybeSingle();
+    if (error) throw new Error(`Failed to load volunteer: ${error.message}`);
+    return data ? toDomain(data as VolunteerRow) : null;
+  }
+
+  async listByStatus(status: VolunteerStatus): Promise<Volunteer[]> {
+    const { data, error } = await this.client.from('volunteers').select().eq('status', status);
+    if (error) throw new Error(`Failed to list volunteers: ${error.message}`);
+    return (data as VolunteerRow[]).map(toDomain);
   }
 
   async getPasswordHash(id: string): Promise<string | null> {
