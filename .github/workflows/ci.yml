@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Fail on high/critical vulnerabilities in PRODUCTION dependencies only.
+      # Dev-only advisories (e.g. node-tar via the Supabase CLI) are tracked by
+      # Dependabot and must not break the build.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint
         run: npm run lint
 
