@@ -97,6 +97,10 @@ ponderado resultante define la prioridad.
 - **Validación automática contra la BD de la FPV**: el sistema verifica que el voluntario esté en el
   padrón de la Federación antes de habilitarlo. No hay autoregistro abierto que active una cuenta sin
   esta validación.
+- **Implementación (Bloque 4):** la verificación está detrás de un **Adapter** (`FpvVerifier`) con un
+  **dummy que siempre aprueba** mientras la FPV no entregue el contrato de su API; se cambia por
+  configuración cuando exista (ver ADR-0013). Si el servicio externo cae, el registro no se bloquea:
+  pasa a `pending_approval` (Caso de Excepción, RF-2.2) para que un administrador lo resuelva.
 
 ## 3. Módulo 3 — Asignación, SLA y escalamiento
 1. Un caso clasificado entra al motor de asignación (riesgo alto primero; resto por orden de llegada
