@@ -28,6 +28,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
+- **Bloque 7 — Pruebas integrales, carga y piloto:** scaffold de **Playwright** (`apps/web/e2e/`) con
+  specs del camino crítico —incluido `crisis-failsafe` que verifica que las líneas de crisis se
+  muestran aunque la API esté caída—; prueba de **carga** con **autocannon** (`scripts/load-test.mjs`,
+  `npm run load-test`) sobre el intake; y `docs/04-testing/README.md` con la estrategia de pruebas,
+  el **checklist del threat model** (verificación manual) y el plan de piloto. Los e2e/carga se corren
+  en CI/preview (no descargan navegadores en este repo).
 - **Bloque 6 — Frontend (PWA) + endpoints de casos/coordinador:**
   - Backend: endpoints `GET /api/v1/cases` (psicólogo→propios; coordinador/admin→todos, riesgo alto
     primero), `GET /cases/:id` (detalle + notas, solo asignado), `POST /cases/:id/notes` (RF-4.3 bloquea
