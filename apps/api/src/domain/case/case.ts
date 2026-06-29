@@ -43,6 +43,8 @@ export interface CaseRepository {
   create(input: NewCase): Promise<CaseRecord>;
   findById(id: string): Promise<CaseRecord | null>;
   listByStatus(status: CaseStatus): Promise<CaseRecord[]>;
+  /** High-risk cases still `assigned` (not accepted) whose SLA has expired. */
+  listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]>;
   updateStatus(id: string, status: CaseStatus): Promise<void>;
 }
 

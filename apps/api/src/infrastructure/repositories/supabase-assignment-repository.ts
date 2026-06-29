@@ -55,4 +55,9 @@ export class SupabaseAssignmentRepository implements AssignmentRepository {
       .eq('id', id);
     if (error) throw new Error(`Failed to mark assignment accepted: ${error.message}`);
   }
+
+  async deleteByCaseId(caseId: string): Promise<void> {
+    const { error } = await this.client.from('assignments').delete().eq('case_id', caseId);
+    if (error) throw new Error(`Failed to revoke assignments: ${error.message}`);
+  }
 }

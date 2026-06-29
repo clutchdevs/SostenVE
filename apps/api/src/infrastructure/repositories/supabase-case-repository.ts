@@ -96,6 +96,17 @@ export class SupabaseCaseRepository implements CaseRepository {
     return (data as CaseRow[]).map(toDomain);
   }
 
+  async listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]> {
+    const { data, error } = await this.client
+      .from('cases')
+      .select()
+      .eq('status', statusToDb.ASSIGNED)
+      .eq('risk_level', riskToDb.HIGH)
+      .lt('sla_expires_at', now.toISOString());
+    if (error) throw new Error(`Failed to list overdue cases: ${error.message}`);
+    return (data as CaseRow[]).map(toDomain);
+  }
+
   async updateStatus(id: string, status: CaseStatus): Promise<void> {
     const { error } = await this.client
       .from('cases')
