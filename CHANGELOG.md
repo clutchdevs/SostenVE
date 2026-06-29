@@ -28,6 +28,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
+- **Bloque 5 — Motor de asignación y SLA (Vercel Cron):** asignación de casos `pendiente` a
+  voluntarios activos por compatibilidad (prioridad infantil para menores), cola honesta cuando no
+  hay voluntario; `POST /api/v1/cases/:id/accept` (detiene el SLA); `GET|POST /api/v1/cron/check-sla`
+  protegido por `CRON_SECRET` que asigna pendientes y **escala** casos de riesgo alto vencidos (revoca,
+  vuelve a la cola, notifica a coordinadores); `vercel.json` con el cron cada 2 min. Las consultas del
+  cron sirven de ping anti-pausa de Supabase (ADR-0002).
 - **Bloque 4 — Registro y validación de psicólogos:** `POST /api/v1/volunteers/register` con
   validación contra la FPV vía **Adapter** (`DummyFpvVerifier` always-OK + esqueleto
   `HttpFpvVerifier`, seleccionable por config), **Circuit Breaker** (caída del servicio → registro a

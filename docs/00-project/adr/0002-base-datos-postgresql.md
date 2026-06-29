@@ -30,8 +30,8 @@ existente de la FPV.
 
 ## Decisión operativa para el MVP (2026-06-28)
 Para el MVP/piloto se usa el **plan gratuito de Supabase**, asumiendo conscientemente sus límites:
-- **Pausa tras 7 días de inactividad** → mitigación: un ping periódico a la BD (se cableará junto al
-  Vercel Cron del Bloque 5) para evitar que el proyecto quede dormido.
+- **Pausa tras 7 días de inactividad** → mitigación **implementada (Bloque 5):** el Vercel Cron
+  `check-sla` (cada 2 min) consulta la BD en cada corrida, lo que mantiene el proyecto activo.
 - **Sin respaldos automáticos** → **deuda técnica explícita**: el MVP **no cumple el NFR 6.2** de la
   Federación mientras se use el plan gratuito. Debe resolverse antes de manejar datos clínicos reales
   a escala (no solo datos de prueba/piloto).
