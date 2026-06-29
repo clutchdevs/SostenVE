@@ -114,6 +114,80 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     expect(res.status).toBe(403);
   });
 
+  it('returns the requester identity (name/phone) to the assigned psychologist', async () => {
+    const vId = await seedVolunteer();
+    const pseudonym = `pseudo-${randomUUID()}`;
+    const created = await pg.query<{ id: string }>(
+      `insert into cases (pseudonym_id, branch, risk_level, urgency_score, status)
+       values ($1, 'verde', 'riesgo_moderado', 10, 'asignado') returning id`,
+      [pseudonym],
+    );
+    const caseId = created.rows[0]!.id;
+    caseIds.push(caseId);
+    await pg.query(
+      `insert into case_contacts (pseudonym_id, name, contact) values ($1, 'Ana Test', '+584120000000')`,
+      [pseudonym],
+    );
+    await assign(caseId, vId);
+
+    const res = await authed(`/api/v1/cases/${caseId}`, await tokenFor(vId));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { contacto: { nombre: string; contacto: string } | null };
+    expect(body.contacto?.nombre).toBe('Ana Test');
+    expect(body.contacto?.contacto).toBe('+584120000000');
+  });
+
+  it('accepts an assigned case once and rejects re-accept (409)', async () => {
+    const vId = await seedVolunteer();
+    const caseId = await seedCase();
+    await assign(caseId, vId);
+    const token = await tokenFor(vId);
+    expect((await authed(`/api/v1/cases/${caseId}/accept`, token, { method: 'POST' })).status).toBe(200);
+    expect((await authed(`/api/v1/cases/${caseId}/accept`, token, { method: 'POST' })).status).toBe(409);
+  });
+
+  it('records a structured closure and prevents re-closing (409)', async () => {
+    const vId = await seedVolunteer();
+    const caseId = await seedCase();
+    await assign(caseId, vId);
+    const token = await tokenFor(vId);
+    await authed(`/api/v1/cases/${caseId}/accept`, token, { method: 'POST' });
+
+    const close1 = await authed(`/api/v1/cases/${caseId}/close`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        contacto: true,
+        sintomas: ['ansiedad_estres_agudo'],
+        tecnicas: ['pap'],
+        motivo_cierre: 'finalizado',
+        derivacion_tipo: 'ninguna',
+        horas: 0.5,
+      }),
+    });
+    expect(close1.status).toBe(201);
+    const row = await pg.query('select status from cases where id = $1', [caseId]);
+    expect(row.rows[0]?.status).toBe('cerrado');
+    const closure = await pg.query('select id from case_closures where case_id = $1', [caseId]);
+    expect(closure.rowCount).toBe(1);
+
+    const close2 = await authed(`/api/v1/cases/${caseId}/close`, token, {
+      method: 'POST',
+      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', horas: 0.05 }),
+    });
+    expect(close2.status).toBe(409);
+  });
+
+  it('cannot close a case that was not accepted (409)', async () => {
+    const vId = await seedVolunteer();
+    const caseId = await seedCase(); // 'asignado', not accepted
+    await assign(caseId, vId);
+    const res = await authed(`/api/v1/cases/${caseId}/close`, await tokenFor(vId), {
+      method: 'POST',
+      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', horas: 0.05 }),
+    });
+    expect(res.status).toBe(409);
+  });
+
   it('records a clinical note and blocks an early TEPT diagnosis (RF-4.3)', async () => {
     const vId = await seedVolunteer();
     const caseId = await seedCase();
