@@ -28,6 +28,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
+- **Bloque 2.5 — Secretos, dependencias y logging seguro:** logger central con **redacción
+  automática de PII/datos clínicos** (Facade); regla ESLint que prohíbe `console` en `apps/api/src`;
+  gate de CI `npm audit --omit=dev --audit-level=high` (falla ante high/critical en producción);
+  Dependabot (npm + GitHub Actions); versiones **ancladas** de libs críticas (argon2, jose, zod);
+  procedimiento de rotación de secretos en `CONTRIBUTING.md`.
+
 ### Cambiado
 - ADR-0005: fijados argon2id (parámetros explícitos) y `jose` para JWT con estrategia de revocación.
 - ADR-0002: decisión operativa de usar el plan gratuito de Supabase en el MVP (mitigación de pausa,
