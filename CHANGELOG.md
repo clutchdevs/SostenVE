@@ -28,6 +28,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   columnas clínicas AES-256-GCM (ADR-0004); factory de clientes Supabase (service/usuario) y adapters
   de repositorio (puertos en el dominio). Tooling: Supabase CLI local sobre Docker.
 
+- **Bloque 3 — Endpoints del Intake (Rama Roja / Rama Verde):** `POST /api/v1/intake/triage`
+  (bifurcación Likert), `GET /api/v1/crisis-lines/active` (ruteo por hora desde config, sin BD),
+  `POST /api/v1/intake/red-branch` (caso de riesgo alto + líneas de crisis, **idempotente** por
+  `Idempotency-Key`) y `POST /api/v1/intake/green-branch` (clasificación por tags con escalamiento a
+  riesgo alto). Casos de uso (Use Case/Command) sobre los repos del Bloque 2, validación Zod y rate
+  limiting del Bloque 1.5. Migración: columna `age` y tabla `idempotency_keys`. Las respuestas de
+  riesgo alto siempre incluyen líneas de crisis (principio no negociable).
 - **Bloque 2.5 — Secretos, dependencias y logging seguro:** logger central con **redacción
   automática de PII/datos clínicos** (Facade); regla ESLint que prohíbe `console` en `apps/api/src`;
   gate de CI `npm audit --omit=dev --audit-level=high` (falla ante high/critical en producción);
