@@ -31,6 +31,7 @@ interface CaseRow {
   requester_type: string | null;
   zone: string | null;
   preferred_modality: string | null;
+  age: number | null;
   created_at: string;
   sla_expires_at: string | null;
 }
@@ -48,6 +49,7 @@ function toDomain(row: CaseRow): CaseRecord {
     preferredModality: row.preferred_modality
       ? modalityFromDb[row.preferred_modality]
       : undefined,
+    age: row.age ?? undefined,
     createdAt: new Date(row.created_at),
     slaExpiresAt: row.sla_expires_at ? new Date(row.sla_expires_at) : undefined,
   };
@@ -70,6 +72,7 @@ export class SupabaseCaseRepository implements CaseRepository {
         preferred_modality: input.preferredModality
           ? modalityToDb[input.preferredModality]
           : null,
+        age: input.age ?? null,
         sla_expires_at: input.slaExpiresAt?.toISOString() ?? null,
       })
       .select()

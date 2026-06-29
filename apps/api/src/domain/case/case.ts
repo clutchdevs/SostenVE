@@ -21,6 +21,7 @@ export interface CaseRecord {
   requesterType?: RequesterType;
   zone?: string;
   preferredModality?: Modality;
+  age?: number;
   createdAt: Date;
   slaExpiresAt?: Date;
 }
@@ -34,6 +35,7 @@ export interface NewCase {
   requesterType?: RequesterType;
   zone?: string;
   preferredModality?: Modality;
+  age?: number;
   slaExpiresAt?: Date;
 }
 
