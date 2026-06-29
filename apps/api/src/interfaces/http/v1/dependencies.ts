@@ -3,9 +3,12 @@ import { forService } from '../../../infrastructure/supabase/client-factory';
 import { SupabaseCaseContactRepository, SupabaseCaseRepository } from '../../../infrastructure/repositories/supabase-case-repository';
 import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/supabase-idempotency-store';
 import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository';
+import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { LogNotifier } from '../../../infrastructure/notifications/log-notifier';
+import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
+import type { AssignmentDeps } from '../../../application/assignment/ports';
 import type { IdempotencyStore } from '../../../application/intake/idempotency';
 import type { IntakeDeps } from '../../../application/intake/types';
 import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer';
@@ -73,4 +76,19 @@ export function getVolunteerContainer(): VolunteerContainer {
     };
   }
   return volunteerCached;
+}
+
+let assignmentCached: AssignmentDeps | null = null;
+
+export function getAssignmentDeps(): AssignmentDeps {
+  if (assignmentCached === null) {
+    const client = forService();
+    assignmentCached = {
+      cases: new SupabaseCaseRepository(client),
+      assignments: new SupabaseAssignmentRepository(client),
+      volunteers: new SupabaseVolunteerRepository(client),
+      notifier: new LogAssignmentNotifier(),
+    };
+  }
+  return assignmentCached;
 }
