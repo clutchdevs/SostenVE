@@ -23,6 +23,22 @@ export const greenBranchSchema = z.object({
   tags: z.array(z.string().min(1)).default([]),
 });
 
+export const registerVolunteerSchema = z.object({
+  nombre: z.string().min(1),
+  cedula_profesional: z.string().min(1),
+  email: z.string().email(),
+  contrasena: z.string().min(8),
+  especialidad: z.string().min(1).optional(),
+  disponibilidad: z.string().min(1).optional(),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  contrasena: z.string().min(1),
+});
+
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
 export type RedBranchBody = z.infer<typeof redBranchSchema>;
 export type GreenBranchBody = z.infer<typeof greenBranchSchema>;
+export type RegisterVolunteerBody = z.infer<typeof registerVolunteerSchema>;
+export type LoginBody = z.infer<typeof loginSchema>;

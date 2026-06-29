@@ -5,6 +5,8 @@ import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security
 import { errorHandler } from '../src/interfaces/http/middleware/error-handler';
 import { createIntakeRouter } from '../src/interfaces/http/v1/intake.controller';
 import { createCrisisLinesRouter } from '../src/interfaces/http/v1/crisis-lines.controller';
+import { createVolunteerRouter } from '../src/interfaces/http/v1/volunteer.controller';
+import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).
@@ -32,5 +34,7 @@ app.get('/health', (c) => {
 
 app.route('/intake', createIntakeRouter());
 app.route('/crisis-lines', createCrisisLinesRouter());
+app.route('/auth', createAuthRouter());
+app.route('/volunteers', createVolunteerRouter());
 
 export default app;
