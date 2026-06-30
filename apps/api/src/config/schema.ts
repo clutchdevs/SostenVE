@@ -39,6 +39,13 @@ export const appConfigSchema = z.object({
     tept_diagnosis_block_days: z.number().int().nonnegative(),
     event_date: z.string().min(1),
   }),
+  consent: z.object({
+    psychologist: z.object({
+      version: z.string().min(1),
+      updated_at: z.string().min(1),
+      text: z.string().min(1),
+    }),
+  }),
   fpv: z.object({
     verifier: z.enum(['dummy', 'http']),
     circuit_breaker: z.object({

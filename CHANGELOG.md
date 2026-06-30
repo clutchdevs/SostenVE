@@ -19,7 +19,23 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   cambio; y consulta del log de auditoría (`GET /admin/audit`, filtros por acción/registro/usuario). El
   **ruteo de líneas de crisis** (`GET /crisis-lines/active`) ahora **lee de la BD** (fuente gestionada por
   el admin) con **fallback a `config`** si la BD no responde o está vacía (fail-safe). Seed con líneas de
-  crisis y un usuario administrador (`admin@sostenve.test`).
+  crisis y un usuario administrador (`admin@sostenve.test`). Panel web `/admin` para gestionar líneas y
+  ver la auditoría.
+- **Módulo 2 — Formulario de postulación completo (RF-2.1.2):** el registro de psicólogos recoge ahora
+  todos los datos del PRD — tipo + número de documento (cédula) separados del nº de inscripción FPV
+  (`professional_id`), universidad, año de egreso, colegio, formación PAP (sí/no con detalle
+  obligatorio), modalidad de atención (multiselect presencial/distancia) y disponibilidad horaria
+  estructurada (día × bloque mañana/tarde/noche). Persistido en `volunteers` (migración
+  `20260628000008`, columnas nullable para compatibilidad) y validado en la API con Zod. La página
+  web `/registro` se amplía con los nuevos campos y bloquea el envío hasta completar modalidad y
+  disponibilidad.
+- **Módulo 2 — Consentimiento informado obligatorio (RF-2.1.1):** el registro de psicólogos exige
+  aceptar el consentimiento bioético antes del alta. Texto **versionado** y editable en
+  `config/app.config.yml` (provisional `v0.1.0-draft` hasta el oficial de la FPV), expuesto por
+  `GET /consent/active`. El backend bloquea el alta sin aceptación (`consentimiento` obligatorio) y
+  rechaza versiones obsoletas; la aceptación queda **auditable** (versión + timestamp en `volunteers`
+  y entrada `consent_accepted:{versión}` en el `audit_log` inmutable). Nueva página web `/registro`
+  con la casilla que bloquea el envío hasta marcarla.
 - **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
   **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**
   correcta (aceptar solo desde `asignado` y una vez; cierre terminal; `cerrado` en solo lectura) con

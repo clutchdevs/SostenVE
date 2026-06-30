@@ -33,6 +33,30 @@ default: &default
     tept_diagnosis_block_days: 30 # RF-4.3
     event_date: "2026-06-24" # earthquake date; reference for the RF-4.3 TEPT block
 
+  consent:
+    # Informed consent shown at psychologist registration (RF-2.1.1, Módulo 2).
+    # PROVISIONAL text: the official bioethical wording comes from the FPV
+    # (sección 8 del PRD). Bump `version` whenever `text` changes so the audit
+    # trail records exactly which wording each volunteer accepted.
+    psychologist:
+      version: "v0.1.0-draft"
+      updated_at: "2026-06-29"
+      text: |
+        BORRADOR — Texto provisional pendiente del consentimiento bioético oficial
+        de la Federación de Psicólogos de Venezuela (sección 8 del PRD).
+
+        Como profesional voluntario declaro que:
+        1. Brindaré atención psicológica conforme al Código de Ética del psicólogo
+           venezolano y al principio de no maleficencia.
+        2. Mantendré la confidencialidad de la información sensible de cada
+           solicitante, salvo las excepciones legales de protección a la vida.
+        3. Actuaré dentro de mi área de competencia y derivaré los casos que
+           excedan mi formación (p. ej. crisis psicótica aguda).
+        4. Trataré los datos personales con el deber de cuidado que exige la
+           plataforma y no los usaré para fines ajenos a la atención.
+
+        Al marcar la casilla acepto este consentimiento informado de forma libre.
+
   fpv:
     verifier: "dummy" # dummy | http (http pending the real FPV API contract)
     circuit_breaker:

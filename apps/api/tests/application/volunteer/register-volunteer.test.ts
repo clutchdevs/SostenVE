@@ -52,11 +52,30 @@ const notifier: Notifier = {
 };
 const audit: AuditLogRepository = { async append() {} };
 
+function recordingAudit(): AuditLogRepository & { entries: { actionType: string }[] } {
+  const entries: { actionType: string }[] = [];
+  return { entries, async append(entry) {
+    entries.push({ actionType: entry.actionType });
+  } };
+}
+
 const input = {
   fullName: 'Ana',
-  professionalId: 'V-123',
+  professionalId: 'FPV-123',
   email: 'ana@example.com',
   password: 'a-strong-password',
+  application: {
+    documentType: 'V' as const,
+    documentNumber: '12345678',
+    university: 'UCV',
+    graduationYear: 2015,
+    colegio: 'Colegio de Psicólogos de Miranda',
+    modalities: ['distancia' as const],
+    availabilitySchedule: [{ dia: 'lunes', bloque: 'manana' }],
+    papTrained: true,
+    papDetail: 'Curso PAP 2024',
+  },
+  consentVersion: 'v0.1.0-draft',
 };
 
 describe('registerVolunteer', () => {
@@ -111,5 +130,48 @@ describe('registerVolunteer', () => {
     });
     expect(repo.lastCreated?.passwordHash).toBeDefined();
     expect(repo.lastCreated?.passwordHash).not.toBe(input.password);
+  });
+
+  it('persists the full applicant profile (RF-2.1.2)', async () => {
+    const repo = fakeVolunteers();
+    await registerVolunteer(input, {
+      volunteers: repo,
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit,
+    });
+    expect(repo.lastCreated?.application?.documentNumber).toBe('12345678');
+    expect(repo.lastCreated?.application?.modalities).toEqual(['distancia']);
+    expect(repo.lastCreated?.application?.availabilitySchedule).toHaveLength(1);
+    expect(repo.lastCreated?.application?.papTrained).toBe(true);
+  });
+
+  it('persists the accepted consent version and timestamp (RF-2.1.1)', async () => {
+    const repo = fakeVolunteers();
+    await registerVolunteer(input, {
+      volunteers: repo,
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit,
+    });
+    expect(repo.lastCreated?.consentVersion).toBe('v0.1.0-draft');
+    expect(repo.lastCreated?.consentAcceptedAt).toBeInstanceOf(Date);
+  });
+
+  it('appends an auditable consent_accepted entry with the version', async () => {
+    const auditSpy = recordingAudit();
+    await registerVolunteer(input, {
+      volunteers: fakeVolunteers(),
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit: auditSpy,
+    });
+    expect(auditSpy.entries.map((e) => e.actionType)).toContain('consent_accepted:v0.1.0-draft');
   });
 });

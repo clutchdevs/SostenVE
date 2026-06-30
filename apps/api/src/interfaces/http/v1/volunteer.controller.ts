@@ -3,6 +3,7 @@ import { getConfig } from '../../../config';
 import { registerVolunteer } from '../../../application/volunteer/register-volunteer';
 import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer';
 import type { Volunteer, VolunteerStatus } from '../../../domain/volunteer/volunteer';
+import { ApiError } from '../../../shared/errors/api-error';
 import { requireAuth, getAuthUser } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
@@ -39,15 +40,38 @@ export function createVolunteerRouter(): Hono {
     validateBody(registerVolunteerSchema),
     async (c) => {
       const body = getValidated<RegisterVolunteerBody>(c, 'body');
+
+      // Consent integrity (RF-2.1.1): never record acceptance of a version the
+      // user did not see. Reject a stale form so the client reloads the text.
+      const currentConsentVersion = getConfig().consent.psychologist.version;
+      if (body.consentimiento_version !== currentConsentVersion) {
+        throw new ApiError(
+          409,
+          'CONSENT_VERSION_MISMATCH',
+          'El consentimiento informado fue actualizado. Recarga el formulario.',
+        );
+      }
+
       const { registerDeps } = getVolunteerContainer();
       const result = await registerVolunteer(
         {
           fullName: body.nombre,
-          professionalId: body.cedula_profesional,
+          professionalId: body.numero_fpv,
           email: body.email,
           password: body.contrasena,
           specialty: body.especialidad,
-          availability: body.disponibilidad,
+          application: {
+            documentType: body.tipo_documento,
+            documentNumber: body.numero_documento,
+            university: body.universidad,
+            graduationYear: body.anio_egreso,
+            colegio: body.colegio,
+            modalities: body.modalidad,
+            availabilitySchedule: body.disponibilidad_horaria,
+            papTrained: body.pap,
+            papDetail: body.pap_detalle,
+          },
+          consentVersion: currentConsentVersion,
         },
         registerDeps,
       );

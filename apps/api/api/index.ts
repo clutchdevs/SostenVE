@@ -5,6 +5,7 @@ import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security
 import { errorHandler } from '../src/interfaces/http/middleware/error-handler';
 import { createIntakeRouter } from '../src/interfaces/http/v1/intake.controller';
 import { createCrisisLinesRouter } from '../src/interfaces/http/v1/crisis-lines.controller';
+import { createConsentRouter } from '../src/interfaces/http/v1/consent.controller';
 import { createVolunteerRouter } from '../src/interfaces/http/v1/volunteer.controller';
 import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
 import { createCronRouter } from '../src/interfaces/http/v1/cron.controller';
@@ -44,6 +45,7 @@ app.get('/health', (c) => {
 
 app.route('/intake', createIntakeRouter());
 app.route('/crisis-lines', createCrisisLinesRouter());
+app.route('/consent', createConsentRouter());
 app.route('/auth', createAuthRouter());
 app.route('/volunteers', createVolunteerRouter());
 app.route('/cases', createCasesRouter());
