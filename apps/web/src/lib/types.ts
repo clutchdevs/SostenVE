@@ -67,9 +67,33 @@ export interface CrisisLineAdmin {
 export interface AuditEntryView {
   id: string;
   usuario_id: string | null;
+  usuario_nombre: string | null;
+  usuario_cedula: string | null;
   rol: string | null;
   registro_afectado: string | null;
   accion: string;
+  creado_en: string;
+}
+
+/** Paginated audit response: total matching + the current page of items. */
+export interface AuditPageView {
+  total: number;
+  items: AuditEntryView[];
+}
+
+export type VolunteerStatus = 'active' | 'pending_approval' | 'inactive';
+export type ExceptionReason = 'fpv_unreachable' | 'fpv_not_found' | 'pap_not_declared';
+
+export interface VolunteerView {
+  id: string;
+  nombre: string;
+  cedula_profesional: string;
+  email?: string | null;
+  especialidad?: string | null;
+  rol: string;
+  estado: VolunteerStatus;
+  /** Why it needs manual review; only set while pending_approval. */
+  motivo_excepcion: ExceptionReason | null;
   creado_en: string;
 }
 

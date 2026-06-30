@@ -56,7 +56,7 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-brand">Coordinadores</h2>
+      <h1 className="font-serif text-3xl font-semibold text-ink">Coordinadores</h1>
       <p className="mt-1 text-sm text-slate-600">
         Invita coordinadores por token (RF-2.6). El enlace de invitación se envía por correo; el token
         también se muestra aquí una sola vez para compartirlo manualmente si hace falta.

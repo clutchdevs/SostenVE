@@ -57,7 +57,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-brand">Líneas de crisis</h2>
+      <h1 className="font-serif text-3xl font-semibold text-ink">Líneas de crisis</h1>
       <p className="mt-1 text-sm text-slate-600">
         Fuente del ruteo público. Desactivar una línea la oculta del ruteo (soft-delete, auditado).
       </p>

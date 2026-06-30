@@ -11,7 +11,15 @@ export default {
         surface: { DEFAULT: '#F8F5EF', card: '#FFFFFF' },
         navy: { DEFAULT: '#203B5A', light: '#2C4F77', hover: '#28598A' },
         ink: '#1F2A37',
-        accent: { orange: '#E07A3F', blue: '#2563EB', danger: '#C0392B' },
+        accent: {
+          orange: '#E07A3F',
+          blue: '#2563EB',
+          danger: '#C0392B',
+          green: '#138A72',
+          teal: '#5CB8B2',
+          amber: '#D89B29',
+          coral: '#D55A4E',
+        },
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
