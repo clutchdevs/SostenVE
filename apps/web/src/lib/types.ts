@@ -48,3 +48,23 @@ export interface Capacity {
   riesgo_alto_sin_atender: number;
   en_cola_por_categoria: Record<string, number>;
 }
+
+export interface CrisisLineAdmin {
+  id: string;
+  nombre: string;
+  telefono: string;
+  cobertura: string | null;
+  hora_inicio: number | null;
+  hora_fin: number | null;
+  prioridad: number;
+  activa: boolean;
+}
+
+export interface AuditEntryView {
+  id: string;
+  usuario_id: string | null;
+  rol: string | null;
+  registro_afectado: string | null;
+  accion: string;
+  creado_en: string;
+}
