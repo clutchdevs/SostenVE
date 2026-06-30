@@ -17,7 +17,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Solicitante (Civil/Afectado)
 - ✅ Registrar solicitud (intake de baja fricción: Likert → ramas roja/verde).
 - ✅ Visualizar líneas de crisis instantáneas (con fail-safe de caché/embebido en cliente).
-- ❌ Acceder a guías de Primeros Auxilios Psicológicos (PAP) asíncronas.
+- ✅ Acceder a **guías de Primeros Auxilios Psicológicos (PAP) asíncronas** (issue #22): contenido
+  **versionado** en `config/app.config.yml`, expuesto por `GET /pap` (público, sin BD) y página
+  `/guias` enlazada desde inicio, intake y la confirmación de Rama Verde. Texto provisional pendiente FPV.
 
 ### Psicólogo Voluntario
 - ✅ Portal exclusivo (`/psicologo`).
@@ -127,7 +129,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
 - [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
       el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
-- [ ] **Guías PAP asíncronas** para el solicitante.
+- [x] **Guías PAP asíncronas** para el solicitante (issue #22): contenido versionado en config,
+      `GET /pap` y página `/guias` enlazada desde el intake. Texto provisional pendiente de la FPV.
 - [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
       (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
       sesión por inactividad (`security.session.idle_timeout_minutes`) y ruta `/login-coordinador` (RF-2.7).
