@@ -63,6 +63,38 @@ export const caseClosureSchema = z.object({
   comentario: z.string().max(1500).optional(),
 });
 
+const hour = z.number().int().min(0).max(26); // up to 26 to express ranges past midnight
+
+export const crisisLineCreateSchema = z.object({
+  nombre: z.string().min(1),
+  telefono: z.string().min(1),
+  cobertura: z.string().min(1).optional(),
+  hora_inicio: hour.optional(),
+  hora_fin: hour.optional(),
+  prioridad: z.number().int().optional(),
+  activa: z.boolean().optional(),
+});
+
+export const crisisLineUpdateSchema = z
+  .object({
+    nombre: z.string().min(1),
+    telefono: z.string().min(1),
+    cobertura: z.string().min(1).nullable(),
+    hora_inicio: hour.nullable(),
+    hora_fin: hour.nullable(),
+    prioridad: z.number().int(),
+    activa: z.boolean(),
+  })
+  .partial();
+
+export const auditQuerySchema = z.object({
+  accion: z.string().min(1).optional(),
+  registro: z.string().min(1).optional(),
+  usuario: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 export type AddNoteBody = z.infer<typeof addNoteSchema>;
 export type CaseClosureBody = z.infer<typeof caseClosureSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
@@ -70,3 +102,6 @@ export type RedBranchBody = z.infer<typeof redBranchSchema>;
 export type GreenBranchBody = z.infer<typeof greenBranchSchema>;
 export type RegisterVolunteerBody = z.infer<typeof registerVolunteerSchema>;
 export type LoginBody = z.infer<typeof loginSchema>;
+export type CrisisLineCreateBody = z.infer<typeof crisisLineCreateSchema>;
+export type CrisisLineUpdateBody = z.infer<typeof crisisLineUpdateSchema>;
+export type AuditQuery = z.infer<typeof auditQuerySchema>;
