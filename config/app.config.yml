@@ -63,6 +63,19 @@ default: &default
       failure_threshold: 3
       cooldown_seconds: 30
 
+  email:
+    # provider: log (no real send, just logs) | smtp (nodemailer). Default "log"
+    # keeps tests/e2e offline. Switch to "smtp" to send via the SMTP server below;
+    # in local dev point it at the Supabase Inbucket SMTP (enable smtp_port = 54325
+    # in supabase/config.toml) and read the emails at http://localhost:54324.
+    provider: "log"
+    from: "Sostén <no-reply@sostenve.app>"
+    login_url: "http://localhost:3000/login"
+    smtp:
+      host: "host.docker.internal" # API container -> host's Inbucket
+      port: 54325
+      username: "" # Inbucket needs no auth; SMTP_PASSWORD (env) used when set
+
   rbac:
     roles: ["requester", "psychologist", "coordinator", "admin"]
 

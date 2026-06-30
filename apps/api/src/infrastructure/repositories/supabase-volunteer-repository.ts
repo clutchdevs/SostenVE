@@ -114,6 +114,14 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
     return data ? (data as { password_hash: string }).password_hash : null;
   }
 
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    const { error } = await this.client
+      .from('volunteers')
+      .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw new Error(`Failed to update password: ${error.message}`);
+  }
+
   async setStatus(id: string, status: VolunteerStatus): Promise<void> {
     const { error } = await this.client
       .from('volunteers')

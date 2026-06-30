@@ -14,6 +14,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Módulo 2 — Alta automática real (RF-2.2.4 / RF-2.2):** la contraseña ya no la elige el usuario;
+  se **autogenera** con alta entropía (24 bytes, base64url) y se entrega por un **correo de bienvenida**
+  real vía `SmtpNotifier` (nodemailer), seleccionable por config `email.provider` (`log` por defecto
+  para tests/dev; `smtp` para envío real, p. ej. contra el Inbucket de Supabase en local). Regla de
+  **activación automática** `cédula+FPV ∧ PAP=Sí → Activo` (si no, `pending_approval`). La **aprobación**
+  por un admin reemite una contraseña nueva y reenvía las credenciales para no dejar la cuenta bloqueada.
+  El formulario `/registro` ya no pide contraseña.
 - **Endpoints admin (issue #21):** CRUD de líneas de crisis (`GET/POST /admin/crisis-lines`,
   `PATCH/DELETE /admin/crisis-lines/:id`) con **soft-delete** (desactivación) y **auditoría** de cada
   cambio; y consulta del log de auditoría (`GET /admin/audit`, filtros por acción/registro/usuario). El

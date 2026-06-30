@@ -37,6 +37,7 @@ function repoWith(status: VolunteerStatus): VolunteerRepository {
     async getPasswordHash() {
       return passwordHash;
     },
+    async updatePasswordHash() {},
     async setStatus() {},
     async bumpTokenVersion() {
       return 2;
