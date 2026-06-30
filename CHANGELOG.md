@@ -22,6 +22,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   sobre cada voluntario (RF-2.4) en la nueva tabla `volunteer_notes` (migración `20260628000012`, RLS solo
   coordinador/admin, `GET/POST /volunteers/:id/notes`). Nueva página `/coordinador/voluntarios`. La
   auditoría registra el rol real del actor.
+- **Módulo 1 — Guías de Primeros Auxilios Psicológicos (PAP) asíncronas (issue #22):** autoayuda para
+  el solicitante con contenido **versionado** en `config/app.config.yml` (provisional `v0.1.0-draft`
+  hasta el oficial de la FPV), expuesto por `GET /pap` (público, sin BD, instantáneo aun con backend
+  frío). Nueva página web `/guias` (acordeón de guías con pasos) enlazada desde el inicio, la pantalla
+  de intake y la confirmación de la Rama Verde, con aviso de que no reemplaza la atención profesional y
+  acceso a líneas de crisis.
 - **Módulo 2 — Registro/login de coordinador por token + expiración por inactividad (issue #23,
   RF-2.6 / RF-2.7):** los coordinadores ya no se autorregistran contra el padrón FPV; un admin los
   **invita por token**. El admin emite la invitación (`POST /admin/coordinators/invitations`), que

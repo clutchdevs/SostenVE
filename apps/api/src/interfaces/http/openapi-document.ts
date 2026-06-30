@@ -58,6 +58,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'intake' },
       { name: 'crisis-lines' },
       { name: 'consent' },
+      { name: 'pap' },
       { name: 'auth' },
       { name: 'volunteers' },
       { name: 'cases' },
@@ -119,6 +120,13 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           tags: ['consent'],
           summary: 'Texto y versión del consentimiento informado del psicólogo (RF-2.1.1)',
           responses: { '200': { description: 'version + updated_at + text' } },
+        },
+      },
+      '/pap': {
+        get: {
+          tags: ['pap'],
+          summary: 'Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el solicitante',
+          responses: { '200': { description: 'version + updated_at + guides[]' } },
         },
       },
       '/auth/login': {
