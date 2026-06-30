@@ -2,13 +2,23 @@ import { Hono } from 'hono';
 import { getConfig } from '../../../config';
 import { registerVolunteer } from '../../../application/volunteer/register-volunteer';
 import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer';
+import {
+  addVolunteerNote,
+  listVolunteerNotes,
+} from '../../../application/volunteer/manage-volunteer-notes';
 import type { Volunteer, VolunteerStatus } from '../../../domain/volunteer/volunteer';
+import type { VolunteerNote } from '../../../domain/volunteer/volunteer-note';
 import { ApiError } from '../../../shared/errors/api-error';
 import { requireAuth, getAuthUser } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
 import { getVolunteerContainer } from './dependencies';
-import { registerVolunteerSchema, type RegisterVolunteerBody } from './schemas';
+import {
+  registerVolunteerSchema,
+  volunteerNoteSchema,
+  type RegisterVolunteerBody,
+  type VolunteerNoteBody,
+} from './schemas';
 
 const STATUS_TO_VALIDATION: Record<VolunteerStatus, string> = {
   active: 'validado',
@@ -85,9 +95,10 @@ export function createVolunteerRouter(): Hono {
     },
   );
 
-  // Admin: list volunteers. Defaults to pending approval (the exceptions queue);
-  // `status=all` returns the full roster (padrón) for the admin directory.
-  router.get('/', requireAuth({ roles: ['admin'] }), async (c) => {
+  // Volunteer management is a coordinator responsibility per the PRD (RF-2.3);
+  // admins keep access too. List defaults to pending approval (exceptions queue);
+  // `status=all` returns the full roster.
+  router.get('/', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {
     const status = c.req.query('status') ?? 'pending_approval';
     const { volunteers } = getVolunteerContainer();
     const list =
@@ -97,17 +108,59 @@ export function createVolunteerRouter(): Hono {
     return c.json(list.map(presentVolunteer));
   });
 
-  router.post('/:id/approve', requireAuth({ roles: ['admin'] }), async (c) => {
-    const admin = getAuthUser(c);
-    await approveVolunteer(c.req.param('id'), admin.sub, getVolunteerContainer().manageDeps);
+  router.post('/:id/approve', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {
+    const actor = getAuthUser(c);
+    await approveVolunteer(
+      c.req.param('id'),
+      { id: actor.sub, role: actor.role },
+      getVolunteerContainer().manageDeps,
+    );
     return c.json({ ok: true });
   });
 
-  router.post('/:id/reject', requireAuth({ roles: ['admin'] }), async (c) => {
-    const admin = getAuthUser(c);
-    await rejectVolunteer(c.req.param('id'), admin.sub, getVolunteerContainer().manageDeps);
+  router.post('/:id/reject', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {
+    const actor = getAuthUser(c);
+    await rejectVolunteer(
+      c.req.param('id'),
+      { id: actor.sub, role: actor.role },
+      getVolunteerContainer().manageDeps,
+    );
     return c.json({ ok: true });
   });
+
+  // Confidential coordinator notes about a volunteer (RF-2.4) — coordinator/admin
+  // only; never visible to the volunteer.
+  router.get('/:id/notes', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {
+    const notes = await listVolunteerNotes(c.req.param('id'), getVolunteerContainer().notesDeps);
+    return c.json(notes.map(presentVolunteerNote));
+  });
+
+  router.post(
+    '/:id/notes',
+    requireAuth({ roles: ['coordinator', 'admin'] }),
+    validateBody(volunteerNoteSchema),
+    async (c) => {
+      const actor = getAuthUser(c);
+      const body = getValidated<VolunteerNoteBody>(c, 'body');
+      const note = await addVolunteerNote(
+        c.req.param('id'),
+        body.contenido,
+        { id: actor.sub, role: actor.role },
+        getVolunteerContainer().notesDeps,
+      );
+      return c.json(presentVolunteerNote(note), 201);
+    },
+  );
 
   return router;
+}
+
+function presentVolunteerNote(note: VolunteerNote) {
+  return {
+    id: note.id,
+    voluntario_id: note.volunteerId,
+    autor_id: note.authorId ?? null,
+    contenido: note.content,
+    creada_en: note.createdAt.toISOString(),
+  };
 }

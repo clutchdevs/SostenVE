@@ -3,6 +3,7 @@ import { forService } from '../../../infrastructure/supabase/client-factory';
 import { SupabaseCaseContactRepository, SupabaseCaseRepository } from '../../../infrastructure/repositories/supabase-case-repository';
 import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/supabase-idempotency-store';
 import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository';
+import { SupabaseVolunteerNoteRepository } from '../../../infrastructure/repositories/supabase-volunteer-note-repository';
 import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
@@ -24,6 +25,7 @@ import type { IntakeDeps } from '../../../application/intake/types';
 import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer';
 import type { LoginDeps } from '../../../application/volunteer/login-volunteer';
 import type { ManageVolunteerDeps } from '../../../application/volunteer/manage-volunteer';
+import type { VolunteerNotesDeps } from '../../../application/volunteer/manage-volunteer-notes';
 import type { VolunteerRepository } from '../../../domain/volunteer/volunteer';
 
 /**
@@ -63,6 +65,7 @@ interface VolunteerContainer {
   registerDeps: RegisterVolunteerDeps;
   loginDeps: LoginDeps;
   manageDeps: ManageVolunteerDeps;
+  notesDeps: VolunteerNotesDeps;
 }
 
 let volunteerCached: VolunteerContainer | null = null;
@@ -84,6 +87,7 @@ export function getVolunteerContainer(): VolunteerContainer {
       },
       loginDeps: { volunteers, config },
       manageDeps: { volunteers, audit, notifier },
+      notesDeps: { notes: new SupabaseVolunteerNoteRepository(client), volunteers, audit },
     };
   }
   return volunteerCached;

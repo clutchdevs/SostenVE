@@ -4,14 +4,17 @@ import {
   acceptInvitationSchema,
   addNoteSchema,
   caseClosureSchema,
+  coordinatorCloseSchema,
   coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
   greenBranchSchema,
   loginSchema,
+  reassignCaseSchema,
   redBranchSchema,
   registerVolunteerSchema,
   triageInitialSchema,
+  volunteerNoteSchema,
 } from './v1/schemas';
 
 /**
@@ -137,7 +140,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/volunteers': {
         get: {
           tags: ['volunteers'],
-          summary: 'Listar voluntarios (admin). status: active|pending_approval|inactive|all (def. pending_approval)',
+          summary: 'Listar voluntarios (coordinador/admin). status: active|pending_approval|inactive|all (def. pending_approval)',
           security: bearer,
           parameters: [
             {
@@ -153,7 +156,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/volunteers/{id}/approve': {
         post: {
           tags: ['volunteers'],
-          summary: 'Aprobar un voluntario pendiente (admin)',
+          summary: 'Aprobar/activar un voluntario (coordinador/admin, RF-2.3)',
           security: bearer,
           parameters: [idParam],
           responses: { '200': { description: 'Aprobado' }, '403': { description: 'Sin permiso' }, '404': { description: 'No encontrado' } },
@@ -162,10 +165,27 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/volunteers/{id}/reject': {
         post: {
           tags: ['volunteers'],
-          summary: 'Rechazar/desactivar un voluntario (admin)',
+          summary: 'Rechazar/suspender un voluntario (coordinador/admin, RF-2.3.2)',
           security: bearer,
           parameters: [idParam],
-          responses: { '200': { description: 'Rechazado' }, '403': { description: 'Sin permiso' }, '404': { description: 'No encontrado' } },
+          responses: { '200': { description: 'Suspendido' }, '403': { description: 'Sin permiso' }, '404': { description: 'No encontrado' } },
+        },
+      },
+      '/volunteers/{id}/notes': {
+        get: {
+          tags: ['volunteers'],
+          summary: 'Listar notas confidenciales sobre un voluntario (coordinador/admin, RF-2.4)',
+          security: bearer,
+          parameters: [idParam],
+          responses: { '200': { description: 'Notas (más recientes primero)' }, '403': { description: 'Sin permiso' } },
+        },
+        post: {
+          tags: ['volunteers'],
+          summary: 'Agregar una nota confidencial sobre un voluntario (coordinador/admin, RF-2.4)',
+          security: bearer,
+          parameters: [idParam],
+          requestBody: jsonBody(volunteerNoteSchema),
+          responses: { '201': { description: 'Nota creada' }, '403': { description: 'Sin permiso' }, '404': { description: 'No encontrado' } },
         },
       },
       '/cases': {
@@ -210,6 +230,35 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             '201': { description: 'Caso cerrado con expediente' },
             '403': { description: 'Caso ajeno' },
             '409': { description: 'Estado inválido o ya cerrado' },
+          },
+        },
+      },
+      '/cases/{id}/reassign': {
+        post: {
+          tags: ['cases'],
+          summary: 'Reasignar el caso a un psicólogo activo (coordinador/admin, RF-2.3)',
+          security: bearer,
+          parameters: [idParam],
+          requestBody: jsonBody(reassignCaseSchema),
+          responses: {
+            '200': { description: 'Reasignado' },
+            '400': { description: 'El destino no es un psicólogo activo' },
+            '403': { description: 'Sin permiso' },
+            '409': { description: 'No se puede reasignar un caso cerrado' },
+          },
+        },
+      },
+      '/cases/{id}/coordinator-close': {
+        post: {
+          tags: ['cases'],
+          summary: 'Cierre administrativo del caso por el coordinador (RF-2.3)',
+          security: bearer,
+          parameters: [idParam],
+          requestBody: jsonBody(coordinatorCloseSchema),
+          responses: {
+            '200': { description: 'Caso cerrado' },
+            '403': { description: 'Sin permiso' },
+            '409': { description: 'El caso ya está cerrado' },
           },
         },
       },
