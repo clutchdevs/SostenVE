@@ -7,11 +7,15 @@ import { SupabaseAssignmentRepository } from '../../../infrastructure/repositori
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
+import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { LogNotifier } from '../../../infrastructure/notifications/log-notifier';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
 import type { AssignmentDeps } from '../../../application/assignment/ports';
 import type { CaseDeps } from '../../../application/cases/ports';
+import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines';
+import type { QueryAuditLogDeps } from '../../../application/audit/query-audit-log';
+import type { CrisisLineRepository } from '../../../domain/crisis-line/crisis-line';
 import type { IdempotencyStore } from '../../../application/intake/idempotency';
 import type { IntakeDeps } from '../../../application/intake/types';
 import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer';
@@ -94,6 +98,36 @@ export function getAssignmentDeps(): AssignmentDeps {
     };
   }
   return assignmentCached;
+}
+
+let crisisLineRepoCached: CrisisLineRepository | null = null;
+
+/** Crisis-line repository for the public `/crisis-lines/active` route (DB-driven). */
+export function getCrisisLineDeps(): CrisisLineRepository {
+  if (crisisLineRepoCached === null) {
+    crisisLineRepoCached = new SupabaseCrisisLineRepository(forService());
+  }
+  return crisisLineRepoCached;
+}
+
+interface AdminContainer {
+  crisisLines: CrisisLineDeps;
+  audit: QueryAuditLogDeps;
+}
+
+let adminCached: AdminContainer | null = null;
+
+/** Composition root for the admin endpoints (crisis-line CRUD + audit query). */
+export function getAdminContainer(): AdminContainer {
+  if (adminCached === null) {
+    const client = forService();
+    const audit = new SupabaseAuditLogRepository(client);
+    adminCached = {
+      crisisLines: { lines: new SupabaseCrisisLineRepository(client), audit },
+      audit: { reader: audit },
+    };
+  }
+  return adminCached;
 }
 
 let caseCached: CaseDeps | null = null;
