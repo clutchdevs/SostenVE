@@ -32,8 +32,20 @@ export interface RegistrationNotification {
   temporaryPassword?: string;
 }
 
+/** Notification for a coordinator invitation (RF-2.6). */
+export interface InvitationNotification {
+  email: string;
+  fullName: string;
+  /** Public link the invitee opens to set their password and activate. */
+  acceptUrl: string;
+  /** When the invitation stops being valid. */
+  expiresAt: Date;
+}
+
 /** Sends volunteer registration notifications (Adapter; LogNotifier or SmtpNotifier). */
 export interface Notifier {
   notifyRegistrationApproved(notification: RegistrationNotification): Promise<void>;
   notifyRegistrationPending(notification: RegistrationNotification): Promise<void>;
+  /** Emails a coordinator the invitation link to complete their sign-up (RF-2.6). */
+  notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void>;
 }

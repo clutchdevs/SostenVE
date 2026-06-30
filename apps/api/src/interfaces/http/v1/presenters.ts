@@ -12,6 +12,7 @@ import type { CaseContact, CaseRecord } from '../../../domain/case/case';
 import type { ClinicalNote } from '../../../domain/clinical/clinical-note';
 import type { CaseClosure } from '../../../domain/clinical/case-closure';
 import type { CrisisLine } from '../../../domain/crisis-line/crisis-line';
+import type { CoordinatorInvitation } from '../../../domain/coordinator/invitation';
 
 /** Maps domain results to the Spanish contract values (see openapi.yaml). */
 
@@ -29,6 +30,18 @@ export function presentCrisisLineAdmin(line: CrisisLine) {
     hora_fin: line.endHour ?? null,
     prioridad: line.priority,
     activa: line.active,
+  };
+}
+
+export function presentInvitation(invitation: CoordinatorInvitation) {
+  return {
+    id: invitation.id,
+    nombre: invitation.fullName,
+    email: invitation.email,
+    estado: invitation.status,
+    vence_en: invitation.expiresAt.toISOString(),
+    aceptada_en: invitation.acceptedAt?.toISOString() ?? null,
+    creada_en: invitation.createdAt.toISOString(),
   };
 }
 

@@ -1,4 +1,4 @@
-import type { RegistrationNotification } from '../../application/volunteer/ports';
+import type { InvitationNotification, RegistrationNotification } from '../../application/volunteer/ports';
 
 export interface WelcomeEmail {
   subject: string;
@@ -41,6 +41,31 @@ export function buildPendingEmail(notification: RegistrationNotification): Welco
       '',
       'Recibimos tu registro como psicólogo voluntario. Está en revisión por la FPV;',
       'te enviaremos tus credenciales de acceso en cuanto sea aprobado.',
+      '',
+      'Federación de Psicólogos de Venezuela · Sostén',
+    ].join('\n'),
+  };
+}
+
+/**
+ * Renders the coordinator invitation email (RF-2.6): a one-time link to set the
+ * password and activate the account, with the expiry date. The link carries the
+ * raw token; it is never logged.
+ */
+export function buildInvitationEmail(notification: InvitationNotification): WelcomeEmail {
+  return {
+    subject: 'Sostén — invitación para coordinar',
+    body: [
+      `Hola ${notification.fullName},`,
+      '',
+      'Has sido invitado/a a unirte a Sostén como coordinador/a de la FPV.',
+      'Abre el siguiente enlace para definir tu contraseña y activar tu cuenta:',
+      '',
+      `  ${notification.acceptUrl}`,
+      '',
+      `La invitación vence el ${notification.expiresAt.toLocaleString('es-VE')}.`,
+      '',
+      'Si no esperabas esta invitación, puedes ignorar este mensaje.',
       '',
       'Federación de Psicólogos de Venezuela · Sostén',
     ].join('\n'),

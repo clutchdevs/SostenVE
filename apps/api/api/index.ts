@@ -11,6 +11,7 @@ import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
 import { createCronRouter } from '../src/interfaces/http/v1/cron.controller';
 import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller';
 import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller';
+import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coordinator-onboarding.controller';
 import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller';
 import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller';
 
@@ -50,6 +51,7 @@ app.route('/auth', createAuthRouter());
 app.route('/volunteers', createVolunteerRouter());
 app.route('/cases', createCasesRouter());
 app.route('/coordinator', createCoordinatorRouter());
+app.route('/coordinators', createCoordinatorOnboardingRouter());
 app.route('/admin', createAdminRouter());
 app.route('/cron', createCronRouter());
 app.route('/', createDocsRouter());

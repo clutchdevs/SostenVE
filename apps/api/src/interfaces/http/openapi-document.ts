@@ -1,8 +1,10 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ZodType } from 'zod';
 import {
+  acceptInvitationSchema,
   addNoteSchema,
   caseClosureSchema,
+  coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
   greenBranchSchema,
@@ -57,6 +59,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'volunteers' },
       { name: 'cases' },
       { name: 'coordinator' },
+      { name: 'coordinators' },
       { name: 'admin' },
       { name: 'cron' },
     ],
@@ -224,6 +227,17 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           responses: { '200': { description: 'Métricas de capacidad' }, '403': { description: 'Sin permiso' } },
         },
       },
+      '/coordinators/accept-invitation': {
+        post: {
+          tags: ['coordinators'],
+          summary: 'Aceptar invitación de coordinador y activar la cuenta (RF-2.6)',
+          requestBody: jsonBody(acceptInvitationSchema),
+          responses: {
+            '201': { description: 'Coordinador activado' },
+            '400': { description: 'Invitación inválida o vencida' },
+          },
+        },
+      },
       '/admin/crisis-lines': {
         get: {
           tags: ['admin'],
@@ -254,6 +268,35 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           security: bearer,
           parameters: [idParam],
           responses: { '200': { description: 'Línea desactivada' }, '404': { description: 'No encontrada' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/coordinators/invitations': {
+        get: {
+          tags: ['admin'],
+          summary: 'Listar invitaciones de coordinador (admin)',
+          security: bearer,
+          responses: { '200': { description: 'Lista de invitaciones' }, '403': { description: 'Sin permiso' } },
+        },
+        post: {
+          tags: ['admin'],
+          summary: 'Invitar a un coordinador (admin, auditado; devuelve el token una sola vez)',
+          security: bearer,
+          requestBody: jsonBody(coordinatorInviteSchema),
+          responses: { '201': { description: 'Invitación creada (+ token)' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/coordinators/invitations/{id}': {
+        delete: {
+          tags: ['admin'],
+          summary: 'Revocar una invitación de coordinador pendiente (admin, auditado)',
+          security: bearer,
+          parameters: [idParam],
+          responses: {
+            '200': { description: 'Invitación revocada' },
+            '404': { description: 'No encontrada' },
+            '409': { description: 'La invitación no está pendiente' },
+            '403': { description: 'Sin permiso' },
+          },
         },
       },
       '/admin/audit': {

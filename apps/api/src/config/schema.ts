@@ -58,6 +58,9 @@ export const appConfigSchema = z.object({
     from: z.string().min(1),
     // Public base URL the welcome email links to for sign-in.
     login_url: z.string().min(1),
+    // Public URL the coordinator invitation email links to (RF-2.6); the raw
+    // token is appended as a `?token=` query param.
+    coordinator_invite_url: z.string().min(1),
     smtp: z.object({
       host: z.string().min(1),
       port: z.number().int().positive(),
@@ -80,6 +83,14 @@ export const appConfigSchema = z.object({
     jwt: z.object({
       access_token_ttl_minutes: z.number().int().positive(),
       refresh_token_ttl_days: z.number().int().positive(),
+    }),
+    session: z.object({
+      // Idle (inactivity) timeout (RF-2.7): a session with no activity for this
+      // many minutes is expired client-side; the short access-token TTL bounds it
+      // server-side regardless.
+      idle_timeout_minutes: z.number().int().positive(),
+      // Invitation tokens (RF-2.6) are valid for this many days.
+      invitation_ttl_days: z.number().int().positive(),
     }),
   }),
 });
