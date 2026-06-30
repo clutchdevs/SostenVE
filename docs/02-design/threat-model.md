@@ -51,4 +51,7 @@ Escala 0-10 por factor; total = suma (máx. 50).
 - Sin 2FA en la primera versión (ADR-0005): riesgo residual aceptado, mitigado por validación contra BD FPV.
 - Canal de contacto vía `wa.me` sin auditoría interna (ADR-0007): aceptado como decisión de costo.
 - **Plan gratuito de Supabase sin respaldos automáticos** (ADR-0002): riesgo abierto, pendiente de decisión de la Federación (`<TODO — Human-in-the-Loop>`).
-- Acceso del coordinador al contenido clínico: `<TODO — Human-in-the-Loop>`.
+- Acceso del coordinador al contenido clínico (issue #25): **resuelto** — acceso **auditado**. El
+  coordinador/admin puede leer las notas clínicas (cumple el PRD), pero cada lectura registra
+  `clinical_note_read` en el `audit_log` inmutable (ADR-0012); la PII de contacto sigue restringida al
+  psicólogo asignado. Riesgo residual aceptado: mayor superficie de lectura, mitigada por trazabilidad.

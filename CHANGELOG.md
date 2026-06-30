@@ -6,6 +6,13 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Seguridad
+- **Acceso del coordinador a notas clínicas (issue #25, decisión FPV):** resuelto como acceso
+  **auditado**. La RLS de `clinical_notes` amplía la lectura a coordinator/admin y `GET /cases/:id`
+  les devuelve las notas y el cierre (sin PII de contacto, que sigue restringida al psicólogo
+  asignado); cada lectura registra `clinical_note_read` en el `audit_log` inmutable. Actualizados
+  charter, threat-model y clasificación de datos.
+
 ### Añadido
 - **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
   **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**

@@ -46,9 +46,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ## 2. Matriz de datos sensibles (PRD §2.1)
 - ✅ Seudonimización de PII (PII separada; admin no ve PII/clínico) — ADR-0011 + RLS.
 - ✅ Cifrado de notas clínicas en reposo (AES-256-GCM) — ADR-0004.
-- ⚠️ **Divergencia a resolver (Human-in-the-Loop FPV):** el PRD otorga al **coordinador** acceso a
-  **todas las notas clínicas**; nuestra implementación (charter/threat-model) lo **restringe** a
-  estado/prioridad sin contenido clínico. Decidir cuál prevalece.
+- ✅ **Acceso del coordinador a notas clínicas (issue #25 — resuelto):** el coordinador/admin accede al
+  contenido clínico de forma **auditada** (cada lectura registra `clinical_note_read` en `audit_log`),
+  alineado con el PRD; la **PII de contacto** sigue restringida al psicólogo asignado.
 
 ## 3. Cobertura por módulo funcional (PRD §3)
 
@@ -122,9 +122,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
       (ubicación, cambio de hábitos).
 
-### C. Decisión pendiente (Human-in-the-Loop FPV)
-- [ ] **Acceso del coordinador a notas clínicas:** el PRD dice "todas"; nuestra implementación lo
-      restringe. Confirmar la política y alinear RLS + endpoints.
+### C. Decisión resuelta (Human-in-the-Loop FPV)
+- [x] **Acceso del coordinador a notas clínicas (issue #25):** resuelto → acceso **auditado**. La RLS de
+      `clinical_notes` amplía la lectura a coordinator/admin y cada acceso registra `clinical_note_read`;
+      la PII de contacto sigue restringida al psicólogo asignado.
 
 ## Cómo mantener este documento
 Marcar las casillas conforme se implementen; cada brecha cerrada debería referenciar su bloque/ADR y
