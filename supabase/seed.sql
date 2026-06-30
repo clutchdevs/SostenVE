@@ -25,6 +25,16 @@ values
     'psychologist',
     '$argon2id$v=19$m=19456,t=2,p=1$Ky7np0LE4J7g8zGA3HdtmA$lbA4d36yXbTibL6C+qdki9ZxeeuH+gNMWoQEO1AUIlU',
     'active'
+  ),
+  (
+    '99999999-9999-9999-9999-999999999999',
+    'Administradora de Prueba',
+    'FPV-ADMIN-001',
+    'admin@sostenve.test',
+    null,
+    'admin',
+    '$argon2id$v=19$m=19456,t=2,p=1$VIY6M3xruuLdP5q+wa2p7w$eYDFcQIi0TWsLi2aCVYPALzudgFrQsSxM2I/TFh6ePU',
+    'active'
   )
 on conflict (id) do nothing;
 
@@ -71,4 +81,13 @@ values (
   '44444444-4444-4444-4444-444444444444',
   '22222222-2222-2222-2222-222222222222'
 )
+on conflict (id) do nothing;
+
+-- Líneas de crisis (espejo de config/app.config.yml) para el ruteo DB-driven y el
+-- CRUD admin. Las que tienen ventana horaria enrutan por hora; las demás son respaldo.
+insert into crisis_lines (id, name, phone, coverage, start_hour, end_hour, priority, active)
+values
+  ('66666666-6666-6666-6666-666666666666', 'LAPSI', '+584242907338', '8:00–2:00', 8, 26, 10, true),
+  ('77777777-7777-7777-7777-777777777777', 'Colegio de Psicólogos de Miranda', '04127840112', '2:00–8:00', 2, 8, 9, true),
+  ('88888888-8888-8888-8888-888888888888', 'VEN-911', '911', 'Emergencias', null, null, 1, true)
 on conflict (id) do nothing;
