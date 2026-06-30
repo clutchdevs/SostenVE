@@ -1,8 +1,16 @@
 # Cobertura del PRD (Sistema PPV 2026) y brechas — mapa de TODO
 
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** vivo (actualizar conforme se cierren brechas)
-> **Fuente:** `Documento de Requisitos de Producto (PRD).pdf` (FPV) · **Evaluado:** 2026-06-29
-> Trazabilidad de lo construido (Bloques 0–7) contra el PRD. Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta.
+> **Fuente canónica:** `Documento de Requisitos de Producto (PRD).pdf` (FPV, "Sistema PPV 2026") · **Evaluado:** 2026-06-30
+> Trazabilidad de lo construido (Bloques 0–7 + issues #16–#25) contra el PRD. Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta.
+
+> **Nota de alcance del PDF.** Esta versión del PRD describe **Módulos 1–4** (intake/triage,
+> registro/validación de psicólogos, asignación/SLA y panel/expediente del psicólogo). **No** incluye
+> Módulo 5 (SMS/LoRa) ni RF-3.4 (Webhook de Rescate Activo): esos venían de un PRD "fase 2" anterior y
+> siguen documentados como **fuera del MVP** en [`flujo-central.md`](flujo-central.md). Además, el PDF
+> **renumera el Módulo 4**: aquí **RF-4.3 = interruptor de disponibilidad + telemetría de sincronización**
+> (presencia del psicólogo), no el bloqueo de TEPT. El **bloqueo de diagnóstico de TEPT < 4 semanas** es
+> una adición clínica nuestra (no figura en este PDF); se mantiene implementada por su valor clínico.
 
 ## Resumen
 El **imperativo clínico** del PRD —ninguna vida en riesgo crítico depende de revisión manual— está
@@ -32,17 +40,30 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ❌ Presencia en tiempo real (heartbeat/Redis, RF-2.5).
 
 ### Coordinador de Turno
-- ✅ Monitorear panel de casos (prioridad de riesgo alto + capacidad + polling).
+- ✅ **Centro de operaciones en vivo** (`/coordinador`): cola de casos priorizada (vencido SLA → riesgo →
+  antigüedad), KPIs (riesgo alto / en cola / psicólogos en atención / espera promedio), badge de **SLA
+  vencido** y refresco por polling. La lista trae el **psicólogo asignado** (`asignado_a`, sin PII del solicitante).
+- ✅ Sub-vistas **Psicólogos en atención** y **Reportes** (cola por categoría) con datos reales.
 - ✅ Alertas de SLA vencido (visual + escalamiento por cron).
 - ❌ Panel **georreferenciado** (mapas) — fuera de alcance (geo pospuesto).
-- ❌ **Reasignar/cerrar** manualmente casos (hoy solo el cron reasigna).
-- ⚠️ Gestión de voluntarios (aprobar/suspender) — implementado bajo rol **`admin`**; el PRD lo asigna al **coordinador**.
+- ❌ **Reasignar/cerrar** manualmente casos (hoy solo el cron reasigna) — RF-2.3.2/PRD §4.
+- ⚠️ Gestión de voluntarios (aprobar/suspender) — implementado bajo rol **`admin`**; el PRD (RF-2.3) lo asigna al **coordinador**.
 - ❌ Notas confidenciales sobre voluntarios (RF-2.4).
+- ❌ Presencia en tiempo real con indicador "En línea/Desconectado" (RF-2.5.4) — pendiente del store de presencia.
 
 ### Administrador (Federación)
-- ✅ Resolver excepciones de validación de psicólogos (`approve`/`reject`).
-- ✅ Auditar accesos — `audit_log` inmutable (RLS + trigger) + **endpoint** `GET /admin/audit` (filtros por acción/registro/usuario).
-- ✅ CRUD de líneas de crisis — endpoints admin (`/admin/crisis-lines`, soft-delete, auditado) y el **ruteo activo lee de la BD** con fallback a `config` (fail-safe).
+- ✅ **Módulo de administración** con sidebar y sub-rutas: excepciones de registro, padrón, líneas de
+  crisis, coordinadores y auditoría.
+- ✅ Resolver excepciones de validación de psicólogos (`approve`/`reject`) desde la pantalla **Excepciones
+  de registro**, que muestra el **motivo** real de la excepción (FPV no respondió / cédula no encontrada /
+  PAP no declarada) y un panel de tasa de auto-validación.
+- ✅ **Padrón de psicólogos** (`/volunteers?status=all`) con búsqueda y filtro por estado.
+- ✅ Auditar accesos — `audit_log` inmutable (RLS + trigger) + endpoint **paginado** `GET /admin/audit`
+  (`{ total, items }`, 50/pág) con **acciones traducidas** a lenguaje humano y el **actor resuelto**
+  (nombre + cédula para distinguir homónimos).
+- ✅ CRUD de líneas de crisis — endpoints admin (`/admin/crisis-lines`, soft-delete, auditado) y el **ruteo
+  activo lee de la BD** con fallback a `config` (fail-safe).
+- ✅ Invitación de coordinadores por token (`/admin/coordinators/invitations`) — ver Módulo 2 (RF-2.6).
 
 ## 2. Matriz de datos sensibles (PRD §2.1)
 - ✅ Seudonimización de PII (PII separada; admin no ve PII/clínico) — ADR-0011 + RLS.
@@ -79,13 +100,18 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   (el usuario no la elige), entregada por **correo de bienvenida** vía `SmtpNotifier` (nodemailer,
   seleccionable por config `email.provider`; `log` por defecto). La aprobación por admin reemite y
   reenvía credenciales. ⚠️ Pendiente: flujo de cambio/reseteo de contraseña (la temporal viaja en claro).
-- ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat).
+- ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat + TTL 65 s + heartbeat 30 s, RF-2.5.1–2.5.4).
 - ✅ RF-2.6 Registro de coordinadores por **token de invitación** (issue #23): el admin invita
   (`/admin/coordinators/invitations`), se persiste solo el hash del token (un solo uso, con TTL) y el
   invitado lo canjea en `/coordinators/accept-invitation` para activarse como coordinador; auditado.
-- ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout configurable) **+ expiración de
+  ⚠️ **Desvío del PRD:** el form de canje hoy solo fija la contraseña (nombre/correo vienen de la
+  invitación); el PRD (RF-2.6.2) pide capturar Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono, y
+  **contraseña ≥ 12** caracteres complejos (hoy el mínimo es **8**).
+- ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout 15 min configurable) **+ expiración de
   sesión por inactividad** (`security.session.idle_timeout_minutes`, enforce en cliente sobre el `exp`
   del JWT) **+ ruta separada `/login-coordinador`** (issue #23).
+  ⚠️ **Desvío del PRD:** RF-2.7 fija la inactividad en **30 min**; hoy está configurada en **15 min**
+  (`idle_timeout_minutes: 15`). Falta la **destrucción de sesiones duplicadas en caliente** (RF-2.7).
 
 ### Módulo 3 — Asignación y SLA
 - ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + especialidad infantil por edad.
@@ -95,14 +121,24 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ⚠️ Notificación — `LogNotifier`; faltan push PWA y correo reales.
 
 ### Módulo 4 — Panel del psicólogo y expediente clínico (versión online ✅)
-- ❌ RF-4.1 Offline-first + SQLCipher — fuera del MVP.
-- ✅ RF-4.2 Registro clínico / cierre estructurado (online): contactabilidad Sí/No, demografía (sexo,
-  destinatario derivado), sintomatología-chips, medio de contacto, técnicas SMAPS, motivo de cierre,
-  **derivación tipo+destino**, horas y comentario. Identidad del solicitante visible para el asignado.
-- ✅ RF-4.3 (bloqueo TEPT < 4 semanas) y ✅ RF-4.2.9 (crisis psicótica → derivación urgente + sube riesgo).
+> Numeración según el PDF vigente: **RF-4.1** offline-first/SQLCipher, **RF-4.2** registro de
+> diagnóstico/notas y cierre (con sub-RF 4.2.1–4.2.8), **RF-4.3** interruptor de disponibilidad +
+> telemetría de sincronización (presencia). El **RF-4.4 (sync por deltas)** y la antigua **RF-4.2.9** son
+> de versiones previas; abajo se mapean a lo construido.
+- ❌ RF-4.1 Offline-first + SQLCipher (AES-256) — fuera del MVP.
+- ✅ RF-4.2 Registro clínico / cierre estructurado (online): contactabilidad Sí/No (RF-4.2.2), demografía
+  (sexo, destinatario derivado, RF-4.2.3), sintomatología-chips (RF-4.2.4), medio de contacto (RF-4.2.5),
+  técnicas SMAPS (RF-4.2.6), motivo de cierre + **derivación tipo+destino** (RF-4.2.7), horas y comentario
+  (RF-4.2.8). Identidad del solicitante visible para el asignado (RF-4.2.1).
+- ✅ RF-4.2.4: la **ideación suicida** registra alerta de seguimiento (auditoría; el PRD pide bandera
+  preventiva a 5 días para el clúster de coordinadores — hoy queda como evento auditado, falta el plazo).
+- ✅ **Crisis psicótica aguda** → derivación urgente bloqueada + sube riesgo (regla de seguridad nuestra,
+  alineada con el chip `sintoma_crisis_psicotica_aguda` de RF-4.2.4).
+- ✅ **Bloqueo de diagnóstico de TEPT < 4 semanas** — adición clínica nuestra (no figura como RF en este
+  PDF; antes numerada RF-4.3).
 - ✅ Máquina de estados: aceptar (solo `asignado`, una vez) → aceptado → cierre (terminal) → solo lectura.
-- ✅ RF-4.2.4: la ideación suicida registra alerta de seguimiento (auditoría).
-- ❌ RF-4.3 PWA (toggle disponibilidad) y RF-4.4 (sync por deltas) — pendientes (presencia/offline).
+- ❌ **RF-4.3 (toggle disponibilidad + telemetría de sincronización)** y **sync por deltas** — pendientes
+  (dependen de presencia/offline-first).
 
 ## 4. Brechas — TODO
 
@@ -125,15 +161,19 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [ ] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV.
 - [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
+- [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,
+      psicólogo asignado por caso (`asignado_a`) y sub-vistas Psicólogos/Reportes (sin PII del solicitante).
 - [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
       voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
-- [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
-      el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
+- [x] **Endpoints + módulo admin (issues #21, #23):** CRUD de líneas de crisis (soft-delete, auditado,
+      ruteo desde BD con fallback), **excepciones de registro** con motivo FPV real + aprobar/rechazar,
+      **padrón** de psicólogos, **invitaciones de coordinador** y **auditoría paginada** con acciones
+      traducidas y actor (nombre + cédula).
 - [x] **Guías PAP asíncronas** para el solicitante (issue #22): contenido versionado en config,
       `GET /pap` y página `/guias` enlazada desde el intake. Texto provisional pendiente de la FPV.
 - [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
       (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
-      sesión por inactividad (`security.session.idle_timeout_minutes`) y ruta `/login-coordinador` (RF-2.7).
+      sesión por inactividad y ruta `/login-coordinador` (RF-2.7). ⚠️ Desvíos del PRD abajo (sección D).
 - [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
       (ubicación, cambio de hábitos).
 
@@ -141,6 +181,15 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [x] **Acceso del coordinador a notas clínicas (issue #25):** resuelto → acceso **auditado**. La RLS de
       `clinical_notes` amplía la lectura a coordinator/admin y cada acceso registra `clinical_note_read`;
       la PII de contacto sigue restringida al psicólogo asignado.
+
+### D. Desvíos del PRD por ajustar (implementado pero no exacto al texto)
+Funcionalidad construida que se aparta de la letra del PRD; cada uno es un cambio chico:
+- [ ] **Inactividad de coordinador = 30 min (RF-2.7):** hoy `idle_timeout_minutes: 15`. Subir a 30 (1 línea de config).
+- [ ] **Contraseña de coordinador ≥ 12 complejos (RF-2.6.2):** hoy el canje exige ≥ 8. Subir el mínimo + regla de complejidad.
+- [ ] **Campos del signup de coordinador (RF-2.6.2):** capturar Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono en el canje (hoy solo contraseña; nombre/correo vienen de la invitación).
+- [ ] **Destrucción de sesiones duplicadas en caliente (RF-2.7):** no implementada.
+- [ ] **Hashing:** el PRD sugiere `bcrypt` (factor 12); usamos **argon2id** por decisión documentada (ADR-0005). Mantener argon2id; queda anotado como desvío consciente.
+- [ ] **Bandera de seguimiento a 5 días por ideación suicida (RF-4.2.4):** hoy se audita el evento; falta el plazo programado para el clúster de coordinadores.
 
 ## Cómo mantener este documento
 Marcar las casillas conforme se implementen; cada brecha cerrada debería referenciar su bloque/ADR y
