@@ -46,9 +46,13 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ Sub-vistas **Psicólogos en atención** y **Reportes** (cola por categoría) con datos reales.
 - ✅ Alertas de SLA vencido (visual + escalamiento por cron).
 - ❌ Panel **georreferenciado** (mapas) — fuera de alcance (geo pospuesto).
-- ❌ **Reasignar/cerrar** manualmente casos (hoy solo el cron reasigna) — RF-2.3.2/PRD §4.
-- ⚠️ Gestión de voluntarios (aprobar/suspender) — implementado bajo rol **`admin`**; el PRD (RF-2.3) lo asigna al **coordinador**.
-- ❌ Notas confidenciales sobre voluntarios (RF-2.4).
+- ✅ **Reasignar/cerrar** manualmente casos (issue #20): `POST /cases/:id/reassign` (a un psicólogo
+  activo, resetea el SLA en riesgo alto) y `POST /cases/:id/coordinator-close` (cierre administrativo con
+  motivo). Acciones en el board, auditadas.
+- ✅ Gestión de voluntarios (aprobar/suspender) **abierta al rol `coordinador`** (issue #20, RF-2.3);
+  el admin la conserva. Página `/coordinador/voluntarios`.
+- ✅ Notas confidenciales sobre voluntarios (RF-2.4, issue #20): tabla `volunteer_notes` con RLS
+  (solo coordinador/admin), endpoints `GET/POST /volunteers/:id/notes`, auditado.
 - ❌ Presencia en tiempo real con indicador "En línea/Desconectado" (RF-2.5.4) — pendiente del store de presencia.
 
 ### Administrador (Federación)
@@ -163,8 +167,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,
       psicólogo asignado por caso (`asignado_a`) y sub-vistas Psicólogos/Reportes (sin PII del solicitante).
-- [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
-      voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
+- [x] **Acciones del coordinador (issue #20):** reasignar (`/cases/:id/reassign`) y cierre administrativo
+      (`/cases/:id/coordinator-close`) manuales; notas confidenciales sobre voluntarios (RF-2.4,
+      `volunteer_notes` con RLS); y gestión de voluntarios (aprobar/suspender) abierta al rol
+      **coordinador** (RF-2.3). UI en `/coordinador` (acciones de caso) y `/coordinador/voluntarios`.
 - [x] **Endpoints + módulo admin (issues #21, #23):** CRUD de líneas de crisis (soft-delete, auditado,
       ruteo desde BD con fallback), **excepciones de registro** con motivo FPV real + aprobar/rechazar,
       **padrón** de psicólogos, **invitaciones de coordinador** y **auditoría paginada** con acciones

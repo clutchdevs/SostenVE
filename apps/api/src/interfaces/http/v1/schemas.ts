@@ -129,6 +129,21 @@ export const crisisLineUpdateSchema = z
   })
   .partial();
 
+/** Confidential coordinator note about a volunteer (RF-2.4). */
+export const volunteerNoteSchema = z.object({
+  contenido: z.string().min(1).max(1500),
+});
+
+/** Coordinator manual reassignment of a case (RF-2.3). */
+export const reassignCaseSchema = z.object({
+  voluntario_id: z.string().min(1),
+});
+
+/** Coordinator administrative close of a case (RF-2.3). */
+export const coordinatorCloseSchema = z.object({
+  motivo: z.enum(['estancado', 'duplicado', 'resuelto_externamente', 'solicitud_tercero', 'otro']),
+});
+
 export const coordinatorInviteSchema = z.object({
   nombre: z.string().min(1),
   email: z.string().email(),
@@ -157,6 +172,9 @@ export type RegisterVolunteerBody = z.infer<typeof registerVolunteerSchema>;
 export type LoginBody = z.infer<typeof loginSchema>;
 export type CrisisLineCreateBody = z.infer<typeof crisisLineCreateSchema>;
 export type CrisisLineUpdateBody = z.infer<typeof crisisLineUpdateSchema>;
+export type VolunteerNoteBody = z.infer<typeof volunteerNoteSchema>;
+export type ReassignCaseBody = z.infer<typeof reassignCaseSchema>;
+export type CoordinatorCloseBody = z.infer<typeof coordinatorCloseSchema>;
 export type CoordinatorInviteBody = z.infer<typeof coordinatorInviteSchema>;
 export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
 export type AuditQuery = z.infer<typeof auditQuerySchema>;

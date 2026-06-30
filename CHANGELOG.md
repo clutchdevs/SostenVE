@@ -14,6 +14,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Acciones del coordinador (issue #20, RF-2.3 / RF-2.4):** el coordinador ahora actúa sobre casos y
+  voluntarios. **Casos:** reasignación manual a un psicólogo activo (`POST /cases/:id/reassign`, resetea
+  el SLA en riesgo alto y notifica) y **cierre administrativo** con motivo (`POST /cases/:id/coordinator-close`),
+  ambos auditados y disponibles desde el board (`/coordinador`). **Voluntarios:** la gestión
+  (aprobar/suspender) se **abre al rol `coordinador`** además del admin, y se añaden **notas confidenciales**
+  sobre cada voluntario (RF-2.4) en la nueva tabla `volunteer_notes` (migración `20260628000012`, RLS solo
+  coordinador/admin, `GET/POST /volunteers/:id/notes`). Nueva página `/coordinador/voluntarios`. La
+  auditoría registra el rol real del actor.
 - **Módulo 1 — Guías de Primeros Auxilios Psicológicos (PAP) asíncronas (issue #22):** autoayuda para
   el solicitante con contenido **versionado** en `config/app.config.yml` (provisional `v0.1.0-draft`
   hasta el oficial de la FPV), expuesto por `GET /pap` (público, sin BD, instantáneo aun con backend

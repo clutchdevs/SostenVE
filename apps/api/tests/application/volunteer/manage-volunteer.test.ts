@@ -73,7 +73,7 @@ describe('approveVolunteer', () => {
   it('activates, reissues a working password and emails the credentials (RF-2.2.4)', async () => {
     const repo = fakeRepo();
     const notifier = recordingNotifier();
-    await approveVolunteer('vol-1', 'admin-1', { volunteers: repo, audit, notifier });
+    await approveVolunteer('vol-1', { id: 'coord-1', role: 'coordinator' }, { volunteers: repo, audit, notifier });
 
     expect(repo.status).toBe('active');
     // A fresh argon2 hash was stored.

@@ -131,6 +131,14 @@ export class SupabaseCaseRepository implements CaseRepository {
       .eq('id', id);
     if (error) throw new Error(`Failed to update case status: ${error.message}`);
   }
+
+  async updateSlaExpiresAt(id: string, slaExpiresAt: Date | null): Promise<void> {
+    const { error } = await this.client
+      .from('cases')
+      .update({ sla_expires_at: slaExpiresAt?.toISOString() ?? null })
+      .eq('id', id);
+    if (error) throw new Error(`Failed to update case SLA: ${error.message}`);
+  }
 }
 
 interface CaseContactRow {

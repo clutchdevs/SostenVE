@@ -1,44 +1,60 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { CaseQueueTable } from '../../src/features/coordinator/case-queue-table';
+import { CaseActionModal } from '../../src/features/coordinator/case-action-modal';
 import { sortForBoard, summarizeOps } from '../../src/features/coordinator/operations';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
-import type { CaseSummary } from '../../src/lib/types';
+import type { CaseSummary, VolunteerView } from '../../src/lib/types';
 
 const REFRESH_MS = 15_000;
 
+interface CaseAction {
+  caso: CaseSummary;
+  mode: 'reassign' | 'close';
+}
+
 export default function CoordinatorBoard() {
   const [cases, setCases] = useState<CaseSummary[]>([]);
+  const [psychologists, setPsychologists] = useState<VolunteerView[]>([]);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
   const [now, setNow] = useState(() => new Date());
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [action, setAction] = useState<CaseAction | null>(null);
   const activeRef = useRef(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      const list = await apiFetch<CaseSummary[]>('/cases');
+      if (!activeRef.current) return;
+      setCases(list);
+      setUpdatedAt(new Date());
+    } catch (err) {
+      if (!activeRef.current) return;
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
+      else setError('No se pudieron cargar los casos. Intenta de nuevo.');
+    }
+  }, []);
 
   // Data polling (near real-time).
   useEffect(() => {
     activeRef.current = true;
-    async function refresh() {
-      try {
-        const list = await apiFetch<CaseSummary[]>('/cases');
-        if (!activeRef.current) return;
-        setCases(list);
-        setUpdatedAt(new Date());
-      } catch (err) {
-        if (!activeRef.current) return;
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
-        else setError('No se pudieron cargar los casos. Intenta de nuevo.');
-      }
-    }
     void refresh();
     const timer = setInterval(refresh, REFRESH_MS);
     return () => {
       activeRef.current = false;
       clearInterval(timer);
     };
+  }, [refresh]);
+
+  // Active psychologists for the reassignment picker (coordinator-authorized).
+  useEffect(() => {
+    apiFetch<VolunteerView[]>('/volunteers?status=active')
+      .then((list) => setPsychologists(list.filter((v) => v.rol === 'psychologist')))
+      .catch(() => {});
   }, []);
 
   // 1-second tick so the clock, "updated ago" and SLA chips stay live.
@@ -91,7 +107,25 @@ export default function CoordinatorBoard() {
         </p>
       )}
 
-      <CaseQueueTable cases={board} now={now} />
+      <CaseQueueTable
+        cases={board}
+        now={now}
+        onReassign={(caso) => setAction({ caso, mode: 'reassign' })}
+        onClose={(caso) => setAction({ caso, mode: 'close' })}
+      />
+
+      {action && (
+        <CaseActionModal
+          caso={action.caso}
+          mode={action.mode}
+          psychologists={psychologists}
+          onCancel={() => setAction(null)}
+          onDone={() => {
+            setAction(null);
+            void refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
