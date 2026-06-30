@@ -235,6 +235,45 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     expect(list[0]?.nivel_riesgo).toBe('riesgo_alto');
   });
 
+  it('gives the coordinator audited clinical access without PII (issue #25)', async () => {
+    const psy = await seedVolunteer();
+    const coord = await seedVolunteer();
+    await pg.query("update volunteers set role = 'coordinator' where id = $1", [coord]);
+
+    const pseudonym = `pseudo-${randomUUID()}`;
+    const created = await pg.query<{ id: string }>(
+      `insert into cases (pseudonym_id, branch, risk_level, urgency_score, status)
+       values ($1, 'verde', 'riesgo_moderado', 10, 'asignado') returning id`,
+      [pseudonym],
+    );
+    const caseId = created.rows[0]!.id;
+    caseIds.push(caseId);
+    await pg.query(
+      `insert into case_contacts (pseudonym_id, name, contact) values ($1, 'Ana', '+584120000000')`,
+      [pseudonym],
+    );
+    await assign(caseId, psy);
+    await authed(`/api/v1/cases/${caseId}/notes`, await tokenFor(psy), {
+      method: 'POST',
+      body: JSON.stringify({ contenido: 'Primera sesión', diagnostico: 'estrés agudo' }),
+    });
+
+    const res = await authed(`/api/v1/cases/${caseId}`, await tokenFor(coord, 'coordinator'));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      contacto: unknown | null;
+      notas: Array<{ contenido: string }>;
+    };
+    expect(body.notas.length).toBe(1);
+    expect(body.contacto).toBeNull();
+
+    const audit = await pg.query(
+      "select id from audit_log where action_type = 'clinical_note_read' and affected_record_id = $1 and user_id = $2",
+      [caseId, coord],
+    );
+    expect(audit.rowCount).toBe(1);
+  });
+
   it('returns capacity counts for the coordinator', async () => {
     const coord = await seedVolunteer();
     await pg.query("update volunteers set role = 'coordinator' where id = $1", [coord]);

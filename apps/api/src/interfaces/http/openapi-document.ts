@@ -3,6 +3,8 @@ import type { ZodType } from 'zod';
 import {
   addNoteSchema,
   caseClosureSchema,
+  crisisLineCreateSchema,
+  crisisLineUpdateSchema,
   greenBranchSchema,
   loginSchema,
   redBranchSchema,
@@ -55,6 +57,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'volunteers' },
       { name: 'cases' },
       { name: 'coordinator' },
+      { name: 'admin' },
       { name: 'cron' },
     ],
     components: {
@@ -101,7 +104,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/crisis-lines/active': {
         get: {
           tags: ['crisis-lines'],
-          summary: 'Línea de crisis activa según la hora (ruteo dinámico)',
+          summary: 'Línea de crisis activa según la hora (ruteo dinámico, leído de BD con fallback a config)',
           responses: { '200': { description: 'Línea activa + respaldos' } },
         },
       },
@@ -166,10 +169,10 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/cases/{id}': {
         get: {
           tags: ['cases'],
-          summary: 'Detalle de un caso con identidad, notas y cierre (psicólogo asignado)',
+          summary: 'Detalle de un caso con notas y cierre (psicólogo asignado ve identidad; coordinador/admin acceso auditado sin PII)',
           security: bearer,
           parameters: [idParam],
-          responses: { '200': { description: 'Detalle + identidad + notas + cierre' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
+          responses: { '200': { description: 'Detalle + notas + cierre (identidad solo para el psicólogo asignado)' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
         },
       },
       '/cases/{id}/accept': {
@@ -219,6 +222,53 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           summary: 'Capacidad y casos sin atender (coordinador/admin)',
           security: bearer,
           responses: { '200': { description: 'Métricas de capacidad' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/crisis-lines': {
+        get: {
+          tags: ['admin'],
+          summary: 'Listar todas las líneas de crisis (admin)',
+          security: bearer,
+          responses: { '200': { description: 'Lista de líneas' }, '403': { description: 'Sin permiso' } },
+        },
+        post: {
+          tags: ['admin'],
+          summary: 'Crear una línea de crisis (admin, auditado)',
+          security: bearer,
+          requestBody: jsonBody(crisisLineCreateSchema),
+          responses: { '201': { description: 'Línea creada' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/crisis-lines/{id}': {
+        patch: {
+          tags: ['admin'],
+          summary: 'Actualizar una línea de crisis (admin, auditado)',
+          security: bearer,
+          parameters: [idParam],
+          requestBody: jsonBody(crisisLineUpdateSchema),
+          responses: { '200': { description: 'Línea actualizada' }, '404': { description: 'No encontrada' }, '403': { description: 'Sin permiso' } },
+        },
+        delete: {
+          tags: ['admin'],
+          summary: 'Desactivar (soft-delete) una línea de crisis (admin, auditado)',
+          security: bearer,
+          parameters: [idParam],
+          responses: { '200': { description: 'Línea desactivada' }, '404': { description: 'No encontrada' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/audit': {
+        get: {
+          tags: ['admin'],
+          summary: 'Consultar el log de auditoría (admin)',
+          security: bearer,
+          parameters: [
+            { name: 'accion', in: 'query', required: false, schema: { type: 'string' } },
+            { name: 'registro', in: 'query', required: false, schema: { type: 'string' } },
+            { name: 'usuario', in: 'query', required: false, schema: { type: 'string' } },
+            { name: 'limit', in: 'query', required: false, schema: { type: 'integer' } },
+            { name: 'offset', in: 'query', required: false, schema: { type: 'integer' } },
+          ],
+          responses: { '200': { description: 'Entradas de auditoría' }, '403': { description: 'Sin permiso' } },
         },
       },
       '/cron/check-sla': {

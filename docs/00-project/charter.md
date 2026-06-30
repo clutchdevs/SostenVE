@@ -58,7 +58,7 @@ brote psicótico) sobre el seguimiento regular.
 | Acción | Psicólogo asignado | Coordinador de turno | Federación / Admin |
 |---|---|---|---|
 | Ver estado y prioridad de un caso | Solo los propios | Todos | Todos |
-| Ver contenido clínico de las notas | Sí (propios) | No por defecto (`<TODO — Human-in-the-Loop>`) | Según política de retención |
+| Ver contenido clínico de las notas | Sí (propios) | Sí, auditado (decisión FPV, issue #25) | Según política de retención |
 | Registrar diagnóstico / notas | Sí (propios) | No | No |
 | Reasignar o cerrar caso | Propios | Sí | Sí |
 | Editar líneas de crisis/respaldo | No | No | Sí (rol administrador) |
@@ -87,6 +87,9 @@ brote psicótico) sobre el seguimiento regular.
 ## Decisiones abiertas (Human-in-the-Loop)
 Estas decisiones corresponden a la Federación y **no se inventan** en este repositorio:
 - `<TODO — Human-in-the-Loop>` Esquema de turnos de coordinación.
-- `<TODO — Human-in-the-Loop>` Política de retención y acceso a historias clínicas.
+- `<TODO — Human-in-the-Loop>` Política de **retención** de historias clínicas.
+- ✅ **Acceso del coordinador a notas clínicas** (issue #25): el coordinador accede al contenido
+  clínico de forma **auditada** (cada lectura registra `clinical_note_read` en `audit_log`); la PII de
+  contacto sigue restringida al psicólogo asignado.
 - `<TODO — Human-in-the-Loop>` Texto de consentimiento informado mostrado al solicitante.
 - `<TODO — Human-in-the-Loop>` Nombre final del proyecto (se usa "Sostén" como placeholder).

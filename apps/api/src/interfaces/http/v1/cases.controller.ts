@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { acceptCase } from '../../../application/assignment/accept-case';
 import { addClinicalNote } from '../../../application/cases/add-note';
+import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator';
 import { getCaseForVolunteer } from '../../../application/cases/get-case';
 import { listAllCases, listAssignedCases } from '../../../application/cases/list-cases';
 import { recordCaseClosure } from '../../../application/cases/record-case-closure';
@@ -27,10 +28,16 @@ export function createCasesRouter(): Hono {
     return c.json(cases.map(presentCaseSummary));
   });
 
-  // Case detail with identity, notes and closure — assigned psychologist only.
-  router.get('/:id', requireAuth({ roles: ['psychologist'] }), async (c) => {
+  // Case detail with notes and closure. The assigned psychologist also sees the
+  // requester identity (PII); coordinators/admins get audited clinical access
+  // without PII (issue #25, HITL FPV decision).
+  router.get('/:id', requireAuth({ roles: STAFF_ROLES }), async (c) => {
     const user = getAuthUser(c);
-    const detail = await getCaseForVolunteer(c.req.param('id'), user.sub, getCaseDeps());
+    const deps = getCaseDeps();
+    const detail =
+      user.role === 'psychologist'
+        ? await getCaseForVolunteer(c.req.param('id'), user.sub, deps)
+        : await getCaseForCoordinator(c.req.param('id'), { id: user.sub, role: user.role }, deps);
     return c.json({
       caso: presentCaseSummary(detail.case),
       contacto: presentCaseContact(detail.contact),
