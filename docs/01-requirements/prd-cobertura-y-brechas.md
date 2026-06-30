@@ -67,9 +67,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   **versionado** en `config/app.config.yml` (expuesto por `GET /consent/active`) y aceptación
   auditable (versión + timestamp en `volunteers` y en `audit_log`). El texto es **provisional**
   (borrador `v0.1.0-draft`) a la espera del oficial de la FPV (sección 8 del PRD); se cambia sin tocar código.
-- ⚠️ RF-2.1.2 Formulario de registro — mínimo (nombre, cédula/`professional_id`, email, especialidad,
-  disponibilidad, contraseña); faltan tipo de documento, FPV separado de cédula, universidad, año,
-  PAP + detalle, colegio, etc.
+- ✅ RF-2.1.2 Formulario de postulación completo: tipo + número de documento (cédula) separados del
+  `professional_id` (= nº FPV), universidad, año de egreso, colegio, PAP (sí/no) + detalle obligatorio,
+  modalidad (multiselect presencial/distancia) y disponibilidad horaria estructurada (día × bloque).
+  Persistido en `volunteers` (migración `…0008`, columnas nullable) y validado en la API (Zod).
 - ✅ RF-2.2 Validación contra FPV vía **Adapter** (dummy always-OK; HTTP pendiente de contrato, ADR-0013);
   ⚠️ falta la regla exacta `cédula+FPV ∧ PAP=Sí → Activo` (hoy decide el verifier).
 - ✅ Estados `active` / `pending_approval` / `inactive`.
@@ -109,7 +110,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### B. Pendientes dentro del alcance del MVP (esperables por el PRD)
 - [x] **Módulo 2 — Consentimiento informado** obligatorio (RF-2.1.1) — mecanismo completo con texto
       provisional versionado; pendiente sustituir por el texto bioético oficial de la FPV.
-- [ ] **Módulo 2 — Formulario de postulación completo** (RF-2.1.2): tipo doc, FPV, universidad, año,
+- [x] **Módulo 2 — Formulario de postulación completo** (RF-2.1.2): tipo doc, FPV, universidad, año,
       PAP + detalle, colegio, multiselect de modalidad, disponibilidad horaria.
 - [ ] **Módulo 2 — Alta automática real:** generar contraseña de alta entropía + correo de bienvenida;
       regla `cédula+FPV ∧ PAP → Activo`.

@@ -23,19 +23,57 @@ export const greenBranchSchema = z.object({
   tags: z.array(z.string().min(1)).default([]),
 });
 
-export const registerVolunteerSchema = z.object({
-  nombre: z.string().min(1),
-  cedula_profesional: z.string().min(1),
-  email: z.string().email(),
-  contrasena: z.string().min(8),
-  especialidad: z.string().min(1).optional(),
-  disponibilidad: z.string().min(1).optional(),
-  // Informed consent (RF-2.1.1): mandatory. `z.literal(true)` makes a request
-  // without acceptance fail validation, so registration is blocked server-side
-  // regardless of the UI. The version is the wording the client displayed.
-  consentimiento: z.literal(true),
-  consentimiento_version: z.string().min(1),
+/** Complete applicant form vocab (RF-2.1.2). */
+export const documentTypeEnum = z.enum(['V', 'E', 'P']);
+export const modalidadEnum = z.enum(['presencial', 'distancia']);
+export const diaSemanaEnum = z.enum([
+  'lunes',
+  'martes',
+  'miercoles',
+  'jueves',
+  'viernes',
+  'sabado',
+  'domingo',
+]);
+export const bloqueHorarioEnum = z.enum(['manana', 'tarde', 'noche']);
+export const availabilitySlotSchema = z.object({
+  dia: diaSemanaEnum,
+  bloque: bloqueHorarioEnum,
 });
+
+export const registerVolunteerSchema = z
+  .object({
+    nombre: z.string().min(1),
+    // Personal identity document (RF-2.1.2): type + number, separate from the FPV.
+    tipo_documento: documentTypeEnum,
+    numero_documento: z.string().min(1),
+    // FPV professional registration number (persisted as professional_id).
+    numero_fpv: z.string().min(1),
+    email: z.string().email(),
+    contrasena: z.string().min(8),
+    universidad: z.string().min(1),
+    anio_egreso: z
+      .number()
+      .int()
+      .min(1950)
+      .max(new Date().getFullYear()),
+    colegio: z.string().min(1),
+    especialidad: z.string().min(1).optional(),
+    modalidad: z.array(modalidadEnum).min(1),
+    disponibilidad_horaria: z.array(availabilitySlotSchema).min(1),
+    // PAP (Primeros Auxilios Psicológicos): trained yes/no + detail when yes.
+    pap: z.boolean(),
+    pap_detalle: z.string().min(1).optional(),
+    // Informed consent (RF-2.1.1): mandatory. `z.literal(true)` makes a request
+    // without acceptance fail validation, so registration is blocked server-side
+    // regardless of the UI. The version is the wording the client displayed.
+    consentimiento: z.literal(true),
+    consentimiento_version: z.string().min(1),
+  })
+  .refine((v) => !v.pap || (v.pap_detalle !== undefined && v.pap_detalle.length > 0), {
+    message: 'pap_detalle es obligatorio cuando pap es true',
+    path: ['pap_detalle'],
+  });
 
 export const loginSchema = z.object({
   email: z.string().email(),

@@ -56,11 +56,21 @@ export function createVolunteerRouter(): Hono {
       const result = await registerVolunteer(
         {
           fullName: body.nombre,
-          professionalId: body.cedula_profesional,
+          professionalId: body.numero_fpv,
           email: body.email,
           password: body.contrasena,
           specialty: body.especialidad,
-          availability: body.disponibilidad,
+          application: {
+            documentType: body.tipo_documento,
+            documentNumber: body.numero_documento,
+            university: body.universidad,
+            graduationYear: body.anio_egreso,
+            colegio: body.colegio,
+            modalities: body.modalidad,
+            availabilitySchedule: body.disponibilidad_horaria,
+            papTrained: body.pap,
+            papDetail: body.pap_detalle,
+          },
           consentVersion: currentConsentVersion,
         },
         registerDeps,

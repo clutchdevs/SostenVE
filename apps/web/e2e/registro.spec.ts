@@ -1,34 +1,50 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Registration consent gate (RF-2.1.1), backend-independent: the consent endpoint
- * and the register POST are mocked so this runs with only the web server. The
- * submit button must stay disabled until the consent checkbox is ticked.
+ * Complete registration form (RF-2.1.2) + consent gate (RF-2.1.1),
+ * backend-independent: the consent endpoint and the register POST are mocked so
+ * this runs with only the web server. Submit stays disabled until consent,
+ * modality and availability are provided.
  */
-test('registration is blocked until the informed consent is accepted', async ({ page }) => {
+test('full registration requires consent, modality and availability', async ({ page }) => {
   await page.route('**/consent/active', (route) =>
     route.fulfill({
       json: { version: 'v0.1.0-draft', updated_at: '2026-06-29', text: 'Texto de prueba del consentimiento.' },
     }),
   );
-  await page.route('**/volunteers/register', (route) =>
-    route.fulfill({ status: 202, json: { voluntario_id: 'vol-1', estado_validacion: 'validado' } }),
-  );
+  let posted: Record<string, unknown> | undefined;
+  await page.route('**/volunteers/register', async (route) => {
+    posted = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({ status: 202, json: { voluntario_id: 'vol-1', estado_validacion: 'validado' } });
+  });
 
   await page.goto('/registro');
   await expect(page.getByText('Texto de prueba del consentimiento.')).toBeVisible();
 
   await page.getByPlaceholder('Nombre completo').fill('Ana Test');
-  await page.getByPlaceholder('Cédula profesional (FPV)').fill('FPV-12345678');
+  await page.getByPlaceholder('Número de documento (cédula)').fill('12345678');
+  await page.getByPlaceholder('Número de inscripción FPV').fill('FPV-9000');
   await page.getByPlaceholder('Correo').fill('ana@example.com');
   await page.getByPlaceholder('Contraseña (mínimo 8 caracteres)').fill('a-strong-password');
+  await page.getByPlaceholder('Universidad de egreso').fill('UCV');
+  await page.getByPlaceholder('Año de egreso').fill('2015');
+  await page.getByPlaceholder('Colegio de psicólogos').fill('Colegio de Miranda');
 
   const submit = page.getByRole('button', { name: /registrarme/i });
+
+  // Consent alone is not enough: modality + availability are still required.
+  await page.getByText('He leído y acepto el consentimiento informado.').click();
   await expect(submit).toBeDisabled();
 
-  await page.getByRole('checkbox').check();
+  await page.getByText('Presencial').click();
+  await page.getByLabel('Lun Mañana').check();
   await expect(submit).toBeEnabled();
 
   await submit.click();
   await expect(page.getByText(/registro recibido/i)).toBeVisible();
+
+  expect(posted?.tipo_documento).toBe('V');
+  expect(posted?.modalidad).toEqual(['presencial']);
+  expect(posted?.disponibilidad_horaria).toEqual([{ dia: 'lunes', bloque: 'manana' }]);
+  expect(posted?.consentimiento).toBe(true);
 });
