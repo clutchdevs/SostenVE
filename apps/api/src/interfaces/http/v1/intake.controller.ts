@@ -71,6 +71,10 @@ export function createIntakeRouter(): Hono {
     const body = getValidated<GreenBranchBody>(c, 'body');
     const { intakeDeps } = getIntakeContainer();
 
+    // Location screen sends estado + ciudad; compose into the case zone (falling
+    // back to the free-form `zona` for compatibility).
+    const zone = composeZone(body.ciudad, body.estado) ?? body.zona;
+
     const result = await submitGreenBranch(
       {
         name: body.nombre,
@@ -78,10 +82,11 @@ export function createIntakeRouter(): Hono {
         requesterType: body.tipo_solicitante
           ? requesterFromDb[body.tipo_solicitante]
           : undefined,
-        zone: body.zona,
+        zone,
         modality: body.modalidad ? modalityFromDb[body.modalidad] : undefined,
         age: body.edad,
         tagCodes: body.tags,
+        habitChanges: body.cambio_habitos,
       },
       intakeDeps,
     );
@@ -90,4 +95,10 @@ export function createIntakeRouter(): Hono {
   });
 
   return router;
+}
+
+/** Joins "Ciudad, Estado" for the case zone, tolerating either part missing. */
+function composeZone(ciudad?: string, estado?: string): string | undefined {
+  const parts = [ciudad?.trim(), estado?.trim()].filter((p): p is string => !!p);
+  return parts.length > 0 ? parts.join(', ') : undefined;
 }

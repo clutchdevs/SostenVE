@@ -14,6 +14,13 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
     return 0;
   }
 
+  // Drain the queue by the weighted urgency index (RF-1.5): higher urgency first,
+  // ties broken by arrival (FIFO). Ideation cases carry a dominant term so they
+  // are always served before any non-ideation case.
+  pending.sort(
+    (a, b) => b.urgencyScore - a.urgencyScore || a.createdAt.getTime() - b.createdAt.getTime(),
+  );
+
   // Only psychologists receive cases — coordinators/admins are active staff but
   // are not part of the assignment pool.
   const available: Volunteer[] = (await deps.volunteers.listByStatus('active')).filter(

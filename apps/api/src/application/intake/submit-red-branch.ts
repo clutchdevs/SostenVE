@@ -1,7 +1,5 @@
 import { generatePseudonymId } from '../../domain/identity/pseudonym';
-import { RiskLevel } from '../../domain/triage';
-import { DEFAULT_SEVERITY_WEIGHT } from '../../domain/triage/triage-catalog';
-import { Severity } from '../../domain/triage';
+import { RED_BRANCH_URGENCY, RiskLevel } from '../../domain/triage';
 import { getActiveCrisisLine } from './get-active-crisis-line';
 import type { IntakeCaseResult, IntakeDeps } from './types';
 
@@ -32,7 +30,7 @@ export async function submitRedBranch(
       caseId: null,
       branch: 'RED',
       riskLevel: RiskLevel.HIGH,
-      urgencyScore: DEFAULT_SEVERITY_WEIGHT[Severity.RED],
+      urgencyScore: RED_BRANCH_URGENCY,
       crisisLines,
     };
   }
@@ -44,7 +42,7 @@ export async function submitRedBranch(
     pseudonymId,
     branch: 'RED',
     riskLevel: RiskLevel.HIGH,
-    urgencyScore: DEFAULT_SEVERITY_WEIGHT[Severity.RED],
+    urgencyScore: RED_BRANCH_URGENCY,
     status: 'PENDING',
     slaExpiresAt: new Date(now.getTime() + slaMs),
   });

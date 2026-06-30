@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { Severity } from '../../../src/domain/triage/severity';
 import { createSymptomTag } from '../../../src/domain/triage/symptom-tag';
 import { DEFAULT_SEVERITY_WEIGHT } from '../../../src/domain/triage/triage-catalog';
-import { weightedUrgencyIndex } from '../../../src/domain/triage/urgency-index';
+import {
+  computeUrgencyIndex,
+  RED_BRANCH_URGENCY,
+  URGENCY_WEIGHTS,
+  weightedUrgencyIndex,
+} from '../../../src/domain/triage/urgency-index';
 
 function tag(severity: Severity) {
   return createSymptomTag({
@@ -37,5 +42,40 @@ describe('weightedUrgencyIndex (RF-1.5)', () => {
     expect(weightedUrgencyIndex([tag(Severity.ORANGE)])).toBeGreaterThan(
       weightedUrgencyIndex([tag(Severity.YELLOW)]),
     );
+  });
+});
+
+describe('computeUrgencyIndex — full formula (RF-1.5)', () => {
+  it('adds the dominant ideation term when a RED tag is present', () => {
+    const withRed = computeUrgencyIndex({ tags: [tag(Severity.RED)] });
+    expect(withRed).toBe(URGENCY_WEIGHTS.ideation + DEFAULT_SEVERITY_WEIGHT.RED);
+  });
+
+  it('makes a single ideation case outrank any pile of non-RED tags', () => {
+    const ideation = computeUrgencyIndex({ tags: [tag(Severity.RED)] });
+    const manyOrange = computeUrgencyIndex({
+      tags: Array.from({ length: 20 }, () => tag(Severity.ORANGE)),
+    });
+    expect(ideation).toBeGreaterThan(manyOrange);
+  });
+
+  it('adds one point per reported habit change', () => {
+    const base = computeUrgencyIndex({ tags: [tag(Severity.YELLOW)] });
+    const withHabits = computeUrgencyIndex({
+      tags: [tag(Severity.YELLOW)],
+      habitChangeCount: 3,
+    });
+    expect(withHabits).toBe(base + 3 * URGENCY_WEIGHTS.habitChange);
+  });
+
+  it('ignores a negative habit count and defaults to zero', () => {
+    expect(computeUrgencyIndex({ tags: [], habitChangeCount: -5 })).toBe(0);
+    expect(computeUrgencyIndex({ tags: [] })).toBe(0);
+  });
+
+  it('places a red-branch case at ideation level', () => {
+    expect(RED_BRANCH_URGENCY).toBe(URGENCY_WEIGHTS.ideation + DEFAULT_SEVERITY_WEIGHT.RED);
+    // A green case with one red tag and a red-branch case share the top tier.
+    expect(computeUrgencyIndex({ tags: [tag(Severity.RED)] })).toBe(RED_BRANCH_URGENCY);
   });
 });

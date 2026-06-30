@@ -13,14 +13,27 @@ export const redBranchSchema = z.object({
   edad: z.number().int().min(0).max(120).optional(),
 });
 
+/** Recent habit changes (green-branch screen 5, RF-1.3 pantalla 5). */
+export const habitChangeEnum = z.enum([
+  'alimentacion',
+  'concentracion',
+  'aseo',
+  'relaciones',
+  'sueno',
+]);
+
 export const greenBranchSchema = z.object({
   nombre: z.string().min(1).optional(),
   contacto: z.string().min(1),
   tipo_solicitante: z.enum(['victima', 'familiar', 'voluntario']).optional(),
+  // Free-form zone kept for compatibility; location screen sends estado + ciudad.
   zona: z.string().min(1).optional(),
+  estado: z.string().min(1).optional(),
+  ciudad: z.string().min(1).optional(),
   modalidad: z.enum(['presencial', 'distancia']).optional(),
   edad: z.number().int().min(0).max(120).optional(),
   tags: z.array(z.string().min(1)).default([]),
+  cambio_habitos: z.array(habitChangeEnum).default([]),
 });
 
 /** Complete applicant form vocab (RF-2.1.2). */

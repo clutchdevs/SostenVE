@@ -1,6 +1,6 @@
 import { ValidationError } from '../../shared/errors/api-error';
 import { generatePseudonymId } from '../../domain/identity/pseudonym';
-import { classifyRisk, isHighRisk, weightedUrgencyIndex } from '../../domain/triage';
+import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage';
 import { getProvisionalTag } from '../../domain/triage/triage-catalog';
 import type { Modality, RequesterType } from '../../domain/case/case';
 import { getActiveCrisisLine } from './get-active-crisis-line';
@@ -14,6 +14,8 @@ export interface GreenBranchInput {
   modality?: Modality;
   age?: number;
   tagCodes: string[];
+  /** Recent habit changes reported on screen 5 (feeds the urgency index, RF-1.5). */
+  habitChanges?: string[];
 }
 
 /**
@@ -40,7 +42,10 @@ export async function submitGreenBranch(
   const riskLevel = classifyRisk(tags, {
     orangeTagsThresholdForEscalation: deps.config.triage.orange_tags_threshold_for_escalation,
   });
-  const urgencyScore = weightedUrgencyIndex(tags);
+  const urgencyScore = computeUrgencyIndex({
+    tags,
+    habitChangeCount: input.habitChanges?.length ?? 0,
+  });
   const high = isHighRisk(riskLevel);
 
   const pseudonymId = generatePseudonymId(input.contact, deps.pseudonymSalt);
