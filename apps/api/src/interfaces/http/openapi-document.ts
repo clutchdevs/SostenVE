@@ -158,10 +158,10 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/cases/{id}': {
         get: {
           tags: ['cases'],
-          summary: 'Detalle de un caso con identidad, notas y cierre (psicólogo asignado)',
+          summary: 'Detalle de un caso con notas y cierre (psicólogo asignado ve identidad; coordinador/admin acceso auditado sin PII)',
           security: bearer,
           parameters: [idParam],
-          responses: { '200': { description: 'Detalle + identidad + notas + cierre' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
+          responses: { '200': { description: 'Detalle + notas + cierre (identidad solo para el psicólogo asignado)' }, '403': { description: 'Caso ajeno' }, '404': { description: 'No encontrado' } },
         },
       },
       '/cases/{id}/accept': {
