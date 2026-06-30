@@ -1,71 +1,106 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { CaseList } from '../../src/features/shared/case-list';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
+import { CaseQueueTable } from '../../src/features/coordinator/case-queue-table';
+import { sortForBoard, summarizeOps } from '../../src/features/coordinator/operations';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
-import type { Capacity, CaseSummary } from '../../src/lib/types';
+import type { CaseSummary } from '../../src/lib/types';
 
-export default function CoordinatorPanel() {
+const REFRESH_MS = 15_000;
+
+export default function CoordinatorBoard() {
   const [cases, setCases] = useState<CaseSummary[]>([]);
-  const [capacity, setCapacity] = useState<Capacity | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [now, setNow] = useState(() => new Date());
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const activeRef = useRef(true);
 
+  // Data polling (near real-time).
   useEffect(() => {
-    let active = true;
+    activeRef.current = true;
     async function refresh() {
       try {
-        const [list, cap] = await Promise.all([
-          apiFetch<CaseSummary[]>('/cases'),
-          apiFetch<Capacity>('/coordinator/capacity'),
-        ]);
-        if (active) {
-          setCases(list);
-          setCapacity(cap);
-        }
+        const list = await apiFetch<CaseSummary[]>('/cases');
+        if (!activeRef.current) return;
+        setCases(list);
+        setUpdatedAt(new Date());
       } catch (err) {
-        if (!active) return;
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-          setNeedsAuth(true);
-        } else {
-          setError('No se pudieron cargar los datos. Intenta de nuevo.');
-        }
+        if (!activeRef.current) return;
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
+        else setError('No se pudieron cargar los casos. Intenta de nuevo.');
       }
     }
     void refresh();
-    const timer = setInterval(refresh, 15_000); // near real-time via polling
+    const timer = setInterval(refresh, REFRESH_MS);
     return () => {
-      active = false;
+      activeRef.current = false;
       clearInterval(timer);
     };
   }, []);
 
-  if (needsAuth) {
-    return <AuthRequired />;
-  }
+  // 1-second tick so the clock, "updated ago" and SLA chips stay live.
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const summary = useMemo(() => summarizeOps(cases, now), [cases, now]);
+  const board = useMemo(() => sortForBoard(cases, now), [cases, now]);
+
+  if (needsAuth) return <AuthRequired />;
+
+  const clock = now.toLocaleString('es-VE', { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+  const agoSeconds = updatedAt
+    ? Math.max(0, Math.round((now.getTime() - updatedAt.getTime()) / 1000))
+    : null;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-brand">Panel de coordinación</h1>
-      {error && <p className="mt-4 text-risk-high">{error}</p>}
-
-      {capacity && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-risk-high bg-red-50 p-3">
-            <p className="text-2xl font-bold text-risk-high">{capacity.riesgo_alto_sin_atender}</p>
-            <p className="text-sm">Riesgo alto sin atender</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-2xl font-bold">{capacity.casos_sin_asignar}</p>
-            <p className="text-sm">Sin asignar</p>
-          </div>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-semibold text-ink">Cola de casos en vivo</h1>
+          <p className="mt-1 text-sm capitalize text-slate-600">
+            {clock}
+            {agoSeconds !== null && (
+              <span className="lowercase"> · actualizado hace {agoSeconds} s</span>
+            )}
+          </p>
         </div>
+        {summary.slaVencidos > 0 && (
+          <span className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3.5 py-1.5 text-sm font-semibold text-accent-coral">
+            <span className="h-2 w-2 rounded-full bg-accent-coral" aria-hidden />
+            <AlertTriangle className="h-4 w-4" aria-hidden />
+            {summary.slaVencidos} SLA {summary.slaVencidos === 1 ? 'vencido' : 'vencidos'}
+          </span>
+        )}
+      </header>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Kpi value={summary.riesgoAlto} label="Riesgo alto" className="text-accent-coral" />
+        <Kpi value={summary.enCola} label="En cola" className="text-accent-amber" />
+        <Kpi value={summary.psicologos} label="Psicólogos en atención" className="text-accent-teal" />
+        <Kpi value={`${summary.esperaPromedioMin}m`} label="Espera promedio" className="text-navy" />
+      </section>
+
+      {error && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-risk-high">
+          {error}
+        </p>
       )}
 
-      <div className="mt-6">
-        <CaseList cases={cases} />
-      </div>
-    </main>
+      <CaseQueueTable cases={board} now={now} />
+    </div>
+  );
+}
+
+function Kpi({ value, label, className }: { value: number | string; label: string; className: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-surface-card p-5 shadow-card">
+      <p className={`text-4xl font-bold tabular-nums ${className}`}>{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{label}</p>
+    </div>
   );
 }

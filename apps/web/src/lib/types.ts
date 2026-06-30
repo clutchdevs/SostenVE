@@ -15,6 +15,8 @@ export interface CaseSummary {
   // and detail; never returned to coordinators/admins.
   nombre?: string | null;
   contacto?: string | null;
+  // Assigned psychologist's name. Present only on the coordinator/admin board.
+  asignado_a?: string | null;
 }
 
 export interface ClinicalNoteView {
