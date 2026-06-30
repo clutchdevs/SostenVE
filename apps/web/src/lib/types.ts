@@ -11,6 +11,10 @@ export interface CaseSummary {
   edad?: number | null;
   creado_en: string;
   sla_vence_en: string | null;
+  // Requester contact (PII). Present only on the psychologist's own case list
+  // and detail; never returned to coordinators/admins.
+  nombre?: string | null;
+  contacto?: string | null;
 }
 
 export interface ClinicalNoteView {
