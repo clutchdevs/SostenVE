@@ -26,7 +26,9 @@ export function clearSession(): void {
 
 /** Landing route for a role after login. */
 export function homePathForRole(role: string | null): string {
-  return role === 'coordinator' || role === 'admin' ? '/coordinador' : '/psicologo';
+  if (role === 'admin') return '/admin';
+  if (role === 'coordinator') return '/coordinador';
+  return '/psicologo';
 }
 
 /** Expiry (ms epoch) from a JWT's `exp` claim, or null if it can't be read. */

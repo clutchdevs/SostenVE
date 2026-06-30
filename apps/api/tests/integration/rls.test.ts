@@ -130,6 +130,22 @@ describe.skipIf(!dbAvailable)('RLS and audit immutability (integration)', () => 
     expect(res.rowCount).toBe(0);
   });
 
+  it('lets a coordinator read clinical notes (issue #25, audited access)', async () => {
+    const res = await asUser(ids.other, 'coordinator', () =>
+      client.query('select id from clinical_notes where case_id = $1', [ids.caseId]),
+    );
+    expect(res.rowCount).toBe(1);
+  });
+
+  it('still blocks a coordinator from reading PII contact', async () => {
+    const res = await asUser(ids.other, 'coordinator', () =>
+      client.query('select pseudonym_id from case_contacts where pseudonym_id = $1', [
+        ids.pseudonym,
+      ]),
+    );
+    expect(res.rowCount).toBe(0);
+  });
+
   it('accepts audit_log inserts but rejects update and delete', async () => {
     const inserted = await client.query<{ id: string }>(
       "insert into audit_log (action_type) values ('read') returning id",

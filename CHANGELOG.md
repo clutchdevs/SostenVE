@@ -6,7 +6,21 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Seguridad
+- **Acceso del coordinador a notas clínicas (issue #25, decisión FPV):** resuelto como acceso
+  **auditado**. La RLS de `clinical_notes` amplía la lectura a coordinator/admin y `GET /cases/:id`
+  les devuelve las notas y el cierre (sin PII de contacto, que sigue restringida al psicólogo
+  asignado); cada lectura registra `clinical_note_read` en el `audit_log` inmutable. Actualizados
+  charter, threat-model y clasificación de datos.
+
 ### Añadido
+- **Endpoints admin (issue #21):** CRUD de líneas de crisis (`GET/POST /admin/crisis-lines`,
+  `PATCH/DELETE /admin/crisis-lines/:id`) con **soft-delete** (desactivación) y **auditoría** de cada
+  cambio; y consulta del log de auditoría (`GET /admin/audit`, filtros por acción/registro/usuario). El
+  **ruteo de líneas de crisis** (`GET /crisis-lines/active`) ahora **lee de la BD** (fuente gestionada por
+  el admin) con **fallback a `config`** si la BD no responde o está vacía (fail-safe). Seed con líneas de
+  crisis y un usuario administrador (`admin@sostenve.test`). Panel web `/admin` para gestionar líneas y
+  ver la auditoría.
 - **Módulo 2 — Formulario de postulación completo (RF-2.1.2):** el registro de psicólogos recoge ahora
   todos los datos del PRD — tipo + número de documento (cédula) separados del nº de inscripción FPV
   (`professional_id`), universidad, año de egreso, colegio, formación PAP (sí/no con detalle

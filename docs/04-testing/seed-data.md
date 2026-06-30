@@ -16,6 +16,7 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 |---|---|---|---|
 | Coordinador | `coordinador@sostenve.test` | `Coordinador123!` | `/coordinador` |
 | Psicólogo | `psicologo@sostenve.test` | `Psicologo123!` | `/psicologo` |
+| Administrador | `admin@sostenve.test` | `Admin123!` | `/admin` |
 
 - El psicólogo tiene especialidad **"psicología infantil"** (útil para probar la priorización por edad).
 - Ambos quedan en estado **`active`** (pueden iniciar sesión de inmediato).
@@ -25,6 +26,17 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 |---|---|---|---|---|
 | `seed-pseudo-pendiente` | `pendiente` | `riesgo_alto` | 9 | En cola; se resalta como "riesgo alto sin atender" en el panel del coordinador (SLA 10 min). Menor → al asignarlo por el cron, prioriza al psicólogo con especialidad infantil. |
 | `seed-pseudo-asignado` | `asignado` | `riesgo_moderado` | 12 | Asignado al psicólogo de prueba; contacto "Ana de Prueba". Menor → la tarjeta muestra "12 años" y el cierre deriva destinatario `indirecta_nino`. |
+
+## Líneas de crisis
+Espejo de `config/app.config.yml`, para el **ruteo desde BD** (`GET /crisis-lines/active`) y el **CRUD admin**:
+
+| Línea | Teléfono | Ventana | Tipo |
+|---|---|---|---|
+| LAPSI | `+584242907338` | 8:00–2:00 | Ruteo por hora |
+| Colegio de Psicólogos de Miranda | `04127840112` | 2:00–8:00 | Ruteo por hora |
+| VEN-911 | `911` | — | Respaldo |
+
+> Si la tabla está vacía o la BD no responde, el endpoint hace **fallback** a las líneas del `config` (fail-safe).
 
 Así, al iniciar sesión:
 - **Coordinador** → ve ambos casos (con el de riesgo alto priorizado) y la tarjeta de capacidad.

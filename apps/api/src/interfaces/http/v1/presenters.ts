@@ -7,14 +7,40 @@ import {
 } from '../../../infrastructure/repositories/enum-maps';
 import type { ActiveCrisisLine } from '../../../application/intake/crisis-line-routing';
 import type { IntakeCaseResult } from '../../../application/intake/types';
+import type { AuditEntryRecord } from '../../../domain/audit/audit';
 import type { CaseContact, CaseRecord } from '../../../domain/case/case';
 import type { ClinicalNote } from '../../../domain/clinical/clinical-note';
 import type { CaseClosure } from '../../../domain/clinical/case-closure';
+import type { CrisisLine } from '../../../domain/crisis-line/crisis-line';
 
 /** Maps domain results to the Spanish contract values (see openapi.yaml). */
 
 export function presentCrisisLines(lines: ActiveCrisisLine) {
   return { activa: lines.active, respaldo: lines.backups };
+}
+
+export function presentCrisisLineAdmin(line: CrisisLine) {
+  return {
+    id: line.id,
+    nombre: line.name,
+    telefono: line.phone,
+    cobertura: line.coverage ?? null,
+    hora_inicio: line.startHour ?? null,
+    hora_fin: line.endHour ?? null,
+    prioridad: line.priority,
+    activa: line.active,
+  };
+}
+
+export function presentAuditEntry(entry: AuditEntryRecord) {
+  return {
+    id: entry.id,
+    usuario_id: entry.userId,
+    rol: entry.role,
+    registro_afectado: entry.affectedRecordId,
+    accion: entry.actionType,
+    creado_en: entry.createdAt.toISOString(),
+  };
 }
 
 export function presentIntakeResult(result: IntakeCaseResult) {

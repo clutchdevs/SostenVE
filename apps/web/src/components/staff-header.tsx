@@ -25,8 +25,6 @@ export function StaffHeader() {
     router.push('/login');
   }
 
-  const isCoordinator = role === 'coordinator' || role === 'admin';
-
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
@@ -39,9 +37,14 @@ export function StaffHeader() {
               Mis casos
             </Link>
           )}
-          {isCoordinator && (
+          {role === 'coordinator' && (
             <Link href="/coordinador" className="font-medium text-slate-700 hover:text-brand">
               Panel
+            </Link>
+          )}
+          {role === 'admin' && (
+            <Link href="/admin" className="font-medium text-slate-700 hover:text-brand">
+              Administración
             </Link>
           )}
           {role && (

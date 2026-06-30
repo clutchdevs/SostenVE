@@ -39,16 +39,15 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### Administrador (Federación)
 - ✅ Resolver excepciones de validación de psicólogos (`approve`/`reject`).
-- ⚠️ Auditar accesos — `audit_log` inmutable (RLS + trigger) existe, pero **sin endpoint/UI** de consulta.
-- ⚠️ CRUD de líneas de crisis — tabla `crisis_lines` + RLS listos, pero el ruteo activo lee de
-  `config/app.config.yml`, no de la tabla; faltan los endpoints admin.
+- ✅ Auditar accesos — `audit_log` inmutable (RLS + trigger) + **endpoint** `GET /admin/audit` (filtros por acción/registro/usuario).
+- ✅ CRUD de líneas de crisis — endpoints admin (`/admin/crisis-lines`, soft-delete, auditado) y el **ruteo activo lee de la BD** con fallback a `config` (fail-safe).
 
 ## 2. Matriz de datos sensibles (PRD §2.1)
 - ✅ Seudonimización de PII (PII separada; admin no ve PII/clínico) — ADR-0011 + RLS.
 - ✅ Cifrado de notas clínicas en reposo (AES-256-GCM) — ADR-0004.
-- ⚠️ **Divergencia a resolver (Human-in-the-Loop FPV):** el PRD otorga al **coordinador** acceso a
-  **todas las notas clínicas**; nuestra implementación (charter/threat-model) lo **restringe** a
-  estado/prioridad sin contenido clínico. Decidir cuál prevalece.
+- ✅ **Acceso del coordinador a notas clínicas (issue #25 — resuelto):** el coordinador/admin accede al
+  contenido clínico de forma **auditada** (cada lectura registra `clinical_note_read` en `audit_log`),
+  alineado con el PRD; la **PII de contacto** sigue restringida al psicólogo asignado.
 
 ## 3. Cobertura por módulo funcional (PRD §3)
 
@@ -121,15 +120,17 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
       voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
-- [ ] **Endpoints admin:** CRUD de líneas de crisis (que el ruteo lea de BD) y consulta de auditoría.
+- [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
+      el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
 - [ ] **Guías PAP asíncronas** para el solicitante.
 - [ ] **Registro/login de coordinador por token** (RF-2.6) y expiración de sesión por inactividad (RF-2.7).
 - [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
       (ubicación, cambio de hábitos).
 
-### C. Decisión pendiente (Human-in-the-Loop FPV)
-- [ ] **Acceso del coordinador a notas clínicas:** el PRD dice "todas"; nuestra implementación lo
-      restringe. Confirmar la política y alinear RLS + endpoints.
+### C. Decisión resuelta (Human-in-the-Loop FPV)
+- [x] **Acceso del coordinador a notas clínicas (issue #25):** resuelto → acceso **auditado**. La RLS de
+      `clinical_notes` amplía la lectura a coordinator/admin y cada acceso registra `clinical_note_read`;
+      la PII de contacto sigue restringida al psicólogo asignado.
 
 ## Cómo mantener este documento
 Marcar las casillas conforme se implementen; cada brecha cerrada debería referenciar su bloque/ADR y
