@@ -57,9 +57,14 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-1.2.1 Ruteo dinámico por hora (LAPSI 8:00–2:00 / Miranda 2:01–7:59, con cruce de medianoche).
 - ✅ RF-1.3 Rama Verde con tags por severidad (motor); ⚠️ **catálogo provisional** (faltan duelo/infancia/disociación completos del PRD).
 - ✅ Regla de interrupción (1 rojo o 3+ naranja → riesgo alto).
-- ⚠️ RF-1.5 Índice de urgencia — suma ponderada simple; falta la fórmula completa `U = w_id·I_ideacion + …`.
+- ✅ RF-1.5 Índice de urgencia **ponderado completo** (issue #24): `U = w_id·I_ideacion + Σ peso(tag) +
+  w_hab·n_cambios_habito`, con `I_ideacion` dominante (cualquier tag rojo lleva el caso a la cima). El
+  motor de asignación **drena la cola por urgencia** (mayor primero, FIFO en empate). Pesos aislados y
+  pendientes de validación FPV.
 - ❌ RF-1.4 Analizador léxico-semántico — Fase 2.
-- ⚠️ Rama Verde pantallas: faltan ubicación/geolocalización y "cambio de hábitos" (pantalla 5).
+- ✅ Rama Verde **flujo por pantallas** (issue #24): síntomas → **ubicación** (estado + ciudad, menús de
+  selección rápida) → **cambio de hábitos** (pantalla 5) → contacto. Los hábitos alimentan el índice.
+  ⚠️ Pendiente: autodetección por geolocalización del dispositivo (requiere geocoder).
 
 ### Módulo 2 — Registro y validación de psicólogos
 - ✅ RF-2.1.1 Consentimiento informado obligatorio: checkbox que bloquea el alta, texto bioético
@@ -131,8 +136,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
       (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
       sesión por inactividad (`security.session.idle_timeout_minutes`) y ruta `/login-coordinador` (RF-2.7).
-- [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
-      (ubicación, cambio de hábitos).
+- [x] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
+      (ubicación, cambio de hábitos) — issue #24. Pendiente: geolocalización por dispositivo.
 
 ### C. Decisión resuelta (Human-in-the-Loop FPV)
 - [x] **Acceso del coordinador a notas clínicas (issue #25):** resuelto → acceso **auditado**. La RLS de

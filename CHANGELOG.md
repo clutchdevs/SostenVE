@@ -14,6 +14,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Módulo 1 — Índice de urgencia ponderado completo + pantallas de Rama Verde (issue #24, RF-1.5/RF-1.3):**
+  el índice pasó de suma simple a la fórmula `U = w_id·I_ideacion + Σ peso(tag) + w_hab·n_cambios_habito`,
+  con un término de **ideación dominante** (cualquier tag rojo lleva el caso a la cima de la cola) y un
+  aporte menor por **cambios de hábito**. El **motor de asignación ahora drena la cola por urgencia**
+  (mayor primero, FIFO en empate); los casos de Rama Roja comparten el nivel de ideación. La **Rama Verde**
+  se volvió un **flujo por pantallas**: síntomas → **ubicación** (estado + ciudad, menús de selección
+  rápida) → **cambio de hábitos** (pantalla 5) → contacto. Pesos aislados y pendientes de validación FPV;
+  pendiente la autodetección por geolocalización del dispositivo.
 - **Módulo 2 — Registro/login de coordinador por token + expiración por inactividad (issue #23,
   RF-2.6 / RF-2.7):** los coordinadores ya no se autorregistran contra el padrón FPV; un admin los
   **invita por token**. El admin emite la invitación (`POST /admin/coordinators/invitations`), que
