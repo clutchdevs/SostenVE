@@ -68,3 +68,18 @@ export interface AuditEntryView {
   accion: string;
   creado_en: string;
 }
+
+export interface CoordinatorInvitationView {
+  id: string;
+  nombre: string;
+  email: string;
+  estado: 'pending' | 'accepted' | 'revoked';
+  vence_en: string;
+  aceptada_en: string | null;
+  creada_en: string;
+}
+
+/** Create response also carries the raw token, shown once to the admin. */
+export interface CoordinatorInvitationCreated extends CoordinatorInvitationView {
+  token: string;
+}

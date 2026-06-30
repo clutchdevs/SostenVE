@@ -3,12 +3,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { AuditViewer } from '../../src/features/admin/audit-viewer';
+import { CoordinatorInvitations } from '../../src/features/admin/coordinator-invitations';
 import { CrisisLinesAdmin } from '../../src/features/admin/crisis-lines-admin';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
-import type { AuditEntryView, CrisisLineAdmin } from '../../src/lib/types';
+import type {
+  AuditEntryView,
+  CoordinatorInvitationView,
+  CrisisLineAdmin,
+} from '../../src/lib/types';
 
 export default function AdminPanel() {
   const [lines, setLines] = useState<CrisisLineAdmin[]>([]);
+  const [invitations, setInvitations] = useState<CoordinatorInvitationView[]>([]);
   const [audit, setAudit] = useState<AuditEntryView[]>([]);
   const [filter, setFilter] = useState('');
   const [needsAuth, setNeedsAuth] = useState(false);
@@ -20,6 +26,16 @@ export default function AdminPanel() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudieron cargar las líneas de crisis.');
+    }
+  }, []);
+
+  const loadInvitations = useCallback(async () => {
+    try {
+      setInvitations(
+        await apiFetch<CoordinatorInvitationView[]>('/admin/coordinators/invitations'),
+      );
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
     }
   }, []);
 
@@ -37,6 +53,10 @@ export default function AdminPanel() {
   }, [loadLines]);
 
   useEffect(() => {
+    void loadInvitations();
+  }, [loadInvitations]);
+
+  useEffect(() => {
     void loadAudit();
   }, [loadAudit]);
 
@@ -45,6 +65,12 @@ export default function AdminPanel() {
     void loadLines();
     void loadAudit();
   }, [loadLines, loadAudit]);
+
+  // Refresh invitations + audit after an invitation change.
+  const onInvitationsChange = useCallback(() => {
+    void loadInvitations();
+    void loadAudit();
+  }, [loadInvitations, loadAudit]);
 
   if (needsAuth) {
     return <AuthRequired />;
@@ -55,6 +81,7 @@ export default function AdminPanel() {
       <h1 className="text-xl font-bold text-brand">Administración</h1>
       {error && <p className="text-risk-high">{error}</p>}
       <CrisisLinesAdmin lines={lines} onChange={onLinesChange} />
+      <CoordinatorInvitations invitations={invitations} onChange={onInvitationsChange} />
       <AuditViewer entries={audit} filter={filter} onFilter={setFilter} />
     </main>
   );
