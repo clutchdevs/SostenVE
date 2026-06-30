@@ -66,6 +66,19 @@ export function presentIntakeResult(result: IntakeCaseResult) {
   };
 }
 
+/**
+ * Case summary for the assigned psychologist's own list: the operational summary
+ * plus the requester contact (name/phone) so the portal can show and search by
+ * identity. Only ever used on the psychologist path (see cases.controller).
+ */
+export function presentAssignedCaseSummary(caseRecord: CaseRecord, contact: CaseContact | null) {
+  return {
+    ...presentCaseSummary(caseRecord),
+    nombre: contact?.name ?? null,
+    contacto: contact?.contact ?? null,
+  };
+}
+
 export function presentCaseSummary(caseRecord: CaseRecord) {
   return {
     caso_id: caseRecord.id,

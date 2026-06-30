@@ -164,7 +164,8 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/cases': {
         get: {
           tags: ['cases'],
-          summary: 'Listar casos (psicólogo: propios; coordinador/admin: todos)',
+          summary:
+            'Listar casos (psicólogo: propios, con nombre/teléfono del solicitante; coordinador/admin: todos, sin PII)',
           security: bearer,
           responses: { '200': { description: 'Lista de casos' }, '401': { description: 'No autenticado' } },
         },
