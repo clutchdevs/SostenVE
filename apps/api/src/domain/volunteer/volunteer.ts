@@ -27,6 +27,9 @@ export interface VolunteerApplication {
   papDetail?: string;
 }
 
+/** Why a registration could not be auto-validated (RF-2.2 exception case). */
+export type PendingReason = 'fpv_unreachable' | 'fpv_not_found' | 'pap_not_declared';
+
 export interface Volunteer {
   id: string;
   fullName: string;
@@ -37,6 +40,8 @@ export interface Volunteer {
   role: VolunteerRole;
   tokenVersion: number;
   status: VolunteerStatus;
+  /** Set only while `pending_approval` to explain the manual-review reason. */
+  pendingReason?: PendingReason;
   createdAt: Date;
 }
 
@@ -49,6 +54,8 @@ export interface NewVolunteer {
   role?: VolunteerRole;
   passwordHash: string;
   status?: VolunteerStatus;
+  /** Manual-review reason recorded when status is `pending_approval` (RF-2.2). */
+  pendingReason?: PendingReason;
   /** Full applicant profile (RF-2.1.2); optional for minimal/seeded inserts. */
   application?: VolunteerApplication;
   /** Informed-consent acceptance recorded at registration (RF-2.1.1). */
@@ -62,6 +69,8 @@ export interface VolunteerRepository {
   findByProfessionalId(professionalId: string): Promise<Volunteer | null>;
   findByEmail(email: string): Promise<Volunteer | null>;
   listByStatus(status: VolunteerStatus): Promise<Volunteer[]>;
+  /** All volunteers regardless of status (admin roster / "padrón"). */
+  listAll(): Promise<Volunteer[]>;
   /** Returns the stored password hash for authentication, or null. */
   getPasswordHash(id: string): Promise<string | null>;
   /** Replaces the stored password hash (e.g. credentials reissued on approval). */

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   NewVolunteer,
+  PendingReason,
   Volunteer,
   VolunteerRepository,
   VolunteerRole,
@@ -17,6 +18,7 @@ interface VolunteerRow {
   role: string;
   token_version: number;
   status: string;
+  pending_reason: string | null;
   created_at: string;
 }
 
@@ -31,6 +33,7 @@ function toDomain(row: VolunteerRow): Volunteer {
     role: row.role as VolunteerRole,
     tokenVersion: row.token_version,
     status: row.status as VolunteerStatus,
+    pendingReason: (row.pending_reason as PendingReason | null) ?? undefined,
     createdAt: new Date(row.created_at),
   };
 }
@@ -50,6 +53,7 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
         role: input.role ?? 'psychologist',
         password_hash: input.passwordHash,
         status: input.status ?? 'pending_approval',
+        pending_reason: input.pendingReason ?? null,
         document_type: input.application?.documentType ?? null,
         document_number: input.application?.documentNumber ?? null,
         university: input.application?.university ?? null,
@@ -104,6 +108,15 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
     return (data as VolunteerRow[]).map(toDomain);
   }
 
+  async listAll(): Promise<Volunteer[]> {
+    const { data, error } = await this.client
+      .from('volunteers')
+      .select()
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(`Failed to list volunteers: ${error.message}`);
+    return (data as VolunteerRow[]).map(toDomain);
+  }
+
   async getPasswordHash(id: string): Promise<string | null> {
     const { data, error } = await this.client
       .from('volunteers')
@@ -123,10 +136,10 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
   }
 
   async setStatus(id: string, status: VolunteerStatus): Promise<void> {
-    const { error } = await this.client
-      .from('volunteers')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    // An active volunteer has no outstanding exception reason; clear it on activation.
+    const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+    if (status === 'active') patch.pending_reason = null;
+    const { error } = await this.client.from('volunteers').update(patch).eq('id', id);
     if (error) throw new Error(`Failed to set volunteer status: ${error.message}`);
   }
 

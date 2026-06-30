@@ -40,6 +40,9 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
     async listByStatus() {
       return [];
     },
+    async listAll() {
+      return [];
+    },
     async getPasswordHash() {
       return null;
     },
@@ -151,6 +154,26 @@ describe('registerVolunteer', () => {
       audit,
     });
     expect(result.status).toBe('pending_approval');
+  });
+
+  it('records the exception reason for manual review (RF-2.2)', async () => {
+    async function reasonFor(
+      verifier: FpvVerifier,
+      papTrained = true,
+    ): Promise<string | undefined> {
+      const repo = fakeVolunteers();
+      await registerVolunteer(
+        { ...input, application: { ...input.application, papTrained } },
+        { volunteers: repo, fpvVerifier: verifier, notifier, audit },
+      );
+      return repo.lastCreated?.pendingReason;
+    }
+
+    expect(await reasonFor({ async verify() { return { valid: false }; } })).toBe('fpv_not_found');
+    expect(await reasonFor({ async verify() { throw new Error('down'); } })).toBe('fpv_unreachable');
+    expect(await reasonFor({ async verify() { return { valid: true }; } }, false)).toBe('pap_not_declared');
+    // Activated registrations carry no pending reason.
+    expect(await reasonFor({ async verify() { return { valid: true }; } }, true)).toBeUndefined();
   });
 
   it('autogenerates the password and stores it only as an argon2 hash (RF-2.2.4)', async () => {

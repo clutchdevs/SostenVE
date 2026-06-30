@@ -82,6 +82,9 @@ function volunteerRepo() {
     async listByStatus() {
       return [];
     },
+    async listAll() {
+      return [];
+    },
     async getPasswordHash() {
       return null;
     },
