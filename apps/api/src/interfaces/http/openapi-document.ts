@@ -137,9 +137,16 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/volunteers': {
         get: {
           tags: ['volunteers'],
-          summary: 'Listar voluntarios por estado (admin)',
+          summary: 'Listar voluntarios (admin). status: active|pending_approval|inactive|all (def. pending_approval)',
           security: bearer,
-          parameters: [{ name: 'status', in: 'query', required: false, schema: { type: 'string' } }],
+          parameters: [
+            {
+              name: 'status',
+              in: 'query',
+              required: false,
+              schema: { type: 'string', enum: ['active', 'pending_approval', 'inactive', 'all'] },
+            },
+          ],
           responses: { '200': { description: 'Lista de voluntarios' }, '401': { description: 'No autenticado' }, '403': { description: 'Sin permiso' } },
         },
       },
@@ -303,7 +310,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/admin/audit': {
         get: {
           tags: ['admin'],
-          summary: 'Consultar el log de auditoría (admin)',
+          summary: 'Consultar el log de auditoría (admin, paginado con actor resuelto: nombre + cédula)',
           security: bearer,
           parameters: [
             { name: 'accion', in: 'query', required: false, schema: { type: 'string' } },
@@ -312,7 +319,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             { name: 'limit', in: 'query', required: false, schema: { type: 'integer' } },
             { name: 'offset', in: 'query', required: false, schema: { type: 'integer' } },
           ],
-          responses: { '200': { description: 'Entradas de auditoría' }, '403': { description: 'Sin permiso' } },
+          responses: { '200': { description: '{ total, items[] } de auditoría' }, '403': { description: 'Sin permiso' } },
         },
       },
       '/cron/check-sla': {

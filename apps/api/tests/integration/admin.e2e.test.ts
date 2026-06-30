@@ -104,8 +104,16 @@ describe.skipIf(!dbAvailable)('admin endpoints (e2e)', () => {
     expect(((await deleted.json()) as { activa: boolean }).activa).toBe(false);
 
     const audit = await authed('/api/v1/admin/audit?accion=crisis_line_created', token);
-    const entries = (await audit.json()) as Array<{ registro_afectado: string }>;
-    expect(entries.some((e) => e.registro_afectado === line.id)).toBe(true);
+    const body = (await audit.json()) as {
+      total: number;
+      items: Array<{ registro_afectado: string; usuario_nombre: string | null; usuario_cedula: string | null }>;
+    };
+    expect(typeof body.total).toBe('number');
+    const entry = body.items.find((e) => e.registro_afectado === line.id);
+    expect(entry).toBeTruthy();
+    // The actor is resolved to a name + distinguishing cédula/credential.
+    expect(entry?.usuario_nombre).toBe('Staff');
+    expect(entry?.usuario_cedula).toBeTruthy();
   });
 
   it('blocks a non-admin from the admin endpoints (403)', async () => {

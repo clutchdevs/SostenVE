@@ -49,6 +49,8 @@ export function presentAuditEntry(entry: AuditEntryRecord) {
   return {
     id: entry.id,
     usuario_id: entry.userId,
+    usuario_nombre: entry.userName,
+    usuario_cedula: entry.userCedula,
     rol: entry.role,
     registro_afectado: entry.affectedRecordId,
     accion: entry.actionType,

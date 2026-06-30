@@ -121,10 +121,11 @@ export function createAdminRouter(): Hono {
     return c.json(presentInvitation(invitation));
   });
 
-  // Audit log consultation (immutable, ADR-0012).
+  // Audit log consultation (immutable, ADR-0012). Paginated: returns the page
+  // items plus the total count matching the same filters.
   router.get('/audit', validateQuery(auditQuerySchema), async (c) => {
     const q = getValidated<AuditQuery>(c, 'query');
-    const entries = await queryAuditLog(
+    const page = await queryAuditLog(
       {
         actionType: q.accion,
         affectedRecordId: q.registro,
@@ -134,7 +135,7 @@ export function createAdminRouter(): Hono {
       },
       getAdminContainer().audit,
     );
-    return c.json(entries.map(presentAuditEntry));
+    return c.json({ total: page.total, items: page.entries.map(presentAuditEntry) });
   });
 
   return router;
