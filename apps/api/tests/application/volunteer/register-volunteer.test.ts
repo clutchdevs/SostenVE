@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { registerVolunteer } from '../../../src/application/volunteer/register-volunteer';
-import type { FpvVerifier, Notifier } from '../../../src/application/volunteer/ports';
+import type {
+  FpvVerifier,
+  Notifier,
+  RegistrationNotification,
+} from '../../../src/application/volunteer/ports';
 import type {
   NewVolunteer,
   Volunteer,
@@ -39,6 +43,7 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
     async getPasswordHash() {
       return null;
     },
+    async updatePasswordHash() {},
     async setStatus() {},
     async bumpTokenVersion() {
       return 2;
@@ -52,6 +57,24 @@ const notifier: Notifier = {
 };
 const audit: AuditLogRepository = { async append() {} };
 
+function recordingNotifier(): Notifier & {
+  approved: RegistrationNotification[];
+  pending: RegistrationNotification[];
+} {
+  const approved: RegistrationNotification[] = [];
+  const pending: RegistrationNotification[] = [];
+  return {
+    approved,
+    pending,
+    async notifyRegistrationApproved(n) {
+      approved.push(n);
+    },
+    async notifyRegistrationPending(n) {
+      pending.push(n);
+    },
+  };
+}
+
 function recordingAudit(): AuditLogRepository & { entries: { actionType: string }[] } {
   const entries: { actionType: string }[] = [];
   return { entries, async append(entry) {
@@ -63,7 +86,6 @@ const input = {
   fullName: 'Ana',
   professionalId: 'FPV-123',
   email: 'ana@example.com',
-  password: 'a-strong-password',
   application: {
     documentType: 'V' as const,
     documentNumber: '12345678',
@@ -79,7 +101,7 @@ const input = {
 };
 
 describe('registerVolunteer', () => {
-  it('activates the volunteer when the FPV verifier approves', async () => {
+  it('activates when the FPV verifier approves AND PAP is declared (cédula+FPV ∧ PAP)', async () => {
     const verifier: FpvVerifier = { async verify() {
       return { valid: true };
     } };
@@ -90,6 +112,17 @@ describe('registerVolunteer', () => {
       audit,
     });
     expect(result.status).toBe('active');
+  });
+
+  it('stays pending when verified but PAP is not declared', async () => {
+    const verifier: FpvVerifier = { async verify() {
+      return { valid: true };
+    } };
+    const result = await registerVolunteer(
+      { ...input, application: { ...input.application, papTrained: false } },
+      { volunteers: fakeVolunteers(), fpvVerifier: verifier, notifier, audit },
+    );
+    expect(result.status).toBe('pending_approval');
   });
 
   it('marks pending_approval when the verifier rejects', async () => {
@@ -118,7 +151,7 @@ describe('registerVolunteer', () => {
     expect(result.status).toBe('pending_approval');
   });
 
-  it('never stores the plaintext password', async () => {
+  it('autogenerates the password and stores it only as an argon2 hash (RF-2.2.4)', async () => {
     const repo = fakeVolunteers();
     await registerVolunteer(input, {
       volunteers: repo,
@@ -128,8 +161,34 @@ describe('registerVolunteer', () => {
       notifier,
       audit,
     });
-    expect(repo.lastCreated?.passwordHash).toBeDefined();
-    expect(repo.lastCreated?.passwordHash).not.toBe(input.password);
+    // No password is supplied by the caller; the use case generates one and only
+    // the argon2id hash is persisted.
+    expect(repo.lastCreated?.passwordHash).toMatch(/^\$argon2id\$/);
+  });
+
+  it('emails the temporary password on activation, but not when pending', async () => {
+    const verifier: FpvVerifier = { async verify() {
+      return { valid: true };
+    } };
+
+    const approvedNotifier = recordingNotifier();
+    await registerVolunteer(input, {
+      volunteers: fakeVolunteers(),
+      fpvVerifier: verifier,
+      notifier: approvedNotifier,
+      audit,
+    });
+    expect(approvedNotifier.approved).toHaveLength(1);
+    expect(approvedNotifier.approved[0]?.temporaryPassword).toBeTruthy();
+    expect(approvedNotifier.pending).toHaveLength(0);
+
+    const pendingNotifier = recordingNotifier();
+    await registerVolunteer(
+      { ...input, application: { ...input.application, papTrained: false } },
+      { volunteers: fakeVolunteers(), fpvVerifier: verifier, notifier: pendingNotifier, audit },
+    );
+    expect(pendingNotifier.pending).toHaveLength(1);
+    expect(pendingNotifier.approved).toHaveLength(0);
   });
 
   it('persists the full applicant profile (RF-2.1.2)', async () => {

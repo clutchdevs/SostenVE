@@ -50,7 +50,6 @@ export const registerVolunteerSchema = z
     // FPV professional registration number (persisted as professional_id).
     numero_fpv: z.string().min(1),
     email: z.string().email(),
-    contrasena: z.string().min(8),
     universidad: z.string().min(1),
     anio_egreso: z
       .number()

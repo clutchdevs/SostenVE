@@ -64,6 +64,8 @@ export interface VolunteerRepository {
   listByStatus(status: VolunteerStatus): Promise<Volunteer[]>;
   /** Returns the stored password hash for authentication, or null. */
   getPasswordHash(id: string): Promise<string | null>;
+  /** Replaces the stored password hash (e.g. credentials reissued on approval). */
+  updatePasswordHash(id: string, passwordHash: string): Promise<void>;
   setStatus(id: string, status: VolunteerStatus): Promise<void>;
   /** Bumps token_version to invalidate previously issued tokens (ADR-0005). */
   bumpTokenVersion(id: string): Promise<number>;

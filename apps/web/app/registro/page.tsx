@@ -49,7 +49,6 @@ export default function RegistroPage() {
   const [numeroDocumento, setNumeroDocumento] = useState('');
   const [numeroFpv, setNumeroFpv] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [universidad, setUniversidad] = useState('');
   const [anioEgreso, setAnioEgreso] = useState('');
   const [colegio, setColegio] = useState('');
@@ -105,7 +104,6 @@ export default function RegistroPage() {
           numero_documento: numeroDocumento,
           numero_fpv: numeroFpv,
           email,
-          contrasena: password,
           universidad,
           anio_egreso: Number(anioEgreso),
           colegio,
@@ -211,15 +209,10 @@ export default function RegistroPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          className={inputClass}
-          type="password"
-          placeholder="Contraseña (mínimo 8 caracteres)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={8}
-          required
-        />
+        <p className="text-xs text-slate-500">
+          No elijas contraseña: si tu registro es validado, te enviaremos una contraseña temporal por
+          correo.
+        </p>
         <input
           className={inputClass}
           type="text"

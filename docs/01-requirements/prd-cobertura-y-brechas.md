@@ -71,11 +71,13 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   `professional_id` (= nº FPV), universidad, año de egreso, colegio, PAP (sí/no) + detalle obligatorio,
   modalidad (multiselect presencial/distancia) y disponibilidad horaria estructurada (día × bloque).
   Persistido en `volunteers` (migración `…0008`, columnas nullable) y validado en la API (Zod).
-- ✅ RF-2.2 Validación contra FPV vía **Adapter** (dummy always-OK; HTTP pendiente de contrato, ADR-0013);
-  ⚠️ falta la regla exacta `cédula+FPV ∧ PAP=Sí → Activo` (hoy decide el verifier).
+- ✅ RF-2.2 Validación contra FPV vía **Adapter** (dummy always-OK; HTTP pendiente de contrato, ADR-0013)
+  con la regla de activación automática `cédula+FPV ∧ PAP=Sí → Activo` (si no, queda `pending_approval`).
 - ✅ Estados `active` / `pending_approval` / `inactive`.
-- ⚠️ RF-2.2.4 Credenciales + correo de bienvenida — `LogNotifier` (stand-in); la contraseña la pone el
-  usuario (no se autogenera de alta entropía).
+- ✅ RF-2.2.4 Credenciales + correo de bienvenida — contraseña **autogenerada** de alta entropía
+  (el usuario no la elige), entregada por **correo de bienvenida** vía `SmtpNotifier` (nodemailer,
+  seleccionable por config `email.provider`; `log` por defecto). La aprobación por admin reemite y
+  reenvía credenciales. ⚠️ Pendiente: flujo de cambio/reseteo de contraseña (la temporal viaja en claro).
 - ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat).
 - ❌ RF-2.6 Registro de coordinadores por token de invitación.
 - ⚠️ RF-2.7 Login con bloqueo por 5 intentos — hay rate-limit/lockout configurable, pero no ruta
@@ -112,8 +114,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       provisional versionado; pendiente sustituir por el texto bioético oficial de la FPV.
 - [x] **Módulo 2 — Formulario de postulación completo** (RF-2.1.2): tipo doc, FPV, universidad, año,
       PAP + detalle, colegio, multiselect de modalidad, disponibilidad horaria.
-- [ ] **Módulo 2 — Alta automática real:** generar contraseña de alta entropía + correo de bienvenida;
-      regla `cédula+FPV ∧ PAP → Activo`.
+- [x] **Módulo 2 — Alta automática real:** contraseña de alta entropía autogenerada + correo de
+      bienvenida (SmtpNotifier); regla `cédula+FPV ∧ PAP → Activo`. Pendiente: cambio/reseteo de contraseña.
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
 - [ ] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV.

@@ -53,6 +53,17 @@ export const appConfigSchema = z.object({
       cooldown_seconds: z.number().int().positive(),
     }),
   }),
+  email: z.object({
+    provider: z.enum(['log', 'smtp']),
+    from: z.string().min(1),
+    // Public base URL the welcome email links to for sign-in.
+    login_url: z.string().min(1),
+    smtp: z.object({
+      host: z.string().min(1),
+      port: z.number().int().positive(),
+      username: z.string(),
+    }),
+  }),
   rbac: z.object({
     roles: z.array(z.string().min(1)).min(1),
   }),

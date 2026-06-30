@@ -8,7 +8,7 @@ import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
-import { LogNotifier } from '../../../infrastructure/notifications/log-notifier';
+import { createNotifier } from '../../../infrastructure/notifications';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
 import type { AssignmentDeps } from '../../../application/assignment/ports';
 import type { CaseDeps } from '../../../application/cases/ports';
@@ -66,16 +66,17 @@ export function getVolunteerContainer(): VolunteerContainer {
     const config = getConfig();
     const volunteers = new SupabaseVolunteerRepository(client);
     const audit = new SupabaseAuditLogRepository(client);
+    const notifier = createNotifier(config);
     volunteerCached = {
       volunteers,
       registerDeps: {
         volunteers,
         fpvVerifier: createFpvVerifier(config),
-        notifier: new LogNotifier(),
+        notifier,
         audit,
       },
       loginDeps: { volunteers, config },
-      manageDeps: { volunteers, audit },
+      manageDeps: { volunteers, audit, notifier },
     };
   }
   return volunteerCached;

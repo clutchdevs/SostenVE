@@ -58,7 +58,6 @@ export function createVolunteerRouter(): Hono {
           fullName: body.nombre,
           professionalId: body.numero_fpv,
           email: body.email,
-          password: body.contrasena,
           specialty: body.especialidad,
           application: {
             documentType: body.tipo_documento,

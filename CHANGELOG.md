@@ -7,6 +7,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Módulo 2 — Alta automática real (RF-2.2.4 / RF-2.2):** la contraseña ya no la elige el usuario;
+  se **autogenera** con alta entropía (24 bytes, base64url) y se entrega por un **correo de bienvenida**
+  real vía `SmtpNotifier` (nodemailer), seleccionable por config `email.provider` (`log` por defecto
+  para tests/dev; `smtp` para envío real, p. ej. contra el Inbucket de Supabase en local). Regla de
+  **activación automática** `cédula+FPV ∧ PAP=Sí → Activo` (si no, `pending_approval`). La **aprobación**
+  por un admin reemite una contraseña nueva y reenvía las credenciales para no dejar la cuenta bloqueada.
+  El formulario `/registro` ya no pide contraseña.
 - **Módulo 2 — Formulario de postulación completo (RF-2.1.2):** el registro de psicólogos recoge ahora
   todos los datos del PRD — tipo + número de documento (cédula) separados del nº de inscripción FPV
   (`professional_id`), universidad, año de egreso, colegio, formación PAP (sí/no con detalle

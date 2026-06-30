@@ -1,4 +1,5 @@
 import { Algorithm, hash, verify } from '@node-rs/argon2';
+import { randomBytes } from 'node:crypto';
 
 /**
  * Password hashing with argon2id (see ADR-0005).
@@ -16,6 +17,15 @@ const ARGON2_OPTIONS = {
 
 export function hashPassword(plain: string): Promise<string> {
   return hash(plain, ARGON2_OPTIONS);
+}
+
+/**
+ * Generates a high-entropy temporary password for automated sign-up (RF-2.2.4).
+ * 24 random bytes (~192 bits) encoded as URL-safe base64 — the user never picks
+ * their password; it is emailed to them. Never log the return value.
+ */
+export function generatePassword(): string {
+  return randomBytes(24).toString('base64url');
 }
 
 export async function verifyPassword(plain: string, passwordHash: string): Promise<boolean> {
