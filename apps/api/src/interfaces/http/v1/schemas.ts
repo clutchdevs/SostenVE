@@ -30,6 +30,11 @@ export const registerVolunteerSchema = z.object({
   contrasena: z.string().min(8),
   especialidad: z.string().min(1).optional(),
   disponibilidad: z.string().min(1).optional(),
+  // Informed consent (RF-2.1.1): mandatory. `z.literal(true)` makes a request
+  // without acceptance fail validation, so registration is blocked server-side
+  // regardless of the UI. The version is the wording the client displayed.
+  consentimiento: z.literal(true),
+  consentimiento_version: z.string().min(1),
 });
 
 export const loginSchema = z.object({

@@ -31,6 +31,7 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
   let app: Hono;
   let pg: Client;
   let signToken: typeof import('../../src/shared/security/jwt').signToken;
+  let consentVersion: string;
   const emails: string[] = [];
 
   beforeAll(async () => {
@@ -40,6 +41,8 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
     app = (await import('../../api/index')).default;
     signToken = (await import('../../src/shared/security/jwt')).signToken;
+    const consentRes = await app.request('/api/v1/consent/active');
+    consentVersion = ((await consentRes.json()) as { version: string }).version;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });
@@ -60,7 +63,7 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     });
   }
 
-  async function register(email: string) {
+  async function register(email: string, overrides: Record<string, unknown> = {}) {
     emails.push(email);
     return post('/api/v1/volunteers/register', {
       nombre: 'Ana Test',
@@ -68,18 +71,44 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
       email,
       contrasena: 'a-strong-password',
       especialidad: 'clinica',
+      consentimiento: true,
+      consentimiento_version: consentVersion,
+      ...overrides,
     });
   }
 
-  it('registers a volunteer as active (dummy FPV verifier approves)', async () => {
+  it('registers a volunteer as active and records consent (dummy FPV verifier approves)', async () => {
     const email = `vol-${randomUUID().slice(0, 8)}@example.com`;
     const res = await register(email);
     expect(res.status).toBe(202);
     const body = (await res.json()) as { voluntario_id: string; estado_validacion: string };
     expect(body.estado_validacion).toBe('validado');
 
-    const row = await pg.query('select status from volunteers where id = $1', [body.voluntario_id]);
+    const row = await pg.query(
+      'select status, consent_version, consent_accepted_at from volunteers where id = $1',
+      [body.voluntario_id],
+    );
     expect(row.rows[0]?.status).toBe('active');
+    expect(row.rows[0]?.consent_version).toBe(consentVersion);
+    expect(row.rows[0]?.consent_accepted_at).not.toBeNull();
+
+    const audit = await pg.query(
+      'select 1 from audit_log where affected_record_id = $1 and action_type = $2',
+      [body.voluntario_id, `consent_accepted:${consentVersion}`],
+    );
+    expect(audit.rowCount).toBe(1);
+  });
+
+  it('rejects registration without informed consent (RF-2.1.1)', async () => {
+    const email = `noconsent-${randomUUID().slice(0, 8)}@example.com`;
+    const res = await register(email, { consentimiento: false });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects registration with a stale consent version', async () => {
+    const email = `stale-${randomUUID().slice(0, 8)}@example.com`;
+    const res = await register(email, { consentimiento_version: 'v0.0.0-old' });
+    expect(res.status).toBe(409);
   });
 
   it('logs in with valid credentials and rejects a wrong password', async () => {

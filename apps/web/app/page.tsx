@@ -27,6 +27,12 @@ export default function LandingPage() {
         >
           Soy psicólogo o coordinador
         </Link>
+        <Link
+          href="/registro"
+          className="block text-center text-sm font-semibold text-brand underline"
+        >
+          Registrarme como psicólogo
+        </Link>
       </nav>
 
       <p className="text-center text-sm text-slate-600">

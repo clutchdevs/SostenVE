@@ -4,7 +4,9 @@
 -- Idempotente: ON CONFLICT DO NOTHING para tolerar recargas.
 
 -- Personal: 1 coordinador y 1 psicólogo, ambos activos (pueden iniciar sesión).
-insert into volunteers (id, full_name, professional_id, email, specialty, role, password_hash, status)
+-- consent_version/_at backfilled con la versión borrador (RF-2.1.1) para que
+-- los registros sembrados queden consistentes con el alta por consentimiento.
+insert into volunteers (id, full_name, professional_id, email, specialty, role, password_hash, status, consent_version, consent_accepted_at)
 values
   (
     '11111111-1111-1111-1111-111111111111',
@@ -14,7 +16,9 @@ values
     null,
     'coordinator',
     '$argon2id$v=19$m=19456,t=2,p=1$ykdOEgZ83oois6LECtATnQ$mfj1zbfsSYwORLSIVxNgJc65zYNrFOLXst1W5k8MlNE',
-    'active'
+    'active',
+    'v0.1.0-draft',
+    now()
   ),
   (
     '22222222-2222-2222-2222-222222222222',
@@ -24,7 +28,9 @@ values
     'psicología infantil',
     'psychologist',
     '$argon2id$v=19$m=19456,t=2,p=1$Ky7np0LE4J7g8zGA3HdtmA$lbA4d36yXbTibL6C+qdki9ZxeeuH+gNMWoQEO1AUIlU',
-    'active'
+    'active',
+    'v0.1.0-draft',
+    now()
   )
 on conflict (id) do nothing;
 

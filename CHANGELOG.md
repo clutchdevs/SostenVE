@@ -7,6 +7,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Módulo 2 — Consentimiento informado obligatorio (RF-2.1.1):** el registro de psicólogos exige
+  aceptar el consentimiento bioético antes del alta. Texto **versionado** y editable en
+  `config/app.config.yml` (provisional `v0.1.0-draft` hasta el oficial de la FPV), expuesto por
+  `GET /consent/active`. El backend bloquea el alta sin aceptación (`consentimiento` obligatorio) y
+  rechaza versiones obsoletas; la aceptación queda **auditable** (versión + timestamp en `volunteers`
+  y entrada `consent_accepted:{versión}` en el `audit_log` inmutable). Nueva página web `/registro`
+  con la casilla que bloquea el envío hasta marcarla.
 - **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
   **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**
   correcta (aceptar solo desde `asignado` y una vez; cierre terminal; `cerrado` en solo lectura) con
