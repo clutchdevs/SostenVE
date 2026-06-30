@@ -1,6 +1,11 @@
 import { hashPassword } from '../../shared/security/password';
 import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { Volunteer, VolunteerRepository, VolunteerStatus } from '../../domain/volunteer/volunteer';
+import type {
+  Volunteer,
+  VolunteerApplication,
+  VolunteerRepository,
+  VolunteerStatus,
+} from '../../domain/volunteer/volunteer';
 import type { FpvVerifier, Notifier } from './ports';
 
 export interface RegisterVolunteerInput {
@@ -9,7 +14,8 @@ export interface RegisterVolunteerInput {
   email: string;
   password: string;
   specialty?: string;
-  availability?: string;
+  /** Full applicant profile collected by the complete form (RF-2.1.2). */
+  application: VolunteerApplication;
   /** Version of the informed-consent text the volunteer accepted (RF-2.1.1). */
   consentVersion: string;
 }
@@ -62,10 +68,10 @@ export async function registerVolunteer(
     professionalId: input.professionalId,
     email: input.email,
     specialty: input.specialty,
-    availability: input.availability,
     role: 'psychologist',
     passwordHash,
     status,
+    application: input.application,
     consentVersion: input.consentVersion,
     consentAcceptedAt,
   });

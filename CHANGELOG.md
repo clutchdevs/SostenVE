@@ -7,6 +7,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Módulo 2 — Formulario de postulación completo (RF-2.1.2):** el registro de psicólogos recoge ahora
+  todos los datos del PRD — tipo + número de documento (cédula) separados del nº de inscripción FPV
+  (`professional_id`), universidad, año de egreso, colegio, formación PAP (sí/no con detalle
+  obligatorio), modalidad de atención (multiselect presencial/distancia) y disponibilidad horaria
+  estructurada (día × bloque mañana/tarde/noche). Persistido en `volunteers` (migración
+  `20260628000008`, columnas nullable para compatibilidad) y validado en la API con Zod. La página
+  web `/registro` se amplía con los nuevos campos y bloquea el envío hasta completar modalidad y
+  disponibilidad.
 - **Módulo 2 — Consentimiento informado obligatorio (RF-2.1.1):** el registro de psicólogos exige
   aceptar el consentimiento bioético antes del alta. Texto **versionado** y editable en
   `config/app.config.yml` (provisional `v0.1.0-draft` hasta el oficial de la FPV), expuesto por

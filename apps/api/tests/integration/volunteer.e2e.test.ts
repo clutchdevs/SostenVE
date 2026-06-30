@@ -67,10 +67,18 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     emails.push(email);
     return post('/api/v1/volunteers/register', {
       nombre: 'Ana Test',
-      cedula_profesional: `FPV-${randomUUID().slice(0, 8)}`,
+      tipo_documento: 'V',
+      numero_documento: `${randomUUID().slice(0, 8)}`,
+      numero_fpv: `FPV-${randomUUID().slice(0, 8)}`,
       email,
       contrasena: 'a-strong-password',
+      universidad: 'UCV',
+      anio_egreso: 2015,
+      colegio: 'Colegio de Psicólogos de Miranda',
       especialidad: 'clinica',
+      modalidad: ['presencial', 'distancia'],
+      disponibilidad_horaria: [{ dia: 'lunes', bloque: 'manana' }],
+      pap: false,
       consentimiento: true,
       consentimiento_version: consentVersion,
       ...overrides,
@@ -85,12 +93,22 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     expect(body.estado_validacion).toBe('validado');
 
     const row = await pg.query(
-      'select status, consent_version, consent_accepted_at from volunteers where id = $1',
+      `select status, consent_version, consent_accepted_at,
+              document_type, document_number, university, graduation_year,
+              colegio, modalities, availability_schedule, pap_trained
+       from volunteers where id = $1`,
       [body.voluntario_id],
     );
     expect(row.rows[0]?.status).toBe('active');
     expect(row.rows[0]?.consent_version).toBe(consentVersion);
     expect(row.rows[0]?.consent_accepted_at).not.toBeNull();
+    // Full applicant profile persisted (RF-2.1.2).
+    expect(row.rows[0]?.document_type).toBe('V');
+    expect(row.rows[0]?.university).toBe('UCV');
+    expect(row.rows[0]?.graduation_year).toBe(2015);
+    expect(row.rows[0]?.modalities).toEqual(['presencial', 'distancia']);
+    expect(row.rows[0]?.availability_schedule).toEqual([{ dia: 'lunes', bloque: 'manana' }]);
+    expect(row.rows[0]?.pap_trained).toBe(false);
 
     const audit = await pg.query(
       'select 1 from audit_log where affected_record_id = $1 and action_type = $2',
@@ -109,6 +127,12 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     const email = `stale-${randomUUID().slice(0, 8)}@example.com`;
     const res = await register(email, { consentimiento_version: 'v0.0.0-old' });
     expect(res.status).toBe(409);
+  });
+
+  it('requires PAP detail when PAP training is declared (RF-2.1.2)', async () => {
+    const email = `pap-${randomUUID().slice(0, 8)}@example.com`;
+    const res = await register(email, { pap: true });
+    expect(res.status).toBe(400);
   });
 
   it('logs in with valid credentials and rejects a wrong password', async () => {
