@@ -21,6 +21,9 @@ describe('OpenAPI document & Swagger UI', () => {
       '/cases/{id}',
       '/cases/{id}/notes',
       '/coordinator/capacity',
+      '/admin/crisis-lines',
+      '/admin/crisis-lines/{id}',
+      '/admin/audit',
       '/cron/check-sla',
     ]) {
       expect(paths).toContain(expected);
