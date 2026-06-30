@@ -18,7 +18,8 @@ x-node-env: &node-env
   DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:54322/postgres}
   JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-at-least-32-bytes!!}
   PSEUDONYMIZATION_SALT: ${PSEUDONYMIZATION_SALT:-local-dev-pseudonym-salt}
-  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-bG9jYWwtZGV2LTMyLWJ5dGUtZW5jcnlwdGlvbi1rZXkh}
+  # MUST decode to exactly 32 bytes (AES-256). base64 of "local-dev-32-byte-encryption-key".
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-bG9jYWwtZGV2LTMyLWJ5dGUtZW5jcnlwdGlvbi1rZXk=}
   CRON_SECRET: ${CRON_SECRET:-local-dev-cron-secret}
 
 services:
