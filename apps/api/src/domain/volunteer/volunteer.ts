@@ -28,6 +28,9 @@ export interface NewVolunteer {
   role?: VolunteerRole;
   passwordHash: string;
   status?: VolunteerStatus;
+  /** Informed-consent acceptance recorded at registration (RF-2.1.1). */
+  consentVersion?: string;
+  consentAcceptedAt?: Date;
 }
 
 export interface VolunteerRepository {

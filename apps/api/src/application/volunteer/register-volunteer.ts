@@ -10,6 +10,8 @@ export interface RegisterVolunteerInput {
   password: string;
   specialty?: string;
   availability?: string;
+  /** Version of the informed-consent text the volunteer accepted (RF-2.1.1). */
+  consentVersion: string;
 }
 
 export interface RegisterVolunteerDeps {
@@ -53,6 +55,7 @@ export async function registerVolunteer(
 ): Promise<RegisterVolunteerResult> {
   const status = await resolveStatus(input, deps);
   const passwordHash = await hashPassword(input.password);
+  const consentAcceptedAt = new Date();
 
   const volunteer: Volunteer = await deps.volunteers.create({
     fullName: input.fullName,
@@ -63,6 +66,8 @@ export async function registerVolunteer(
     role: 'psychologist',
     passwordHash,
     status,
+    consentVersion: input.consentVersion,
+    consentAcceptedAt,
   });
 
   const notification = { email: input.email, fullName: input.fullName };
@@ -77,6 +82,15 @@ export async function registerVolunteer(
     role: volunteer.role,
     affectedRecordId: volunteer.id,
     actionType: `volunteer_registered:${status}`,
+  });
+
+  // Auditable informed-consent record (RF-2.1.1): the version is in the action
+  // type and the timestamp is the audit row's immutable created_at.
+  await deps.audit.append({
+    userId: volunteer.id,
+    role: volunteer.role,
+    affectedRecordId: volunteer.id,
+    actionType: `consent_accepted:${input.consentVersion}`,
   });
 
   return { volunteerId: volunteer.id, status };

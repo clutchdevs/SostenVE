@@ -14,6 +14,7 @@ describe('OpenAPI document & Swagger UI', () => {
       '/intake/red-branch',
       '/intake/green-branch',
       '/crisis-lines/active',
+      '/consent/active',
       '/auth/login',
       '/volunteers/register',
       '/volunteers/{id}/approve',

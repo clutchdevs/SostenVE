@@ -50,6 +50,8 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
         role: input.role ?? 'psychologist',
         password_hash: input.passwordHash,
         status: input.status ?? 'pending_approval',
+        consent_version: input.consentVersion ?? null,
+        consent_accepted_at: input.consentAcceptedAt?.toISOString() ?? null,
       })
       .select()
       .single();

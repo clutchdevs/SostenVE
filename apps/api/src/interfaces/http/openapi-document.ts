@@ -50,6 +50,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'health' },
       { name: 'intake' },
       { name: 'crisis-lines' },
+      { name: 'consent' },
       { name: 'auth' },
       { name: 'volunteers' },
       { name: 'cases' },
@@ -102,6 +103,13 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           tags: ['crisis-lines'],
           summary: 'Línea de crisis activa según la hora (ruteo dinámico)',
           responses: { '200': { description: 'Línea activa + respaldos' } },
+        },
+      },
+      '/consent/active': {
+        get: {
+          tags: ['consent'],
+          summary: 'Texto y versión del consentimiento informado del psicólogo (RF-2.1.1)',
+          responses: { '200': { description: 'version + updated_at + text' } },
         },
       },
       '/auth/login': {

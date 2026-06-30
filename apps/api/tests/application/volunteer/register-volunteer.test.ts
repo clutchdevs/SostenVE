@@ -52,11 +52,19 @@ const notifier: Notifier = {
 };
 const audit: AuditLogRepository = { async append() {} };
 
+function recordingAudit(): AuditLogRepository & { entries: { actionType: string }[] } {
+  const entries: { actionType: string }[] = [];
+  return { entries, async append(entry) {
+    entries.push({ actionType: entry.actionType });
+  } };
+}
+
 const input = {
   fullName: 'Ana',
   professionalId: 'V-123',
   email: 'ana@example.com',
   password: 'a-strong-password',
+  consentVersion: 'v0.1.0-draft',
 };
 
 describe('registerVolunteer', () => {
@@ -111,5 +119,32 @@ describe('registerVolunteer', () => {
     });
     expect(repo.lastCreated?.passwordHash).toBeDefined();
     expect(repo.lastCreated?.passwordHash).not.toBe(input.password);
+  });
+
+  it('persists the accepted consent version and timestamp (RF-2.1.1)', async () => {
+    const repo = fakeVolunteers();
+    await registerVolunteer(input, {
+      volunteers: repo,
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit,
+    });
+    expect(repo.lastCreated?.consentVersion).toBe('v0.1.0-draft');
+    expect(repo.lastCreated?.consentAcceptedAt).toBeInstanceOf(Date);
+  });
+
+  it('appends an auditable consent_accepted entry with the version', async () => {
+    const auditSpy = recordingAudit();
+    await registerVolunteer(input, {
+      volunteers: fakeVolunteers(),
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit: auditSpy,
+    });
+    expect(auditSpy.entries.map((e) => e.actionType)).toContain('consent_accepted:v0.1.0-draft');
   });
 });
