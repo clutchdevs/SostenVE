@@ -57,6 +57,69 @@ default: &default
 
         Al marcar la casilla acepto este consentimiento informado de forma libre.
 
+  pap:
+    # Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el
+    # solicitante (Módulo 1). Contenido PROVISIONAL pendiente de validación por la
+    # FPV; sube `version` cuando cambien las guías. No reemplaza la atención
+    # profesional ni las líneas de crisis.
+    version: "v0.1.0-draft"
+    updated_at: "2026-06-30"
+    guides:
+      - id: "respiracion"
+        title: "Respiración para calmar la angustia"
+        summary: "Un ejercicio breve para bajar la activación cuando el cuerpo se siente acelerado."
+        steps:
+          - "Busca un lugar lo más seguro posible y siéntate o recuéstate."
+          - "Inhala por la nariz contando hasta 4."
+          - "Retén el aire contando hasta 4."
+          - "Exhala lento por la boca contando hasta 6."
+          - "Repite durante 2 o 3 minutos; si te mareas, respira normal y descansa."
+      - id: "anclaje"
+        title: "Anclaje 5-4-3-2-1 para volver al presente"
+        summary: "Cuando la mente se llena de imágenes del sismo, este ejercicio te ayuda a regresar al aquí y ahora."
+        steps:
+          - "Nombra 5 cosas que puedas VER a tu alrededor."
+          - "Nombra 4 cosas que puedas TOCAR y siente su textura."
+          - "Nombra 3 sonidos que puedas OÍR."
+          - "Nombra 2 olores que puedas percibir."
+          - "Nombra 1 cosa que puedas saborear o una cosa buena de ti."
+      - id: "dormir"
+        title: "Si no logras dormir"
+        summary: "Es normal que el sueño se altere tras un evento traumático. Algunas ideas para acompañarte."
+        steps:
+          - "Mantén un horario regular para acostarte y levantarte, aunque duermas poco."
+          - "Evita noticias o videos del sismo en la hora previa a dormir."
+          - "Haz el ejercicio de respiración 4-4-6 al acostarte."
+          - "Si no duermes en 20 minutos, levántate, haz algo tranquilo y vuelve a intentar."
+          - "Reduce café y bebidas energéticas en la tarde y noche."
+      - id: "acompanar-nino"
+        title: "Cómo acompañar a un niño o niña tras el sismo"
+        summary: "Los menores expresan el malestar de otra forma. Tu calma es su mayor sostén."
+        steps:
+          - "Mantén la calma: los niños se regulan con tu tono de voz y tu cuerpo."
+          - "Explica lo ocurrido con palabras simples y honestas, sin detalles que asusten."
+          - "Permite el juego y el dibujo: son su manera de procesar lo vivido."
+          - "Sostén las rutinas posibles (comida, descanso) para devolver seguridad."
+          - "Valida sus emociones: 'es normal tener miedo, estoy contigo'."
+      - id: "perdida"
+        title: "Primeros pasos ante una pérdida"
+        summary: "El duelo tras un desastre es una respuesta humana. No hay una forma 'correcta' de sentirlo."
+        steps:
+          - "Permítete sentir: la tristeza, la rabia o el aturdimiento son esperables."
+          - "Busca a alguien de confianza con quien hablar o estar en silencio."
+          - "Cuida lo básico: hidratación, algo de comida y descanso."
+          - "Pospón decisiones grandes mientras la conmoción esté muy intensa."
+          - "Si el dolor te supera o aparecen pensamientos de no querer vivir, busca ayuda de inmediato."
+      - id: "pap-basico"
+        title: "Acompañar a otra persona: mirar, escuchar, conectar"
+        summary: "Principios de Primeros Auxilios Psicológicos para apoyar a alguien cercano."
+        steps:
+          - "MIRAR: observa si la persona está segura y qué necesita con urgencia."
+          - "ESCUCHAR: acércate con calma, presta atención sin presionar a que hable."
+          - "CONECTAR: ayúdala a cubrir necesidades básicas y a contactar a sus seres queridos."
+          - "No minimices ('no fue para tanto') ni fuerces consejos; acompaña."
+          - "Si hay riesgo para su vida, comunícate con una línea de crisis ya."
+
   fpv:
     verifier: "dummy" # dummy | http (http pending the real FPV API contract)
     circuit_breaker:
