@@ -39,9 +39,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### Administrador (Federación)
 - ✅ Resolver excepciones de validación de psicólogos (`approve`/`reject`).
-- ⚠️ Auditar accesos — `audit_log` inmutable (RLS + trigger) existe, pero **sin endpoint/UI** de consulta.
-- ⚠️ CRUD de líneas de crisis — tabla `crisis_lines` + RLS listos, pero el ruteo activo lee de
-  `config/app.config.yml`, no de la tabla; faltan los endpoints admin.
+- ✅ Auditar accesos — `audit_log` inmutable (RLS + trigger) + **endpoint** `GET /admin/audit` (filtros por acción/registro/usuario).
+- ✅ CRUD de líneas de crisis — endpoints admin (`/admin/crisis-lines`, soft-delete, auditado) y el **ruteo activo lee de la BD** con fallback a `config` (fail-safe).
 
 ## 2. Matriz de datos sensibles (PRD §2.1)
 - ✅ Seudonimización de PII (PII separada; admin no ve PII/clínico) — ADR-0011 + RLS.
@@ -116,7 +115,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
       voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
-- [ ] **Endpoints admin:** CRUD de líneas de crisis (que el ruteo lea de BD) y consulta de auditoría.
+- [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
+      el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
 - [ ] **Guías PAP asíncronas** para el solicitante.
 - [ ] **Registro/login de coordinador por token** (RF-2.6) y expiración de sesión por inactividad (RF-2.7).
 - [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde

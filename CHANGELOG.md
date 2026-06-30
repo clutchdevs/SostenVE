@@ -14,6 +14,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Endpoints admin (issue #21):** CRUD de líneas de crisis (`GET/POST /admin/crisis-lines`,
+  `PATCH/DELETE /admin/crisis-lines/:id`) con **soft-delete** (desactivación) y **auditoría** de cada
+  cambio; y consulta del log de auditoría (`GET /admin/audit`, filtros por acción/registro/usuario). El
+  **ruteo de líneas de crisis** (`GET /crisis-lines/active`) ahora **lee de la BD** (fuente gestionada por
+  el admin) con **fallback a `config`** si la BD no responde o está vacía (fail-safe). Seed con líneas de
+  crisis y un usuario administrador (`admin@sostenve.test`).
 - **Módulo 4 (online) — Panel del Psicólogo y Expediente Clínico:** el detalle de caso muestra la
   **identidad del solicitante** (nombre/teléfono/edad) al psicólogo asignado; **máquina de estados**
   correcta (aceptar solo desde `asignado` y una vez; cierre terminal; `cerrado` en solo lectura) con
