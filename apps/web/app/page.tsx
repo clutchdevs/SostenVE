@@ -41,6 +41,12 @@ export default function LandingPage() {
           Ver líneas de crisis
         </Link>
       </p>
+
+      <p className="text-center text-sm text-slate-600">
+        <Link href="/guias" className="font-semibold text-brand underline">
+          Guías de autoayuda (Primeros Auxilios Psicológicos)
+        </Link>
+      </p>
     </main>
   );
 }
