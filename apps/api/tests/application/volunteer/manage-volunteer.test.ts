@@ -62,6 +62,7 @@ function recordingNotifier(): Notifier & { approved: RegistrationNotification[] 
       approved.push(n);
     },
     async notifyRegistrationPending() {},
+    async notifyCoordinatorInvitation() {},
   };
 }
 

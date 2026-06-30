@@ -54,6 +54,7 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
 const notifier: Notifier = {
   async notifyRegistrationApproved() {},
   async notifyRegistrationPending() {},
+  async notifyCoordinatorInvitation() {},
 };
 const audit: AuditLogRepository = { async append() {} };
 
@@ -72,6 +73,7 @@ function recordingNotifier(): Notifier & {
     async notifyRegistrationPending(n) {
       pending.push(n);
     },
+    async notifyCoordinatorInvitation() {},
   };
 }
 
