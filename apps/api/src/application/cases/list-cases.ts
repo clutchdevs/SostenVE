@@ -1,5 +1,7 @@
 import { riskRank, type RiskLevel } from '../../domain/triage';
+import type { AssignmentRepository } from '../../domain/assignment/assignment';
 import type { CaseContact, CaseRecord } from '../../domain/case/case';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
 import type { CaseDeps } from './ports';
 
 /** Cases assigned to a given volunteer (psychologist portal). */
@@ -44,5 +46,48 @@ export async function listAllCases(deps: CaseDeps): Promise<CaseRecord[]> {
     const byRisk = riskRank(b.riskLevel as RiskLevel) - riskRank(a.riskLevel as RiskLevel);
     if (byRisk !== 0) return byRisk;
     return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+}
+
+/** A case paired with the name of the psychologist it is assigned to (if any). */
+export interface CoordinatorCaseView {
+  case: CaseRecord;
+  assigneeName: string | null;
+}
+
+export interface CoordinatorListDeps {
+  cases: CaseDeps['cases'];
+  assignments: AssignmentRepository;
+  volunteers: VolunteerRepository;
+}
+
+/**
+ * All cases for the coordinator board, enriched with the assigned psychologist's
+ * name (operational data the coordinator is allowed to see; the requester stays
+ * PII-free). Batched: one query for the assignments, then the distinct assignees.
+ */
+export async function listAllCasesDetailed(
+  deps: CoordinatorListDeps,
+): Promise<CoordinatorCaseView[]> {
+  const cases = await listAllCases({ cases: deps.cases } as CaseDeps);
+  const assignments = await deps.assignments.findByCaseIds(cases.map((c) => c.id));
+
+  // Latest assignment per case (escalation deletes old ones, but be defensive).
+  const latestByCase = new Map<string, { volunteerId: string; at: number }>();
+  for (const a of assignments) {
+    const prev = latestByCase.get(a.caseId);
+    const at = a.assignedAt.getTime();
+    if (!prev || at > prev.at) latestByCase.set(a.caseId, { volunteerId: a.volunteerId, at });
+  }
+
+  const assigneeIds = [...new Set([...latestByCase.values()].map((v) => v.volunteerId))];
+  const assignees = await Promise.all(assigneeIds.map((id) => deps.volunteers.findById(id)));
+  const nameById = new Map(
+    assignees.filter((v) => v !== null).map((v) => [v.id, v.fullName] as const),
+  );
+
+  return cases.map((c) => {
+    const assigned = latestByCase.get(c.id);
+    return { case: c, assigneeName: assigned ? (nameById.get(assigned.volunteerId) ?? null) : null };
   });
 }

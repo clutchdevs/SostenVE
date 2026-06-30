@@ -3,7 +3,7 @@ import { acceptCase } from '../../../application/assignment/accept-case';
 import { addClinicalNote } from '../../../application/cases/add-note';
 import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator';
 import { getCaseForVolunteer } from '../../../application/cases/get-case';
-import { listAllCases, listAssignedCasesDetailed } from '../../../application/cases/list-cases';
+import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases';
 import { recordCaseClosure } from '../../../application/cases/record-case-closure';
 import { getAuthUser, requireAuth } from '../middleware/auth';
 import { getValidated, validateBody } from '../middleware/validate';
@@ -13,6 +13,7 @@ import {
   presentCaseClosure,
   presentCaseContact,
   presentCaseSummary,
+  presentCoordinatorCaseSummary,
   presentNote,
 } from './presenters';
 import { addNoteSchema, caseClosureSchema, type AddNoteBody, type CaseClosureBody } from './schemas';
@@ -33,8 +34,13 @@ export function createCasesRouter(): Hono {
       const assigned = await listAssignedCasesDetailed(user.sub, deps);
       return c.json(assigned.map(({ case: cs, contact }) => presentAssignedCaseSummary(cs, contact)));
     }
-    const cases = await listAllCases(deps);
-    return c.json(cases.map(presentCaseSummary));
+    // Coordinator/admin board: every case enriched with the assigned psychologist.
+    const board = await listAllCasesDetailed({
+      cases: deps.cases,
+      assignments: deps.assignments,
+      volunteers: getAssignmentDeps().volunteers,
+    });
+    return c.json(board.map(({ case: cs, assigneeName }) => presentCoordinatorCaseSummary(cs, assigneeName)));
   });
 
   // Case detail with notes and closure. The assigned psychologist also sees the

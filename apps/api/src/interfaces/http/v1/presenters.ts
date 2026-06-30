@@ -81,6 +81,14 @@ export function presentAssignedCaseSummary(caseRecord: CaseRecord, contact: Case
   };
 }
 
+/**
+ * Case summary for the coordinator board: the operational summary plus the
+ * assigned psychologist's name (no requester PII).
+ */
+export function presentCoordinatorCaseSummary(caseRecord: CaseRecord, assigneeName: string | null) {
+  return { ...presentCaseSummary(caseRecord), asignado_a: assigneeName };
+}
+
 export function presentCaseSummary(caseRecord: CaseRecord) {
   return {
     caso_id: caseRecord.id,
