@@ -25,6 +25,7 @@ function presentVolunteer(volunteer: Volunteer) {
     especialidad: volunteer.specialty,
     rol: volunteer.role,
     estado: volunteer.status,
+    motivo_excepcion: volunteer.pendingReason ?? null,
     creado_en: volunteer.createdAt.toISOString(),
   };
 }
@@ -84,11 +85,15 @@ export function createVolunteerRouter(): Hono {
     },
   );
 
-  // Admin: list volunteers (defaults to pending approval) and resolve exceptions.
+  // Admin: list volunteers. Defaults to pending approval (the exceptions queue);
+  // `status=all` returns the full roster (padrón) for the admin directory.
   router.get('/', requireAuth({ roles: ['admin'] }), async (c) => {
-    const status = (c.req.query('status') as VolunteerStatus | undefined) ?? 'pending_approval';
+    const status = c.req.query('status') ?? 'pending_approval';
     const { volunteers } = getVolunteerContainer();
-    const list = await volunteers.listByStatus(status);
+    const list =
+      status === 'all'
+        ? await volunteers.listAll()
+        : await volunteers.listByStatus(status as VolunteerStatus);
     return c.json(list.map(presentVolunteer));
   });
 

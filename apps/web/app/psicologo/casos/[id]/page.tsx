@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { NoteForm, type NoteSubmission } from '../../../../src/features/psychologist-portal/note-form';
 import {
   ClinicalClosureForm,
@@ -72,28 +74,44 @@ export default function CaseDetailPage() {
 
   if (!detail) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <p>{message || 'Cargando…'}</p>
-      </main>
+      <div className="mx-auto max-w-3xl">
+        <p className="text-slate-600">{message || 'Cargando…'}</p>
+      </div>
     );
   }
 
   const status = detail.caso.estado;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Link
+        href="/psicologo"
+        className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-navy"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Volver a mis casos
+      </Link>
+
       <CaseIdentityCard caso={detail.caso} contacto={detail.contacto} />
 
-      {message && <p className="rounded-md bg-emerald-50 p-3 text-emerald-800">{message}</p>}
+      {message && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+          {message}
+        </p>
+      )}
 
       {status === 'asignado' && (
-        <button onClick={accept} className="w-full rounded-md bg-brand px-4 py-3 font-semibold text-white" type="button">
+        <button
+          onClick={accept}
+          className="w-full rounded-xl bg-navy px-4 py-3 font-semibold text-white transition-colors hover:bg-navy-hover"
+          type="button"
+        >
           Aceptar caso
         </button>
       )}
 
       {status === 'pendiente' && (
-        <p className="rounded-md bg-amber-50 p-3 text-amber-800">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800">
           Este caso aún no te ha sido asignado para aceptar.
         </p>
       )}
@@ -111,7 +129,7 @@ export default function CaseDetailPage() {
 
       {status === 'cerrado' && (
         <>
-          <p className="rounded-md bg-slate-100 p-3 text-slate-700">
+          <p className="rounded-xl border border-slate-200 bg-slate-100 p-3 text-slate-700">
             Caso cerrado. Esta vista es de solo lectura.
           </p>
           {detail.cierre && <ClosureSummary cierre={detail.cierre} />}
@@ -121,7 +139,7 @@ export default function CaseDetailPage() {
           </section>
         </>
       )}
-    </main>
+    </div>
   );
 }
 

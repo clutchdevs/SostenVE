@@ -14,6 +14,19 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Módulo 2 — Registro/login de coordinador por token + expiración por inactividad (issue #23,
+  RF-2.6 / RF-2.7):** los coordinadores ya no se autorregistran contra el padrón FPV; un admin los
+  **invita por token**. El admin emite la invitación (`POST /admin/coordinators/invitations`), que
+  genera un token de un solo uso de alta entropía del que solo se persiste su **hash SHA-256**
+  (migración `20260628000010`, RLS default-deny); el token en claro se devuelve **una sola vez** y se
+  envía por correo (`Notifier.notifyCoordinatorInvitation`). El invitado lo canjea en
+  `POST /coordinators/accept-invitation` para fijar su contraseña y quedar **coordinador `active`** sin
+  pasar por la verificación FPV. Listado y revocación (`GET` / `DELETE .../:id`), todo **auditado**
+  (`coordinator_invited` / `_accepted` / `_revoked`). **Expiración de sesión por inactividad** (RF-2.7):
+  nueva config `security.session.idle_timeout_minutes` (15 min) aplicada en el cliente con seguimiento
+  de actividad (`SessionGuard`) sobre la expiración absoluta del JWT. Web: panel admin para invitar y
+  gestionar invitaciones, página pública `/registro-coordinador` (activación por enlace) y ruta de
+  acceso dedicada `/login-coordinador`.
 - **Módulo 2 — Alta automática real (RF-2.2.4 / RF-2.2):** la contraseña ya no la elige el usuario;
   se **autogenera** con alta entropía (24 bytes, base64url) y se entrega por un **correo de bienvenida**
   real vía `SmtpNotifier` (nodemailer), seleccionable por config `email.provider` (`log` por defecto

@@ -1,8 +1,10 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ZodType } from 'zod';
 import {
+  acceptInvitationSchema,
   addNoteSchema,
   caseClosureSchema,
+  coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
   greenBranchSchema,
@@ -57,6 +59,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'volunteers' },
       { name: 'cases' },
       { name: 'coordinator' },
+      { name: 'coordinators' },
       { name: 'admin' },
       { name: 'cron' },
     ],
@@ -134,9 +137,16 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/volunteers': {
         get: {
           tags: ['volunteers'],
-          summary: 'Listar voluntarios por estado (admin)',
+          summary: 'Listar voluntarios (admin). status: active|pending_approval|inactive|all (def. pending_approval)',
           security: bearer,
-          parameters: [{ name: 'status', in: 'query', required: false, schema: { type: 'string' } }],
+          parameters: [
+            {
+              name: 'status',
+              in: 'query',
+              required: false,
+              schema: { type: 'string', enum: ['active', 'pending_approval', 'inactive', 'all'] },
+            },
+          ],
           responses: { '200': { description: 'Lista de voluntarios' }, '401': { description: 'No autenticado' }, '403': { description: 'Sin permiso' } },
         },
       },
@@ -161,7 +171,8 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/cases': {
         get: {
           tags: ['cases'],
-          summary: 'Listar casos (psicólogo: propios; coordinador/admin: todos)',
+          summary:
+            'Listar casos (psicólogo: propios, con nombre/teléfono del solicitante; coordinador/admin: todos, sin PII)',
           security: bearer,
           responses: { '200': { description: 'Lista de casos' }, '401': { description: 'No autenticado' } },
         },
@@ -224,6 +235,17 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           responses: { '200': { description: 'Métricas de capacidad' }, '403': { description: 'Sin permiso' } },
         },
       },
+      '/coordinators/accept-invitation': {
+        post: {
+          tags: ['coordinators'],
+          summary: 'Aceptar invitación de coordinador y activar la cuenta (RF-2.6)',
+          requestBody: jsonBody(acceptInvitationSchema),
+          responses: {
+            '201': { description: 'Coordinador activado' },
+            '400': { description: 'Invitación inválida o vencida' },
+          },
+        },
+      },
       '/admin/crisis-lines': {
         get: {
           tags: ['admin'],
@@ -256,10 +278,39 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           responses: { '200': { description: 'Línea desactivada' }, '404': { description: 'No encontrada' }, '403': { description: 'Sin permiso' } },
         },
       },
+      '/admin/coordinators/invitations': {
+        get: {
+          tags: ['admin'],
+          summary: 'Listar invitaciones de coordinador (admin)',
+          security: bearer,
+          responses: { '200': { description: 'Lista de invitaciones' }, '403': { description: 'Sin permiso' } },
+        },
+        post: {
+          tags: ['admin'],
+          summary: 'Invitar a un coordinador (admin, auditado; devuelve el token una sola vez)',
+          security: bearer,
+          requestBody: jsonBody(coordinatorInviteSchema),
+          responses: { '201': { description: 'Invitación creada (+ token)' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/admin/coordinators/invitations/{id}': {
+        delete: {
+          tags: ['admin'],
+          summary: 'Revocar una invitación de coordinador pendiente (admin, auditado)',
+          security: bearer,
+          parameters: [idParam],
+          responses: {
+            '200': { description: 'Invitación revocada' },
+            '404': { description: 'No encontrada' },
+            '409': { description: 'La invitación no está pendiente' },
+            '403': { description: 'Sin permiso' },
+          },
+        },
+      },
       '/admin/audit': {
         get: {
           tags: ['admin'],
-          summary: 'Consultar el log de auditoría (admin)',
+          summary: 'Consultar el log de auditoría (admin, paginado con actor resuelto: nombre + cédula)',
           security: bearer,
           parameters: [
             { name: 'accion', in: 'query', required: false, schema: { type: 'string' } },
@@ -268,7 +319,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             { name: 'limit', in: 'query', required: false, schema: { type: 'integer' } },
             { name: 'offset', in: 'query', required: false, schema: { type: 'integer' } },
           ],
-          responses: { '200': { description: 'Entradas de auditoría' }, '403': { description: 'Sin permiso' } },
+          responses: { '200': { description: '{ total, items[] } de auditoría' }, '403': { description: 'Sin permiso' } },
         },
       },
       '/cron/check-sla': {

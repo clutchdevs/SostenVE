@@ -34,6 +34,9 @@ function repoWith(status: VolunteerStatus): VolunteerRepository {
     async listByStatus() {
       return [volunteer];
     },
+    async listAll() {
+      return [volunteer];
+    },
     async getPasswordHash() {
       return passwordHash;
     },

@@ -1,4 +1,8 @@
-import type { Notifier, RegistrationNotification } from '../../application/volunteer/ports';
+import type {
+  InvitationNotification,
+  Notifier,
+  RegistrationNotification,
+} from '../../application/volunteer/ports';
 import { logger } from '../../shared/logger';
 
 /**
@@ -17,6 +21,14 @@ export class LogNotifier implements Notifier {
   async notifyRegistrationPending(notification: RegistrationNotification): Promise<void> {
     logger.info('volunteer registration pending review (email would be sent)', {
       email: notification.email,
+    });
+  }
+
+  async notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void> {
+    // The acceptUrl carries the raw token; never log it.
+    logger.info('coordinator invitation created (invite email would be sent)', {
+      email: notification.email,
+      expiresAt: notification.expiresAt.toISOString(),
     });
   }
 }

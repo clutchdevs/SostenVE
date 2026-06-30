@@ -129,6 +129,17 @@ export const crisisLineUpdateSchema = z
   })
   .partial();
 
+export const coordinatorInviteSchema = z.object({
+  nombre: z.string().min(1),
+  email: z.string().email(),
+});
+
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1),
+  // The coordinator picks this password; require a reasonable minimum length.
+  contrasena: z.string().min(8),
+});
+
 export const auditQuerySchema = z.object({
   accion: z.string().min(1).optional(),
   registro: z.string().min(1).optional(),
@@ -146,4 +157,6 @@ export type RegisterVolunteerBody = z.infer<typeof registerVolunteerSchema>;
 export type LoginBody = z.infer<typeof loginSchema>;
 export type CrisisLineCreateBody = z.infer<typeof crisisLineCreateSchema>;
 export type CrisisLineUpdateBody = z.infer<typeof crisisLineUpdateSchema>;
+export type CoordinatorInviteBody = z.infer<typeof coordinatorInviteSchema>;
+export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
 export type AuditQuery = z.infer<typeof auditQuerySchema>;

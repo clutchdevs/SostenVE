@@ -46,6 +46,51 @@ values
   )
 on conflict (id) do nothing;
 
+-- Excepciones de registro (RF-2.2): psicólogos que no se validaron automáticamente
+-- y esperan revisión manual del admin. Cada uno con su motivo (pending_reason).
+insert into volunteers (id, full_name, professional_id, email, specialty, role, password_hash, status, pending_reason, consent_version, consent_accepted_at)
+values
+  (
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'María Fernanda Quintero',
+    'FPV-7741',
+    'mf.quintero@example.com',
+    'Clínica adultos',
+    'psychologist',
+    'x',
+    'pending_approval',
+    'fpv_unreachable',
+    'v0.1.0-draft',
+    now()
+  ),
+  (
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    'José Gregorio Salas',
+    'FPV-8123',
+    'jg.salas@example.com',
+    'Psicología infantil',
+    'psychologist',
+    'x',
+    'pending_approval',
+    'fpv_not_found',
+    'v0.1.0-draft',
+    now()
+  ),
+  (
+    'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    'Daniela Andrade',
+    'FPV-9055',
+    'd.andrade@example.com',
+    'Clínica adultos',
+    'psychologist',
+    'x',
+    'pending_approval',
+    'pap_not_declared',
+    'v0.1.0-draft',
+    now()
+  )
+on conflict (id) do nothing;
+
 -- Caso de riesgo alto en cola (resaltado en el panel del coordinador). Menor de
 -- edad: al asignarlo por el cron, prioriza al psicólogo con especialidad infantil.
 insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone, age, sla_expires_at)

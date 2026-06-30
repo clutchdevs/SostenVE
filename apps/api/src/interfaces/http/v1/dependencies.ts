@@ -8,12 +8,15 @@ import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
 import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository';
+import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure/repositories/supabase-coordinator-invitation-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { createNotifier } from '../../../infrastructure/notifications';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
 import type { AssignmentDeps } from '../../../application/assignment/ports';
 import type { CaseDeps } from '../../../application/cases/ports';
 import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines';
+import type { InvitationDeps } from '../../../application/coordinator/manage-invitations';
+import type { AcceptInvitationDeps } from '../../../application/coordinator/accept-invitation';
 import type { QueryAuditLogDeps } from '../../../application/audit/query-audit-log';
 import type { CrisisLineRepository } from '../../../domain/crisis-line/crisis-line';
 import type { IdempotencyStore } from '../../../application/intake/idempotency';
@@ -114,6 +117,7 @@ export function getCrisisLineDeps(): CrisisLineRepository {
 interface AdminContainer {
   crisisLines: CrisisLineDeps;
   audit: QueryAuditLogDeps;
+  invitations: InvitationDeps;
 }
 
 let adminCached: AdminContainer | null = null;
@@ -122,13 +126,35 @@ let adminCached: AdminContainer | null = null;
 export function getAdminContainer(): AdminContainer {
   if (adminCached === null) {
     const client = forService();
+    const config = getConfig();
     const audit = new SupabaseAuditLogRepository(client);
     adminCached = {
       crisisLines: { lines: new SupabaseCrisisLineRepository(client), audit },
       audit: { reader: audit },
+      invitations: {
+        invitations: new SupabaseCoordinatorInvitationRepository(client),
+        notifier: createNotifier(config),
+        audit,
+        config,
+      },
     };
   }
   return adminCached;
+}
+
+let acceptInvitationCached: AcceptInvitationDeps | null = null;
+
+/** Composition root for the public coordinator self-activation route (RF-2.6). */
+export function getAcceptInvitationDeps(): AcceptInvitationDeps {
+  if (acceptInvitationCached === null) {
+    const client = forService();
+    acceptInvitationCached = {
+      invitations: new SupabaseCoordinatorInvitationRepository(client),
+      volunteers: new SupabaseVolunteerRepository(client),
+      audit: new SupabaseAuditLogRepository(client),
+    };
+  }
+  return acceptInvitationCached;
 }
 
 let caseCached: CaseDeps | null = null;

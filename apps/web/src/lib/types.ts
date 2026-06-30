@@ -11,6 +11,12 @@ export interface CaseSummary {
   edad?: number | null;
   creado_en: string;
   sla_vence_en: string | null;
+  // Requester contact (PII). Present only on the psychologist's own case list
+  // and detail; never returned to coordinators/admins.
+  nombre?: string | null;
+  contacto?: string | null;
+  // Assigned psychologist's name. Present only on the coordinator/admin board.
+  asignado_a?: string | null;
 }
 
 export interface ClinicalNoteView {
@@ -63,8 +69,47 @@ export interface CrisisLineAdmin {
 export interface AuditEntryView {
   id: string;
   usuario_id: string | null;
+  usuario_nombre: string | null;
+  usuario_cedula: string | null;
   rol: string | null;
   registro_afectado: string | null;
   accion: string;
   creado_en: string;
+}
+
+/** Paginated audit response: total matching + the current page of items. */
+export interface AuditPageView {
+  total: number;
+  items: AuditEntryView[];
+}
+
+export type VolunteerStatus = 'active' | 'pending_approval' | 'inactive';
+export type ExceptionReason = 'fpv_unreachable' | 'fpv_not_found' | 'pap_not_declared';
+
+export interface VolunteerView {
+  id: string;
+  nombre: string;
+  cedula_profesional: string;
+  email?: string | null;
+  especialidad?: string | null;
+  rol: string;
+  estado: VolunteerStatus;
+  /** Why it needs manual review; only set while pending_approval. */
+  motivo_excepcion: ExceptionReason | null;
+  creado_en: string;
+}
+
+export interface CoordinatorInvitationView {
+  id: string;
+  nombre: string;
+  email: string;
+  estado: 'pending' | 'accepted' | 'revoked';
+  vence_en: string;
+  aceptada_en: string | null;
+  creada_en: string;
+}
+
+/** Create response also carries the raw token, shown once to the admin. */
+export interface CoordinatorInvitationCreated extends CoordinatorInvitationView {
+  token: string;
 }

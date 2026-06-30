@@ -93,18 +93,31 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     });
   }
 
-  it('lists only the cases assigned to the psychologist', async () => {
+  it('lists only the cases assigned to the psychologist, with requester contact', async () => {
     const vId = await seedVolunteer();
-    const mine = await seedCase();
+    const pseudonym = `pseudo-${randomUUID()}`;
+    const created = await pg.query<{ id: string }>(
+      `insert into cases (pseudonym_id, branch, risk_level, urgency_score, status)
+       values ($1, 'verde', 'riesgo_moderado', 10, 'asignado') returning id`,
+      [pseudonym],
+    );
+    const mine = created.rows[0]!.id;
+    caseIds.push(mine);
+    await pg.query(
+      `insert into case_contacts (pseudonym_id, name, contact) values ($1, 'Ana Lista', '+584129999999')`,
+      [pseudonym],
+    );
     await assign(mine, vId);
     await seedCase(); // someone else's, unassigned to vId
 
     const res = await authed('/api/v1/cases', await tokenFor(vId));
     expect(res.status).toBe(200);
-    const list = (await res.json()) as Array<{ caso_id: string }>;
-    expect(list.some((c) => c.caso_id === mine)).toBe(true);
-    expect(list.every((c) => c.caso_id !== undefined)).toBe(true);
+    const list = (await res.json()) as Array<{ caso_id: string; nombre: string | null; contacto: string | null }>;
     expect(list.length).toBe(1);
+    const mineRow = list.find((c) => c.caso_id === mine);
+    // The assigned psychologist may search by name/phone, so the list carries it.
+    expect(mineRow?.nombre).toBe('Ana Lista');
+    expect(mineRow?.contacto).toBe('+584129999999');
   });
 
   it('blocks access to a case not assigned to the psychologist (403)', async () => {
@@ -231,8 +244,30 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
 
     const res = await authed('/api/v1/cases', await tokenFor(coord, 'coordinator'));
     expect(res.status).toBe(200);
-    const list = (await res.json()) as Array<{ nivel_riesgo: string }>;
+    const list = (await res.json()) as Array<{
+      nivel_riesgo: string;
+      nombre?: unknown;
+      contacto?: unknown;
+      asignado_a?: unknown;
+    }>;
     expect(list[0]?.nivel_riesgo).toBe('riesgo_alto');
+    // The coordinator list must stay PII-free (no requester name/phone)…
+    expect(list.every((c) => c.nombre === undefined && c.contacto === undefined)).toBe(true);
+    // …but it carries the assignee field (operational data) on every row.
+    expect(list.every((c) => 'asignado_a' in c)).toBe(true);
+  });
+
+  it('shows the assigned psychologist name on the coordinator board', async () => {
+    const psy = await seedVolunteer();
+    await pg.query("update volunteers set full_name = 'Dra. Pérez' where id = $1", [psy]);
+    const coord = await seedVolunteer();
+    await pg.query("update volunteers set role = 'coordinator' where id = $1", [coord]);
+    const caseId = await seedCase();
+    await assign(caseId, psy);
+
+    const res = await authed('/api/v1/cases', await tokenFor(coord, 'coordinator'));
+    const list = (await res.json()) as Array<{ caso_id: string; asignado_a: string | null }>;
+    expect(list.find((c) => c.caso_id === caseId)?.asignado_a).toBe('Dra. Pérez');
   });
 
   it('gives the coordinator audited clinical access without PII (issue #25)', async () => {

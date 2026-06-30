@@ -3,12 +3,19 @@ import { acceptCase } from '../../../application/assignment/accept-case';
 import { addClinicalNote } from '../../../application/cases/add-note';
 import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator';
 import { getCaseForVolunteer } from '../../../application/cases/get-case';
-import { listAllCases, listAssignedCases } from '../../../application/cases/list-cases';
+import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases';
 import { recordCaseClosure } from '../../../application/cases/record-case-closure';
 import { getAuthUser, requireAuth } from '../middleware/auth';
 import { getValidated, validateBody } from '../middleware/validate';
 import { getAssignmentDeps, getCaseDeps } from './dependencies';
-import { presentCaseClosure, presentCaseContact, presentCaseSummary, presentNote } from './presenters';
+import {
+  presentAssignedCaseSummary,
+  presentCaseClosure,
+  presentCaseContact,
+  presentCaseSummary,
+  presentCoordinatorCaseSummary,
+  presentNote,
+} from './presenters';
 import { addNoteSchema, caseClosureSchema, type AddNoteBody, type CaseClosureBody } from './schemas';
 
 const STAFF_ROLES = ['psychologist', 'coordinator', 'admin'];
@@ -17,15 +24,23 @@ const STAFF_ROLES = ['psychologist', 'coordinator', 'admin'];
 export function createCasesRouter(): Hono {
   const router = new Hono();
 
-  // List cases: psychologists see their own; coordinators/admins see all.
+  // List cases: psychologists see their own (with the requester contact, which
+  // they are authorized to see for their cases); coordinators/admins see all,
+  // PII-free.
   router.get('/', requireAuth({ roles: STAFF_ROLES }), async (c) => {
     const user = getAuthUser(c);
     const deps = getCaseDeps();
-    const cases =
-      user.role === 'psychologist'
-        ? await listAssignedCases(user.sub, deps)
-        : await listAllCases(deps);
-    return c.json(cases.map(presentCaseSummary));
+    if (user.role === 'psychologist') {
+      const assigned = await listAssignedCasesDetailed(user.sub, deps);
+      return c.json(assigned.map(({ case: cs, contact }) => presentAssignedCaseSummary(cs, contact)));
+    }
+    // Coordinator/admin board: every case enriched with the assigned psychologist.
+    const board = await listAllCasesDetailed({
+      cases: deps.cases,
+      assignments: deps.assignments,
+      volunteers: getAssignmentDeps().volunteers,
+    });
+    return c.json(board.map(({ case: cs, assigneeName }) => presentCoordinatorCaseSummary(cs, assigneeName)));
   });
 
   // Case detail with notes and closure. The assigned psychologist also sees the

@@ -12,6 +12,7 @@ import type { CaseContact, CaseRecord } from '../../../domain/case/case';
 import type { ClinicalNote } from '../../../domain/clinical/clinical-note';
 import type { CaseClosure } from '../../../domain/clinical/case-closure';
 import type { CrisisLine } from '../../../domain/crisis-line/crisis-line';
+import type { CoordinatorInvitation } from '../../../domain/coordinator/invitation';
 
 /** Maps domain results to the Spanish contract values (see openapi.yaml). */
 
@@ -32,10 +33,24 @@ export function presentCrisisLineAdmin(line: CrisisLine) {
   };
 }
 
+export function presentInvitation(invitation: CoordinatorInvitation) {
+  return {
+    id: invitation.id,
+    nombre: invitation.fullName,
+    email: invitation.email,
+    estado: invitation.status,
+    vence_en: invitation.expiresAt.toISOString(),
+    aceptada_en: invitation.acceptedAt?.toISOString() ?? null,
+    creada_en: invitation.createdAt.toISOString(),
+  };
+}
+
 export function presentAuditEntry(entry: AuditEntryRecord) {
   return {
     id: entry.id,
     usuario_id: entry.userId,
+    usuario_nombre: entry.userName,
+    usuario_cedula: entry.userCedula,
     rol: entry.role,
     registro_afectado: entry.affectedRecordId,
     accion: entry.actionType,
@@ -51,6 +66,27 @@ export function presentIntakeResult(result: IntakeCaseResult) {
     score_urgencia: result.urgencyScore,
     lineas_crisis: result.crisisLines ? presentCrisisLines(result.crisisLines) : undefined,
   };
+}
+
+/**
+ * Case summary for the assigned psychologist's own list: the operational summary
+ * plus the requester contact (name/phone) so the portal can show and search by
+ * identity. Only ever used on the psychologist path (see cases.controller).
+ */
+export function presentAssignedCaseSummary(caseRecord: CaseRecord, contact: CaseContact | null) {
+  return {
+    ...presentCaseSummary(caseRecord),
+    nombre: contact?.name ?? null,
+    contacto: contact?.contact ?? null,
+  };
+}
+
+/**
+ * Case summary for the coordinator board: the operational summary plus the
+ * assigned psychologist's name (no requester PII).
+ */
+export function presentCoordinatorCaseSummary(caseRecord: CaseRecord, assigneeName: string | null) {
+  return { ...presentCaseSummary(caseRecord), asignado_a: assigneeName };
 }
 
 export function presentCaseSummary(caseRecord: CaseRecord) {

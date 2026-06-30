@@ -17,10 +17,19 @@ export interface AuditLogRepository {
 export interface AuditEntryRecord {
   id: string;
   userId: string | null;
+  /** Resolved actor name/credential (null when the actor is not a volunteer). */
+  userName: string | null;
+  userCedula: string | null;
   role: string | null;
   affectedRecordId: string | null;
   actionType: string;
   createdAt: Date;
+}
+
+/** A page of audit entries plus the total matching the same filters. */
+export interface AuditPage {
+  entries: AuditEntryRecord[];
+  total: number;
 }
 
 /** Filters for querying the audit log (all optional). */
@@ -34,5 +43,5 @@ export interface AuditLogQuery {
 
 /** Read port for the immutable audit log (admin-only consultation). */
 export interface AuditLogReader {
-  list(query: AuditLogQuery): Promise<AuditEntryRecord[]>;
+  list(query: AuditLogQuery): Promise<AuditPage>;
 }

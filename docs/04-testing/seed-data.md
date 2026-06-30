@@ -21,6 +21,13 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 - El psicólogo tiene especialidad **"psicología infantil"** (útil para probar la priorización por edad).
 - Ambos quedan en estado **`active`** (pueden iniciar sesión de inmediato).
 
+### Alta de coordinador por invitación (RF-2.6, issue #23)
+Además del coordinador sembrado, se puede dar de alta uno nuevo por **token de invitación**:
+1. Como admin, en `/admin` → **Coordinadores** → "Invitar coordinador" (o `POST /admin/coordinators/invitations`).
+   La respuesta muestra el **token una sola vez** (en local `email.provider: log` no envía correo real).
+2. Abre `/registro-coordinador?token=<token>` y define una contraseña (≥ 8) para activar la cuenta.
+3. Inicia sesión en `/login-coordinador` (o `/login`).
+
 ## Casos de ejemplo
 | Caso | Estado | Riesgo | Edad | Notas |
 |---|---|---|---|---|

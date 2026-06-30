@@ -6,16 +6,23 @@ import {
   listCrisisLines,
   updateCrisisLine,
 } from '../../../application/crisis-line/manage-crisis-lines';
+import {
+  inviteCoordinator,
+  listInvitations,
+  revokeInvitation,
+} from '../../../application/coordinator/manage-invitations';
 import type { CrisisLineUpdate } from '../../../domain/crisis-line/crisis-line';
 import { getAuthUser, requireAuth } from '../middleware/auth';
 import { getValidated, validateBody, validateQuery } from '../middleware/validate';
 import { getAdminContainer } from './dependencies';
-import { presentAuditEntry, presentCrisisLineAdmin } from './presenters';
+import { presentAuditEntry, presentCrisisLineAdmin, presentInvitation } from './presenters';
 import {
   auditQuerySchema,
+  coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
   type AuditQuery,
+  type CoordinatorInviteBody,
   type CrisisLineCreateBody,
   type CrisisLineUpdateBody,
 } from './schemas';
@@ -86,10 +93,39 @@ export function createAdminRouter(): Hono {
     return c.json(presentCrisisLineAdmin(line));
   });
 
-  // Audit log consultation (immutable, ADR-0012).
+  // Coordinator invitations (RF-2.6): issue, list and revoke. The raw token is
+  // returned ONCE on creation so the admin can share it if email is unavailable.
+  router.post('/coordinators/invitations', validateBody(coordinatorInviteSchema), async (c) => {
+    const admin = getAuthUser(c);
+    const body = getValidated<CoordinatorInviteBody>(c, 'body');
+    const { invitation, token } = await inviteCoordinator(
+      { email: body.email, fullName: body.nombre },
+      admin.sub,
+      getAdminContainer().invitations,
+    );
+    return c.json({ ...presentInvitation(invitation), token }, 201);
+  });
+
+  router.get('/coordinators/invitations', async (c) => {
+    const invitations = await listInvitations(getAdminContainer().invitations);
+    return c.json(invitations.map(presentInvitation));
+  });
+
+  router.delete('/coordinators/invitations/:id', async (c) => {
+    const admin = getAuthUser(c);
+    const invitation = await revokeInvitation(
+      c.req.param('id'),
+      admin.sub,
+      getAdminContainer().invitations,
+    );
+    return c.json(presentInvitation(invitation));
+  });
+
+  // Audit log consultation (immutable, ADR-0012). Paginated: returns the page
+  // items plus the total count matching the same filters.
   router.get('/audit', validateQuery(auditQuerySchema), async (c) => {
     const q = getValidated<AuditQuery>(c, 'query');
-    const entries = await queryAuditLog(
+    const page = await queryAuditLog(
       {
         actionType: q.accion,
         affectedRecordId: q.registro,
@@ -99,7 +135,7 @@ export function createAdminRouter(): Hono {
       },
       getAdminContainer().audit,
     );
-    return c.json(entries.map(presentAuditEntry));
+    return c.json({ total: page.total, items: page.entries.map(presentAuditEntry) });
   });
 
   return router;

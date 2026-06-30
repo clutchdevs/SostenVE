@@ -1,6 +1,7 @@
 import { generatePassword, hashPassword } from '../../shared/security/password';
 import type { AuditLogRepository } from '../../domain/audit/audit';
 import type {
+  PendingReason,
   Volunteer,
   VolunteerApplication,
   VolunteerRepository,
@@ -43,18 +44,27 @@ export interface RegisterVolunteerResult {
  * open) the registration is NOT blocked — it falls back to `pending_approval`
  * (exception case, RF-2.2) so an external outage never stops sign-ups.
  */
+interface ResolvedStatus {
+  status: VolunteerStatus;
+  /** Why it went to manual review (only when status is `pending_approval`). */
+  reason?: PendingReason;
+}
+
 async function resolveStatus(
   input: RegisterVolunteerInput,
   deps: RegisterVolunteerDeps,
-): Promise<VolunteerStatus> {
+): Promise<ResolvedStatus> {
   try {
     const result = await deps.fpvVerifier.verify({
       professionalId: input.professionalId,
       fullName: input.fullName,
     });
-    return result.valid && input.application.papTrained ? 'active' : 'pending_approval';
+    if (!result.valid) return { status: 'pending_approval', reason: 'fpv_not_found' };
+    if (!input.application.papTrained) return { status: 'pending_approval', reason: 'pap_not_declared' };
+    return { status: 'active' };
   } catch {
-    return 'pending_approval';
+    // External verifier down / circuit breaker open: never block sign-up.
+    return { status: 'pending_approval', reason: 'fpv_unreachable' };
   }
 }
 
@@ -62,7 +72,7 @@ export async function registerVolunteer(
   input: RegisterVolunteerInput,
   deps: RegisterVolunteerDeps,
 ): Promise<RegisterVolunteerResult> {
-  const status = await resolveStatus(input, deps);
+  const { status, reason } = await resolveStatus(input, deps);
   // High-entropy password generated server-side (RF-2.2.4); the user never picks
   // it. Delivered to an active volunteer via the welcome email — never returned
   // in the HTTP response, never logged.
@@ -78,6 +88,7 @@ export async function registerVolunteer(
     role: 'psychologist',
     passwordHash,
     status,
+    pendingReason: reason,
     application: input.application,
     consentVersion: input.consentVersion,
     consentAcceptedAt,

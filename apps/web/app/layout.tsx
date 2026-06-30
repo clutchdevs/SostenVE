@@ -1,5 +1,15 @@
 import type { ReactNode } from 'react';
+import { Inter, Fraunces } from 'next/font/google';
 import './globals.css';
+
+// Clean modern sans for the UI; elegant serif reserved for editorial titles.
+const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+const serif = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+  weight: ['400', '500', '600'],
+});
 
 export const metadata = {
   title: 'Sostén',
@@ -14,8 +24,8 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es-VE">
-      <body className="min-h-screen">{children}</body>
+    <html lang="es-VE" className={`${sans.variable} ${serif.variable}`}>
+      <body className="min-h-screen font-sans">{children}</body>
     </html>
   );
 }

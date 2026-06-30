@@ -1,8 +1,12 @@
 import { createTransport, type Transporter } from 'nodemailer';
 import type { AppConfig } from '../../config';
-import type { Notifier, RegistrationNotification } from '../../application/volunteer/ports';
+import type {
+  InvitationNotification,
+  Notifier,
+  RegistrationNotification,
+} from '../../application/volunteer/ports';
 import { logger } from '../../shared/logger';
-import { buildPendingEmail, buildWelcomeEmail } from './welcome-email';
+import { buildInvitationEmail, buildPendingEmail, buildWelcomeEmail } from './welcome-email';
 
 /**
  * Real volunteer notifier over SMTP (RF-2.2.4) using nodemailer. The welcome
@@ -46,5 +50,12 @@ export class SmtpNotifier implements Notifier {
     const { subject, body } = buildPendingEmail(notification);
     await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
     logger.info('volunteer pending email sent', { email: notification.email });
+  }
+
+  async notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void> {
+    const { subject, body } = buildInvitationEmail(notification);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    // Log WITHOUT the acceptUrl (it carries the raw token); logger redacts email.
+    logger.info('coordinator invitation email sent', { email: notification.email });
   }
 }
