@@ -55,6 +55,14 @@ export default function IntakePage() {
           </button>
         ))}
       </div>
+
+      <p className="mt-6 text-center text-sm text-slate-600">
+        Mientras tanto, puedes ver{' '}
+        <Link href="/guias" className="font-semibold text-brand underline">
+          guías de autoayuda
+        </Link>
+        .
+      </p>
     </main>
   );
 }

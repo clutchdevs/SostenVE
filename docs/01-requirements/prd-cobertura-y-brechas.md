@@ -25,7 +25,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Solicitante (Civil/Afectado)
 - ✅ Registrar solicitud (intake de baja fricción: Likert → ramas roja/verde).
 - ✅ Visualizar líneas de crisis instantáneas (con fail-safe de caché/embebido en cliente).
-- ❌ Acceder a guías de Primeros Auxilios Psicológicos (PAP) asíncronas.
+- ✅ Acceder a **guías de Primeros Auxilios Psicológicos (PAP) asíncronas** (issue #22): contenido
+  **versionado** en `config/app.config.yml`, expuesto por `GET /pap` (público, sin BD) y página
+  `/guias` enlazada desde inicio, intake y la confirmación de Rama Verde. Texto provisional pendiente FPV.
 
 ### Psicólogo Voluntario
 - ✅ Portal exclusivo (`/psicologo`).
@@ -167,7 +169,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       ruteo desde BD con fallback), **excepciones de registro** con motivo FPV real + aprobar/rechazar,
       **padrón** de psicólogos, **invitaciones de coordinador** y **auditoría paginada** con acciones
       traducidas y actor (nombre + cédula).
-- [ ] **Guías PAP asíncronas** para el solicitante.
+- [x] **Guías PAP asíncronas** para el solicitante (issue #22): contenido versionado en config,
+      `GET /pap` y página `/guias` enlazada desde el intake. Texto provisional pendiente de la FPV.
 - [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
       (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
       sesión por inactividad y ruta `/login-coordinador` (RF-2.7). ⚠️ Desvíos del PRD abajo (sección D).

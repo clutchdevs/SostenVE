@@ -46,6 +46,23 @@ export const appConfigSchema = z.object({
       text: z.string().min(1),
     }),
   }),
+  // Asynchronous Psychological First Aid (PAP) self-help guides for the
+  // requester (RF Módulo 1). Versioned like the consent text; content is
+  // provisional pending FPV validation.
+  pap: z.object({
+    version: z.string().min(1),
+    updated_at: z.string().min(1),
+    guides: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          title: z.string().min(1),
+          summary: z.string().min(1),
+          steps: z.array(z.string().min(1)).min(1),
+        }),
+      )
+      .min(1),
+  }),
   fpv: z.object({
     verifier: z.enum(['dummy', 'http']),
     circuit_breaker: z.object({
