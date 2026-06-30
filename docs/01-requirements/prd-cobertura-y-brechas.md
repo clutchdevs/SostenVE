@@ -78,9 +78,12 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   seleccionable por config `email.provider`; `log` por defecto). La aprobación por admin reemite y
   reenvía credenciales. ⚠️ Pendiente: flujo de cambio/reseteo de contraseña (la temporal viaja en claro).
 - ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat).
-- ❌ RF-2.6 Registro de coordinadores por token de invitación.
-- ⚠️ RF-2.7 Login con bloqueo por 5 intentos — hay rate-limit/lockout configurable, pero no ruta
-  separada `/login-coordinador` ni expiración de sesión por inactividad.
+- ✅ RF-2.6 Registro de coordinadores por **token de invitación** (issue #23): el admin invita
+  (`/admin/coordinators/invitations`), se persiste solo el hash del token (un solo uso, con TTL) y el
+  invitado lo canjea en `/coordinators/accept-invitation` para activarse como coordinador; auditado.
+- ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout configurable) **+ expiración de
+  sesión por inactividad** (`security.session.idle_timeout_minutes`, enforce en cliente sobre el `exp`
+  del JWT) **+ ruta separada `/login-coordinador`** (issue #23).
 
 ### Módulo 3 — Asignación y SLA
 - ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + especialidad infantil por edad.
@@ -125,7 +128,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
       el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
 - [ ] **Guías PAP asíncronas** para el solicitante.
-- [ ] **Registro/login de coordinador por token** (RF-2.6) y expiración de sesión por inactividad (RF-2.7).
+- [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
+      (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
+      sesión por inactividad (`security.session.idle_timeout_minutes`) y ruta `/login-coordinador` (RF-2.7).
 - [ ] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
       (ubicación, cambio de hábitos).
 
