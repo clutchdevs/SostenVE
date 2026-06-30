@@ -33,9 +33,13 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ Monitorear panel de casos (prioridad de riesgo alto + capacidad + polling).
 - ✅ Alertas de SLA vencido (visual + escalamiento por cron).
 - ❌ Panel **georreferenciado** (mapas) — fuera de alcance (geo pospuesto).
-- ❌ **Reasignar/cerrar** manualmente casos (hoy solo el cron reasigna).
-- ⚠️ Gestión de voluntarios (aprobar/suspender) — implementado bajo rol **`admin`**; el PRD lo asigna al **coordinador**.
-- ❌ Notas confidenciales sobre voluntarios (RF-2.4).
+- ✅ **Reasignar/cerrar** manualmente casos (issue #20): `POST /cases/:id/reassign` (a un psicólogo
+  activo, resetea el SLA en riesgo alto) y `POST /cases/:id/coordinator-close` (cierre administrativo con
+  motivo). Acciones en el board, auditadas.
+- ✅ Gestión de voluntarios (aprobar/suspender) **abierta al rol `coordinador`** (issue #20, RF-2.3);
+  el admin la conserva. Página `/coordinador/voluntarios`.
+- ✅ Notas confidenciales sobre voluntarios (RF-2.4, issue #20): tabla `volunteer_notes` con RLS
+  (solo coordinador/admin), endpoints `GET/POST /volunteers/:id/notes`, auditado.
 
 ### Administrador (Federación)
 - ✅ Resolver excepciones de validación de psicólogos (`approve`/`reject`).
@@ -123,8 +127,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [ ] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV.
 - [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
-- [ ] **Acciones del coordinador:** reasignar/cerrar manual de casos + notas confidenciales sobre
-      voluntarios (RF-2.4); mover la gestión de voluntarios al rol **coordinador** (PRD §2/RF-2.3).
+- [x] **Acciones del coordinador (issue #20):** reasignar (`/cases/:id/reassign`) y cierre administrativo
+      (`/cases/:id/coordinator-close`) manuales; notas confidenciales sobre voluntarios (RF-2.4,
+      `volunteer_notes` con RLS); y gestión de voluntarios (aprobar/suspender) abierta al rol
+      **coordinador** (RF-2.3). UI en `/coordinador` (acciones de caso) y `/coordinador/voluntarios`.
 - [x] **Endpoints admin (issue #21):** CRUD de líneas de crisis (`/admin/crisis-lines`, soft-delete, auditado;
       el ruteo activo lee de BD con fallback a config) y consulta de auditoría (`GET /admin/audit`).
 - [ ] **Guías PAP asíncronas** para el solicitante.
