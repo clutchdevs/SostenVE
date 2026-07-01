@@ -21,6 +21,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 1 — Intake offline-first: guardado local + reintento (issue #2, Charter in-scope #1):** el intake
+  del solicitante ahora tolera conexión intermitente. Lo capturado se **guarda en `localStorage`** (draft) y
+  **sobrevive a una recarga**; si el envío falla por red o error de servidor (5xx), la solicitud se **encola**
+  (`intake-outbox`) y se **reintenta automáticamente** al cargar la app y al recuperar la conexión (evento
+  `online`), con un aviso discreto de "solicitud guardada sin enviar". La **Rama Roja** ya no descarta en
+  silencio la solicitud de contacto de una persona en riesgo. Un error **4xx** (dato inválido) no se
+  reintenta. No compromete el **fail-safe**: las líneas de crisis se siguen mostrando sin backend (lista
+  embebida + caché). Es la variante ligera del solicitante; el offline-first pesado con **SQLCipher (RF-4.1)**
+  del portal del psicólogo permanece fuera del MVP (#26). Nuevas piezas: `intake-draft`, `intake-outbox`,
+  `IntakeOutboxFlusher` (montado en un `layout` del intake) y tests unitarios.
 - **Módulo 1 — Consentimiento informado en cada interfaz del solicitante (issue #1):** aviso de
   consentimiento/privacidad **no bloqueante** (`ConsentNotice`, colapsable) presente en **todas** las
   pantallas del solicitante (`/intake`, `/intake/roja`, `/intake/verde`, `/guias`), no solo al inicio. Es

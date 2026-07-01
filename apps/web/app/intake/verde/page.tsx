@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
 import { TagPicker } from '../../../src/features/intake/tag-picker';
@@ -12,12 +12,19 @@ import {
   VENEZUELA_STATES,
   type GreenFormState,
 } from '../../../src/features/intake/green-form';
-import { apiFetch } from '../../../src/lib/api-client';
+import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import { FALLBACK_CRISIS_LINES, getCrisisLines } from '../../../src/lib/crisis-lines';
+import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
+import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 
 interface GreenResult {
   nivel_riesgo: string;
   lineas_crisis?: { activa: { name: string; phone: string } | null; respaldo: { name: string; phone: string }[] };
+}
+
+interface GreenDraft {
+  step: number;
+  form: GreenFormState;
 }
 
 const STEPS = ['Síntomas', 'Ubicación', 'Hábitos', 'Contacto'] as const;
@@ -26,8 +33,26 @@ export default function GreenBranchPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<GreenFormState>(EMPTY_GREEN_FORM);
   const [result, setResult] = useState<GreenResult | null>(null);
+  const [queued, setQueued] = useState(false);
+  const [error, setError] = useState('');
   const [escalatedLines, setEscalatedLines] = useState(FALLBACK_CRISIS_LINES);
   const [busy, setBusy] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore any draft saved on a previous (possibly offline) visit, then start
+  // persisting changes. Hydration happens in an effect to avoid an SSR mismatch.
+  useEffect(() => {
+    const draft = loadDraft<GreenDraft>(INTAKE_DRAFT_KEYS.verde);
+    if (draft) {
+      setForm(draft.form);
+      setStep(draft.step);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) saveDraft<GreenDraft>(INTAKE_DRAFT_KEYS.verde, { step, form });
+  }, [hydrated, step, form]);
 
   function update(patch: Partial<GreenFormState>) {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -42,26 +67,41 @@ export default function GreenBranchPage() {
   async function submit() {
     if (!form.contact.trim()) return;
     setBusy(true);
+    setError('');
+    const payload = buildGreenPayload(form);
     try {
       const res = await apiFetch<GreenResult>('/intake/green-branch', {
         method: 'POST',
         auth: false,
-        body: buildGreenPayload(form),
+        body: payload,
       });
+      clearDraft(INTAKE_DRAFT_KEYS.verde);
       setResult(res);
       if (res.nivel_riesgo === 'riesgo_alto') setEscalatedLines(await getCrisisLines());
+    } catch (err) {
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
+        // The server rejected the data; retrying as-is won't help.
+        setError('No pudimos procesar tu solicitud. Revisa los datos e intenta de nuevo.');
+      } else {
+        // No/degraded connection or server error: queue it and retry later so
+        // nothing captured is lost.
+        enqueueSubmission('/intake/green-branch', payload);
+        clearDraft(INTAKE_DRAFT_KEYS.verde);
+        setQueued(true);
+      }
     } finally {
       setBusy(false);
     }
   }
 
-  if (result) {
+  if (result || queued) {
     return (
       <main className="mx-auto max-w-md space-y-4 px-4 py-8">
-        {result.nivel_riesgo === 'riesgo_alto' && <CrisisLinesPanel lines={escalatedLines} />}
+        {result?.nivel_riesgo === 'riesgo_alto' && <CrisisLinesPanel lines={escalatedLines} />}
         <p className="rounded-lg bg-emerald-50 p-4 text-emerald-800">
-          Recibimos tu solicitud. Un psicólogo voluntario te contactará. Si la situación empeora,
-          usa las líneas de crisis.
+          {queued
+            ? 'Guardamos tu solicitud en este dispositivo y la enviaremos automáticamente cuando vuelva la conexión. Si es una emergencia, usa las líneas de crisis.'
+            : 'Recibimos tu solicitud. Un psicólogo voluntario te contactará. Si la situación empeora, usa las líneas de crisis.'}
         </p>
         <p className="text-center text-sm text-slate-600">
           Mientras esperas, puedes ver{' '}
@@ -182,6 +222,8 @@ export default function GreenBranchPage() {
           />
         </section>
       )}
+
+      {error && <p className="text-sm text-risk-high">{error}</p>}
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <button
