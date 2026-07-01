@@ -9,6 +9,8 @@ export interface CaseSummary {
   zona?: string | null;
   modalidad?: string | null;
   edad?: number | null;
+  /** Habit changes reported at intake (green-branch screen 5). */
+  cambio_habitos?: string[];
   creado_en: string;
   sla_vence_en: string | null;
   // Requester contact (PII). Present only on the psychologist's own case list

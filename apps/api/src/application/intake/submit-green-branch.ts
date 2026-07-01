@@ -61,6 +61,7 @@ export async function submitGreenBranch(
     zone: input.zone,
     preferredModality: input.modality,
     age: input.age,
+    habitChanges: input.habitChanges,
     slaExpiresAt: high ? new Date(now.getTime() + slaMs) : undefined,
   });
 

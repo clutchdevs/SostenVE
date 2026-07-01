@@ -105,6 +105,22 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     expect(body.lineas_crisis).toBeDefined();
   });
 
+  it('persists the reported habit changes on the green case (screen 5, RF-1.3)', async () => {
+    const res = await post('/api/v1/intake/green-branch', {
+      contacto: `+5847${randomUUID().slice(0, 7)}`,
+      tags: ['material_loss'],
+      cambio_habitos: ['sueno', 'alimentacion'],
+    });
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as IntakeResponse;
+    track(body);
+    const row = await pg.query<{ habit_changes: string[] }>(
+      'select habit_changes from cases where id = $1',
+      [body.caso_id],
+    );
+    expect(row.rows[0]?.habit_changes).toEqual(['sueno', 'alimentacion']);
+  });
+
   it('classifies a green submission with only yellow tags as follow-up', async () => {
     const res = await post('/api/v1/intake/green-branch', {
       contacto: `+5842${randomUUID().slice(0, 7)}`,

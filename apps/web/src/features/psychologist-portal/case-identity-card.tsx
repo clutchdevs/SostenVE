@@ -1,10 +1,15 @@
 import type { CaseContactView, CaseSummary } from '../../lib/types';
+import { HABIT_CHANGES } from '../intake/green-form';
 
 const RISK_LABEL: Record<string, string> = {
   riesgo_alto: 'Riesgo alto',
   riesgo_moderado: 'Riesgo moderado',
   seguimiento: 'Seguimiento',
 };
+
+const HABIT_LABEL: Record<string, string> = Object.fromEntries(
+  HABIT_CHANGES.map((h) => [h.code, h.label]),
+);
 
 const REQUESTER_LABEL: Record<string, string> = {
   victima: 'Víctima directa',
@@ -53,6 +58,21 @@ export function CaseIdentityCard({
       <p className="mt-3 text-sm text-slate-600">
         {RISK_LABEL[caso.nivel_riesgo] ?? caso.nivel_riesgo} · índice de urgencia {caso.score_urgencia}
       </p>
+
+      {caso.cambio_habitos && caso.cambio_habitos.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Cambios de hábitos reportados
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {caso.cambio_habitos.map((code) => (
+              <span key={code} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600">
+                {HABIT_LABEL[code] ?? code}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

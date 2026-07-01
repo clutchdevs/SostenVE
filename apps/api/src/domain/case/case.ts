@@ -22,6 +22,8 @@ export interface CaseRecord {
   zone?: string;
   preferredModality?: Modality;
   age?: number;
+  /** Recent habit changes reported at intake (green-branch screen 5, RF-1.3). */
+  habitChanges?: string[];
   createdAt: Date;
   slaExpiresAt?: Date;
 }
@@ -36,6 +38,7 @@ export interface NewCase {
   zone?: string;
   preferredModality?: Modality;
   age?: number;
+  habitChanges?: string[];
   slaExpiresAt?: Date;
 }
 
