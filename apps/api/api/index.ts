@@ -14,6 +14,7 @@ import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller';
 import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller';
 import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coordinator-onboarding.controller';
 import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller';
+import { createMonitoringRouter } from '../src/interfaces/http/v1/monitoring.controller';
 import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller';
 
 /**
@@ -42,7 +43,7 @@ app.use('*', buildCors(corsOrigins));
 app.onError(errorHandler);
 
 app.get('/health', (c) => {
-  return c.json({ status: 'ok', app: config.app.name });
+  return c.json({ status: 'ok', app: config.app.name, uptime_seconds: Math.round(process.uptime()) });
 });
 
 app.route('/intake', createIntakeRouter());
@@ -55,6 +56,7 @@ app.route('/cases', createCasesRouter());
 app.route('/coordinator', createCoordinatorRouter());
 app.route('/coordinators', createCoordinatorOnboardingRouter());
 app.route('/admin', createAdminRouter());
+app.route('/metrics', createMonitoringRouter());
 app.route('/cron', createCronRouter());
 app.route('/', createDocsRouter());
 

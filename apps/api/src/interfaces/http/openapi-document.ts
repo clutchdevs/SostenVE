@@ -65,6 +65,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'coordinator' },
       { name: 'coordinators' },
       { name: 'admin' },
+      { name: 'monitoring' },
       { name: 'cron' },
     ],
     components: {
@@ -77,8 +78,16 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       '/health': {
         get: {
           tags: ['health'],
-          summary: 'Estado del servicio',
-          responses: { '200': { description: 'OK' } },
+          summary: 'Liveness del servicio (status + uptime del instante)',
+          responses: { '200': { description: 'status + uptime_seconds' } },
+        },
+      },
+      '/metrics': {
+        get: {
+          tags: ['monitoring'],
+          summary: 'Métricas de SLA (tiempo de asignación por riesgo), cola y uptime (coordinador/admin)',
+          security: bearer,
+          responses: { '200': { description: 'Snapshot de métricas' }, '403': { description: 'Sin permiso' } },
         },
       },
       '/intake/triage': {
