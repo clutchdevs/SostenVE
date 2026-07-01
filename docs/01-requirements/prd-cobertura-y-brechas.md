@@ -186,6 +186,13 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       config (`consent.requester`, `GET /consent/requester`), no hardcodeado. Sin checkbox ni gate para no
       añadir fricción al camino de riesgo alto. Texto **provisional** (`v0.1.0-draft`) pendiente del texto
       oficial de la FPV (decisión Human-in-the-Loop, análogo a las guías PAP).
+- [x] **Intake offline-first: guardado local + reintento (issue #1 constraint / Charter in-scope #1, issue #2):**
+      lo capturado en el intake se **persiste en `localStorage`** (draft) y sobrevive a recargas; si el envío
+      falla por red o error de servidor (5xx) se **encola y reintenta** en carga y al reconectar (evento
+      `online`), sin perder datos — la Rama Roja ya no descarta silenciosamente la solicitud de contacto. Un
+      **4xx** no se reintenta (dato inválido). No compromete el **fail-safe**: las líneas de crisis siguen
+      mostrándose sin backend (lista embebida + caché). Es la variante ligera para el solicitante; el
+      offline-first pesado con **SQLCipher (RF-4.1)** del portal del psicólogo sigue **fuera del MVP** (#26).
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV

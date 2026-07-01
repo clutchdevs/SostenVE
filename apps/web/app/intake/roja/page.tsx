@@ -3,14 +3,22 @@
 import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
-import { apiFetch } from '../../../src/lib/api-client';
+import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import {
   FALLBACK_CRISIS_LINES,
   getCrisisLines,
   type CrisisLines,
 } from '../../../src/lib/crisis-lines';
+import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
+import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 
 type SubChannel = 'recibir-llamada' | 'whatsapp-silencioso';
+
+interface RedDraft {
+  sub: SubChannel | null;
+  name: string;
+  contact: string;
+}
 
 export default function RedBranchPage() {
   // Start from the embedded fallback so numbers render immediately, even before
@@ -20,19 +28,41 @@ export default function RedBranchPage() {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [done, setDone] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     getCrisisLines().then(setLines).catch(() => undefined);
   }, []);
 
+  // Restore any draft from a previous (possibly offline) visit, then persist.
+  useEffect(() => {
+    const draft = loadDraft<RedDraft>(INTAKE_DRAFT_KEYS.roja);
+    if (draft) {
+      setSub(draft.sub);
+      setName(draft.name);
+      setContact(draft.contact);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated && !done) saveDraft<RedDraft>(INTAKE_DRAFT_KEYS.roja, { sub, name, contact });
+  }, [hydrated, done, sub, name, contact]);
+
   async function submit() {
     if (!sub || !contact) return;
+    const payload = { sub_canal: sub, nombre: name || undefined, contacto: contact };
     try {
-      await apiFetch('/intake/red-branch', {
-        method: 'POST',
-        auth: false,
-        body: { sub_canal: sub, nombre: name || undefined, contacto: contact },
-      });
+      await apiFetch('/intake/red-branch', { method: 'POST', auth: false, body: payload });
+      clearDraft(INTAKE_DRAFT_KEYS.roja);
+    } catch (err) {
+      // A high-risk contact request must never be silently dropped: on a network
+      // or server error, queue it for automatic retry. A 4xx won't improve on
+      // retry, so we don't queue it. Either way the crisis lines stay visible.
+      if (!(err instanceof ApiError) || err.status >= 500) {
+        enqueueSubmission('/intake/red-branch', payload);
+        clearDraft(INTAKE_DRAFT_KEYS.roja);
+      }
     } finally {
       setDone(true); // even if it fails, the crisis lines above remain visible
     }
