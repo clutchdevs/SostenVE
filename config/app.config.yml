@@ -173,6 +173,15 @@ default: &default
       port: 54325
       username: "" # Inbucket needs no auth; SMTP_PASSWORD (env) used when set
 
+  presence:
+    # provider: memory (dev/tests, single process) | upstash (production Redis via
+    # REST). RF-2.5: online kept for `heartbeat_ttl_seconds`, refreshed by the PWA
+    # every `heartbeat_interval_seconds`. For upstash, set UPSTASH_REDIS_REST_URL
+    # and UPSTASH_REDIS_REST_TOKEN in the environment.
+    provider: "memory"
+    heartbeat_ttl_seconds: 65
+    heartbeat_interval_seconds: 30
+
   rbac:
     roles: ["requester", "psychologist", "coordinator", "admin"]
 

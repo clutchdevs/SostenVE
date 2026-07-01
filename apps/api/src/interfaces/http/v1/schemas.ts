@@ -195,6 +195,12 @@ export const resetPasswordSchema = z.object({
   contrasena: z.string().min(8),
 });
 
+// Presence heartbeat / availability toggle (RF-2.5 / RF-4.3.1). `disponible`
+// true refreshes the online TTL; false marks the volunteer offline immediately.
+export const presenceSchema = z.object({
+  disponible: z.boolean(),
+});
+
 export type AddNoteBody = z.infer<typeof addNoteSchema>;
 export type CaseClosureBody = z.infer<typeof caseClosureSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
@@ -212,4 +218,5 @@ export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
+export type PresenceBody = z.infer<typeof presenceSchema>;
 export type AuditQuery = z.infer<typeof auditQuerySchema>;

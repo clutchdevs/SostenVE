@@ -37,7 +37,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ Formulario de cierre con flujo "¿contactó? Sí/No" → cierre rápido o clínico completo.
 - ✅ **Máquina de estados** correcta: aceptar solo desde `asignado` (una vez); cierre terminal; `cerrado` solo lectura.
 - ❌ Portal **offline-first** con SQLCipher (RF-4.1) — decisión: fuera del MVP.
-- ❌ Presencia en tiempo real (heartbeat/Redis, RF-2.5).
+- ✅ Presencia en tiempo real (heartbeat/Redis Upstash, RF-2.5) — filtra la asignación por `Online`.
 
 ### Coordinador de Turno
 - ✅ **Centro de operaciones en vivo** (`/coordinador`): cola de casos priorizada (vencido SLA → riesgo →
@@ -53,7 +53,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   el admin la conserva. Página `/coordinador/voluntarios`.
 - ✅ Notas confidenciales sobre voluntarios (RF-2.4, issue #20): tabla `volunteer_notes` con RLS
   (solo coordinador/admin), endpoints `GET/POST /volunteers/:id/notes`, auditado.
-- ❌ Presencia en tiempo real con indicador "En línea/Desconectado" (RF-2.5.4) — pendiente del store de presencia.
+- ✅ Presencia en tiempo real con indicador "En línea/Desconectado" (RF-2.5.4) — punto verde/gris por
+  psicólogo en el panel del coordinador (`en_linea`).
 
 ### Administrador (Federación)
 - ✅ **Módulo de administración** con sidebar y sub-rutas: excepciones de registro, padrón, líneas de
@@ -82,6 +83,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-1.1 Triage-first (Likert one-tap, sin PII en el primer paso).
 - ✅ RF-1.2 Rama Roja con 3 sub-canales (llamar / recibir-llamada / WhatsApp).
 - ✅ RF-1.2.1 Ruteo dinámico por hora (LAPSI 8:00–2:00 / Miranda 2:01–7:59, con cruce de medianoche).
+- ✅ RF-1.2.2 / RF-1.2.3 Formulario mínimo de Rama Roja con **Nombre, Teléfono y Edad** (la edad, parámetro
+  clínico crítico para minoría/geriatría, ya se captura en la UI y persiste en el caso, alimentando el ruteo).
 - ✅ RF-1.3 Rama Verde con tags por severidad (motor) + **catálogo clínico real de la FPV** (issue #19):
   los **22 tags** del PRD RF-1.3 (rojo/naranja/amarillo, con duelo, infancia y disociación), **versionado**
   (`TAG_CATALOG_VERSION`), en el dominio y espejado en el web (mismos códigos). Pesos por severidad con
@@ -120,7 +123,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   sesiones previas (RF-2.7). UI: `/cambiar-contrasena`, `/recuperar-contrasena`, `/restablecer-contrasena`.
   ⚠️ Pendiente menor: migrar la **entrega inicial** de credenciales de "temporal en claro" a enlace
   tokenizado (hoy el reset ya ofrece esa vía de recuperación segura).
-- ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat + TTL 65 s + heartbeat 30 s, RF-2.5.1–2.5.4).
+- ✅ RF-2.5 Presencia en tiempo real (heartbeat 30 s + TTL 65 s) vía puerto `PresenceStore` con adaptador
+  **Upstash Redis** (REST) para prod y **memoria** para dev/tests (ADR-0014). Endpoint
+  `POST /volunteers/me/presence` (latido + pausa manual, RF-4.3.1); el coordinador ve `en_linea` (RF-2.5.4).
 - ✅ RF-2.6 Registro de coordinadores por **token de invitación** (issue #23): el admin invita
   (`/admin/coordinators/invitations`), se persiste solo el hash del token (un solo uso, con TTL) y el
   invitado lo canjea en `/coordinators/accept-invitation` para activarse como coordinador; auditado.
@@ -134,7 +139,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   (`idle_timeout_minutes: 15`). Falta la **destrucción de sesiones duplicadas en caliente** (RF-2.7).
 
 ### Módulo 3 — Asignación y SLA
-- ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + especialidad infantil por edad.
+- ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + especialidad infantil por edad + **filtro de
+  presencia**: solo se asigna a psicólogos `Online` (RF-2.5); si ninguno está en línea, el caso queda en cola
+  y lo rescata el barrido de SLA. (Pendiente: filtrado por clúster regional.)
 - ⚠️ Filtro de elegibilidad — usa estado `Activo`; **falta** el filtro `Online` (presencia).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
 - ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron.
@@ -193,8 +200,12 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       **4xx** no se reintenta (dato inválido). No compromete el **fail-safe**: las líneas de crisis siguen
       mostrándose sin backend (lista embebida + caché). Es la variante ligera para el solicitante; el
       offline-first pesado con **SQLCipher (RF-4.1)** del portal del psicólogo sigue **fuera del MVP** (#26).
-- [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
-      asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
+- [x] **Presencia en tiempo real** (RF-2.5 / RF-3.1 / RF-2.5.4 / RF-4.3): heartbeat cada 30 s + TTL 65 s vía
+      puerto `PresenceStore` con adaptador **Upstash Redis** (REST, prod) y **memoria** (dev/tests), ADR-0014.
+      La asignación **solo va a psicólogos `Online`**; toggle de disponibilidad en la PWA del psicólogo
+      (RF-4.3.1) e indicador En línea/Desconectado en el panel del coordinador (RF-2.5.4). Activación en prod:
+      `presence.provider: upstash` + `UPSTASH_REDIS_REST_URL/TOKEN`. (Pendiente: clúster regional, y colapsar
+      la pausa manual en offline es una simplificación documentada.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV
       (issue #19, RF-1.3): 22 tags versionados en dominio + espejo web; el motor de triage lo usa.
       Pendiente (follow-up): ruteo a psicólogo con **especialidad infantil** disparado por los tags de

@@ -79,7 +79,18 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
             {initialsOf(volunteer.nombre)}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-semibold text-navy">{volunteer.nombre}</p>
+            <p className="flex items-center gap-1.5 truncate font-semibold text-navy">
+              {volunteer.estado === 'active' && (
+                <span
+                  title={volunteer.en_linea ? 'En línea' : 'Desconectado'}
+                  className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+                    volunteer.en_linea ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                  aria-hidden
+                />
+              )}
+              {volunteer.nombre}
+            </p>
             <p className="truncate text-xs text-slate-500">
               {[volunteer.cedula_profesional, volunteer.especialidad, ROLE_LABEL[volunteer.rol] ?? volunteer.rol]
                 .filter(Boolean)
