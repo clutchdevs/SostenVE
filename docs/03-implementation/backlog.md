@@ -95,11 +95,13 @@
   - [ ] Gestión de secretos fuera del código (`JWT_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`).
   - [ ] Vercel Cron del SLA activo en producción; checklist de decisiones FPV resuelto antes de abrir al público.
 
-#### A8 · Observabilidad y alertas (fase 06) 🟡
+#### A8 · Observabilidad y alertas (fase 06) ✅
 - **Fuente:** `docs/06-monitoring/README.md`.
 - **Criterios de aceptación:**
-  - [ ] Métricas de SLA (tiempo de asignación por nivel de riesgo) y uptime.
-  - [ ] Alerta cuando un caso de riesgo alto se escala sin coordinador disponible.
+  - [x] Métricas de SLA (tiempo de asignación por nivel de riesgo) y uptime — `GET /api/v1/metrics`
+        (coordinador/admin) + `uptime_seconds` en `/health`.
+  - [x] Alerta cuando un caso de riesgo alto se escala sin coordinador disponible —
+        `high_risk_escalated_no_coordinator` (log crítico estructurado) desde el escalamiento del cron.
 
 ---
 

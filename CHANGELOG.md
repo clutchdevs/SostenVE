@@ -14,6 +14,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Observabilidad y alertas (issue #8, fase 06):** endpoint **`GET /metrics`** (coordinador/admin) con
+  un snapshot de **SLA por nivel de riesgo** (p50/p95/promedio del tiempo de asignación), estado de la
+  **cola** (pendientes, riesgo alto, **SLA vencidos**), totales y `uptime_seconds`; `GET /health` ahora
+  también expone `uptime_seconds` (liveness). Nueva **alerta crítica** estructurada
+  `high_risk_escalated_no_coordinator` (`raiseAlert`, log `error` para pipelines de alertas por logs) que
+  se dispara cuando un caso de **riesgo alto se escala sin coordinador activo** disponible. Cálculo de
+  métricas en una función pura (`summarizeSla`) con tests. Docs de la fase 06 actualizados.
 - **Módulo 1 — Catálogo clínico real de tags (issue #19, RF-1.3):** se reemplazó el catálogo provisional
   por los **22 tags** de la FPV del PRD (RF-1.3), agrupados en rojo/naranja/amarillo e incluyendo duelo,
   infancia y disociación. **Versionado** (`TAG_CATALOG_VERSION`) en el dominio y espejado en el web (mismos
