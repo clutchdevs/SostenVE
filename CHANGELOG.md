@@ -21,6 +21,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 2 — Cambio y reseteo de contraseña (issue #36, RF-2.2.4):** el personal ya puede **cambiar su
+  contraseña autenticado** (`POST /auth/change-password`, re-verifica la actual) y **recuperar una
+  olvidada** mediante un **token de un solo uso enviado por correo** (`POST /auth/forgot-password` →
+  `POST /auth/reset-password`). Solo se persiste el **hash** del token (tabla `password_reset_tokens` con
+  RLS default-deny, migración `20260628000014`), con TTL configurable (`password_reset_ttl_minutes`, 60 min
+  por defecto). Ambos flujos hacen **bump de `token_version`** para invalidar las sesiones previas
+  (RF-2.7, ADR-0005) y `/auth/forgot-password` responde de forma **uniforme** para no filtrar qué correos
+  existen. Nuevas pantallas: `/cambiar-contrasena` (enlazada desde los sidebars), `/recuperar-contrasena`
+  (enlace "¿Olvidaste tu contraseña?" en el login) y `/restablecer-contrasena`. Correo de recuperación
+  añadido a `LogNotifier`/`SmtpNotifier`; acciones `password_changed`, `password_reset_requested` y
+  `password_reset` traducidas en la auditoría. Follow-up menor: migrar la entrega inicial de credenciales
+  a un enlace tokenizado (hoy el reset ya ofrece una vía de recuperación segura).
 - **Módulo 1 — Persistencia de "Cambio de hábitos" (issue #3, RF-1.3 pantalla 5):** los cambios de hábito
   reportados en el intake de Rama Verde (los 5 checkboxes ya entregados en #24) ahora **se persisten en el
   caso** (nueva columna `cases.habit_changes`, migración `20260628000013`) y se exponen en el resumen del

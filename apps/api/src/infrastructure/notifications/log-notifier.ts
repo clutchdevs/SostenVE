@@ -1,6 +1,7 @@
 import type {
   InvitationNotification,
   Notifier,
+  PasswordResetNotification,
   RegistrationNotification,
 } from '../../application/volunteer/ports';
 import { logger } from '../../shared/logger';
@@ -27,6 +28,14 @@ export class LogNotifier implements Notifier {
   async notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void> {
     // The acceptUrl carries the raw token; never log it.
     logger.info('coordinator invitation created (invite email would be sent)', {
+      email: notification.email,
+      expiresAt: notification.expiresAt.toISOString(),
+    });
+  }
+
+  async notifyPasswordReset(notification: PasswordResetNotification): Promise<void> {
+    // The resetUrl carries the raw token; never log it.
+    logger.info('password reset requested (reset email would be sent)', {
       email: notification.email,
       expiresAt: notification.expiresAt.toISOString(),
     });

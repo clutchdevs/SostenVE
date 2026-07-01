@@ -42,10 +42,22 @@ export interface InvitationNotification {
   expiresAt: Date;
 }
 
+/** Notification for a password reset request (RF-2.2.4, issue #36). */
+export interface PasswordResetNotification {
+  email: string;
+  fullName: string;
+  /** Public link the volunteer opens to set a new password; carries the token. */
+  resetUrl: string;
+  /** When the reset link stops being valid. */
+  expiresAt: Date;
+}
+
 /** Sends volunteer registration notifications (Adapter; LogNotifier or SmtpNotifier). */
 export interface Notifier {
   notifyRegistrationApproved(notification: RegistrationNotification): Promise<void>;
   notifyRegistrationPending(notification: RegistrationNotification): Promise<void>;
   /** Emails a coordinator the invitation link to complete their sign-up (RF-2.6). */
   notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void>;
+  /** Emails a volunteer a one-time link to reset their password (RF-2.2.4). */
+  notifyPasswordReset(notification: PasswordResetNotification): Promise<void>;
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ClipboardList, HeartHandshake, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
+import { ClipboardList, HeartHandshake, KeyRound, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 import { clearSession, getRole } from '../lib/session';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -88,10 +88,17 @@ export function PsychologistSidebar() {
               <p className="truncate text-xs text-white/60">Federación de Psicólogos</p>
             </div>
           </div>
+          <Link
+            href="/cambiar-contrasena"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <KeyRound className="h-4 w-4" aria-hidden />
+            Cambiar contraseña
+          </Link>
           <button
             type="button"
             onClick={signOut}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             Cerrar sesión

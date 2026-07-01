@@ -58,6 +58,7 @@ function recordingNotifier(): Notifier & { invitations: InvitationNotification[]
     async notifyCoordinatorInvitation(n) {
       invitations.push(n);
     },
+    async notifyPasswordReset() {},
   };
 }
 
