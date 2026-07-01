@@ -82,7 +82,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-1.1 Triage-first (Likert one-tap, sin PII en el primer paso).
 - ✅ RF-1.2 Rama Roja con 3 sub-canales (llamar / recibir-llamada / WhatsApp).
 - ✅ RF-1.2.1 Ruteo dinámico por hora (LAPSI 8:00–2:00 / Miranda 2:01–7:59, con cruce de medianoche).
-- ✅ RF-1.3 Rama Verde con tags por severidad (motor); ⚠️ **catálogo provisional** (faltan duelo/infancia/disociación completos del PRD).
+- ✅ RF-1.3 Rama Verde con tags por severidad (motor) + **catálogo clínico real de la FPV** (issue #19):
+  los **22 tags** del PRD RF-1.3 (rojo/naranja/amarillo, con duelo, infancia y disociación), **versionado**
+  (`TAG_CATALOG_VERSION`), en el dominio y espejado en el web (mismos códigos). Pesos por severidad con
+  ajustes marcados por el PRD (duelo traumático, culpa del superviviente); afinado final pendiente FPV.
 - ✅ Regla de interrupción (1 rojo o 3+ naranja → riesgo alto).
 - ✅ RF-1.5 Índice de urgencia **ponderado completo** (issue #24): `U = w_id·I_ideacion + Σ peso(tag) +
   w_hab·n_cambios_habito`, con `I_ideacion` dominante (cualquier tag rojo lleva el caso a la cima). El
@@ -167,7 +170,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       bienvenida (SmtpNotifier); regla `cédula+FPV ∧ PAP → Activo`. Pendiente: cambio/reseteo de contraseña.
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
-- [ ] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV.
+- [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV
+      (issue #19, RF-1.3): 22 tags versionados en dominio + espejo web; el motor de triage lo usa.
+      Pendiente (follow-up): ruteo a psicólogo con **especialidad infantil** disparado por los tags de
+      infancia (hoy el ruteo infantil es por edad del solicitante); afinado final de pesos por la FPV.
 - [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,

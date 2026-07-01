@@ -14,6 +14,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Módulo 1 — Catálogo clínico real de tags (issue #19, RF-1.3):** se reemplazó el catálogo provisional
+  por los **22 tags** de la FPV del PRD (RF-1.3), agrupados en rojo/naranja/amarillo e incluyendo duelo,
+  infancia y disociación. **Versionado** (`TAG_CATALOG_VERSION`) en el dominio y espejado en el web (mismos
+  códigos; el backend re-resuelve severidad/peso, nunca confía en el cliente). Pesos por severidad con
+  ajustes marcados por el PRD (duelo traumático, culpa del superviviente); el `TagPicker` ahora agrupa por
+  severidad. Afinado final de pesos y ruteo por especialidad infantil (por tag) quedan como follow-up FPV.
 - **Módulo 1 — Índice de urgencia ponderado completo + pantallas de Rama Verde (issue #24, RF-1.5/RF-1.3):**
   el índice pasó de suma simple a la fórmula `U = w_id·I_ideacion + Σ peso(tag) + w_hab·n_cambios_habito`,
   con un término de **ideación dominante** (cualquier tag rojo lleva el caso a la cima de la cola) y un
