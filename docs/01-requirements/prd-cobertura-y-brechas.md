@@ -100,8 +100,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Módulo 2 — Registro y validación de psicólogos
 - ✅ RF-2.1.1 Consentimiento informado obligatorio: checkbox que bloquea el alta, texto bioético
   **versionado** en `config/app.config.yml` (expuesto por `GET /consent/active`) y aceptación
-  auditable (versión + timestamp en `volunteers` y en `audit_log`). El texto es **provisional**
-  (borrador `v0.1.0-draft`) a la espera del oficial de la FPV (sección 8 del PRD); se cambia sin tocar código.
+  auditable (versión + timestamp en `volunteers` y en `audit_log`). El texto es el **oficial de la FPV**
+  transcrito del PRD (RF-2.1.1), versión `v1.0.0-fpv` (issue #32); se cambia sin tocar código.
 - ✅ RF-2.1.2 Formulario de postulación completo: tipo + número de documento (cédula) separados del
   `professional_id` (= nº FPV), universidad, año de egreso, colegio, PAP (sí/no) + detalle obligatorio,
   modalidad (multiselect presencial/distancia) y disponibilidad horaria estructurada (día × bloque).
@@ -164,7 +164,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### B. Pendientes dentro del alcance del MVP (esperables por el PRD)
 - [x] **Módulo 2 — Consentimiento informado** obligatorio (RF-2.1.1) — mecanismo completo con texto
-      provisional versionado; pendiente sustituir por el texto bioético oficial de la FPV.
+      con el **texto bioético oficial de la FPV** (RF-2.1.1, `v1.0.0-fpv`, issue #32).
 - [x] **Módulo 2 — Formulario de postulación completo** (RF-2.1.2): tipo doc, FPV, universidad, año,
       PAP + detalle, colegio, multiselect de modalidad, disponibilidad horaria.
 - [x] **Módulo 2 — Alta automática real:** contraseña de alta entropía autogenerada + correo de

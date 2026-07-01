@@ -35,27 +35,34 @@ default: &default
 
   consent:
     # Informed consent shown at psychologist registration (RF-2.1.1, Módulo 2).
-    # PROVISIONAL text: the official bioethical wording comes from the FPV
-    # (sección 8 del PRD). Bump `version` whenever `text` changes so the audit
-    # trail records exactly which wording each volunteer accepted.
+    # OFFICIAL FPV bioethical wording, transcribed verbatim from the PRD (RF-2.1.1).
+    # Bump `version` whenever `text` changes so the audit trail records exactly
+    # which wording each volunteer accepted.
     psychologist:
-      version: "v0.1.0-draft"
-      updated_at: "2026-06-29"
+      version: "v1.0.0-fpv"
+      updated_at: "2026-07-01"
       text: |
-        BORRADOR — Texto provisional pendiente del consentimiento bioético oficial
-        de la Federación de Psicólogos de Venezuela (sección 8 del PRD).
+        Consentimiento Informado para Postulantes — Programa de Formación de
+        Psicólogos Voluntarios
 
-        Como profesional voluntario declaro que:
-        1. Brindaré atención psicológica conforme al Código de Ética del psicólogo
-           venezolano y al principio de no maleficencia.
-        2. Mantendré la confidencialidad de la información sensible de cada
-           solicitante, salvo las excepciones legales de protección a la vida.
-        3. Actuaré dentro de mi área de competencia y derivaré los casos que
-           excedan mi formación (p. ej. crisis psicótica aguda).
-        4. Trataré los datos personales con el deber de cuidado que exige la
-           plataforma y no los usaré para fines ajenos a la atención.
+        Al completar y enviar este formulario, usted manifiesta que actúa de manera
+        libre y voluntaria, y que comprende y acepta las siguientes condiciones:
 
-        Al marcar la casilla acepto este consentimiento informado de forma libre.
+        Carácter Aprobatorio: Declaro conocer que la inscripción en este formulario
+        no garantiza la admisión automática ni la certificación. El ingreso al
+        cuerpo de voluntarios está sujeto a un proceso de selección y al
+        cumplimiento de una formación obligatoria de carácter aprobatorio, siendo
+        indispensable cumplir con las evaluaciones y requisitos exigidos durante el
+        programa.
+
+        Uso de Datos: Autorizo expresamente a que la información suministrada en
+        este formulario sea utilizada exclusivamente para fines de gestión e
+        información gremial, así como para proyectos de investigación institucional.
+
+        Confidencialidad: Se garantiza el manejo ético y la absoluta
+        confidencialidad de sus datos de identidad y de contacto, los cuales serán
+        protegidos y no se divulgarán a terceros bajo ninguna circunstancia,
+        cumpliendo estrictamente con las normativas éticas de la profesión.
 
   pap:
     # Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el
