@@ -12,7 +12,13 @@ export {
   PROVISIONAL_TAG_CATALOG,
   getProvisionalTag,
 } from './triage-catalog';
-export { weightedUrgencyIndex } from './urgency-index';
+export {
+  weightedUrgencyIndex,
+  computeUrgencyIndex,
+  URGENCY_WEIGHTS,
+  RED_BRANCH_URGENCY,
+  type UrgencyInput,
+} from './urgency-index';
 export {
   type ClassificationOptions,
   type RiskClassificationStrategy,
