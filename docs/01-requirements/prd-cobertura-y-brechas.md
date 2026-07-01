@@ -93,7 +93,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   pendientes de validación FPV.
 - ❌ RF-1.4 Analizador léxico-semántico — Fase 2.
 - ✅ Rama Verde **flujo por pantallas** (issue #24): síntomas → **ubicación** (estado + ciudad, menús de
-  selección rápida) → **cambio de hábitos** (pantalla 5) → contacto. Los hábitos alimentan el índice.
+  selección rápida) → **cambio de hábitos** (pantalla 5) → contacto. Los hábitos alimentan el índice y
+  **se persisten en el caso** (issue #3, `cases.habit_changes`; visibles en el detalle del psicólogo).
   ⚠️ Pendiente: autodetección por geolocalización del dispositivo (requiere geocoder).
 
 ### Módulo 2 — Registro y validación de psicólogos

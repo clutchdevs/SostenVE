@@ -14,6 +14,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Añadido
+- **Módulo 1 — Persistencia de "Cambio de hábitos" (issue #3, RF-1.3 pantalla 5):** los cambios de hábito
+  reportados en el intake de Rama Verde (los 5 checkboxes ya entregados en #24) ahora **se persisten en el
+  caso** (nueva columna `cases.habit_changes`, migración `20260628000013`) y se exponen en el resumen del
+  caso (`cambio_habitos`), mostrándose al **psicólogo asignado** en el detalle. Ya alimentaban el índice de
+  urgencia; ahora quedan registrados para el seguimiento clínico.
 - **Observabilidad y alertas (issue #8, fase 06):** endpoint **`GET /metrics`** (coordinador/admin) con
   un snapshot de **SLA por nivel de riesgo** (p50/p95/promedio del tiempo de asignación), estado de la
   **cola** (pendientes, riesgo alto, **SLA vencidos**), totales y `uptime_seconds`; `GET /health` ahora
