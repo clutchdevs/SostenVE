@@ -45,6 +45,14 @@ export const appConfigSchema = z.object({
       updated_at: z.string().min(1),
       text: z.string().min(1),
     }),
+    // Informational consent/privacy notice shown on every requester screen
+    // (issue #1). Non-blocking by design so it never adds friction to the
+    // high-risk path; text is provisional pending FPV validation.
+    requester: z.object({
+      version: z.string().min(1),
+      updated_at: z.string().min(1),
+      text: z.string().min(1),
+    }),
   }),
   // Asynchronous Psychological First Aid (PAP) self-help guides for the
   // requester (RF Módulo 1). Versioned like the consent text; content is

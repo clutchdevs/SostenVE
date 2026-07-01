@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
+import { ConsentNotice } from '../../src/components/consent-notice';
 
 interface PapGuide {
   id: string;
@@ -70,6 +71,8 @@ export default function PapGuidesPage() {
         ))}
         {!data && !error && <p className="text-sm text-slate-500">Cargando guías…</p>}
       </div>
+
+      <ConsentNotice />
     </main>
   );
 }

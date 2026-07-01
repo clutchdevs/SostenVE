@@ -149,9 +149,13 @@ ponderado resultante define la prioridad.
 - [ ] Las líneas de crisis se muestran aun con el backend frío.
 - [ ] No se puede registrar un diagnóstico de TEPT antes de 4 semanas del evento (regla de seguridad
       clínica propia; **en el PDF vigente RF-4.3 es el interruptor de disponibilidad**, no este bloqueo).
-- [ ] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (sección 8 ética del PRD FPV).
+- [x] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (issue #1):
+      aviso **no bloqueante** (`ConsentNotice`, colapsable) en `/intake`, `/intake/roja`, `/intake/verde` y
+      `/guias`, con texto **provisional** servido desde config (`GET /consent/requester`, `v0.1.0-draft`)
+      pendiente de validación por la FPV. No añade fricción al camino de riesgo alto / líneas de crisis.
 
 ## 7. Decisiones abiertas (Human-in-the-Loop)
 - `<TODO — Human-in-the-Loop>` Pesos/umbrales finales de los tags clínicos (valida la FPV).
-- `<TODO — Human-in-the-Loop>` Texto de consentimiento informado.
+- `<TODO — Human-in-the-Loop>` **Texto oficial** del consentimiento del solicitante (el del postulante ya es
+  oficial, `v1.0.0-fpv`). El mecanismo del solicitante ya existe con texto provisional (`v0.1.0-draft`, issue #1).
 - `<TODO — Human-in-the-Loop>` Umbral de tiempo de espera aceptable por categoría.

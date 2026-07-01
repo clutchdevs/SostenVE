@@ -181,6 +181,11 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       (`/auth/forgot-password` → `/auth/reset-password`, TTL 60 min, solo hash persistido); ambos hacen
       bump de `token_version`. UI en `/cambiar-contrasena`, `/recuperar-contrasena`,
       `/restablecer-contrasena`. Follow-up menor: migrar la entrega inicial a enlace tokenizado.
+- [x] **Módulo 1 — Consentimiento en cada interfaz del solicitante (issue #1):** aviso **no bloqueante**
+      (`ConsentNotice`, colapsable) en `/intake`, `/intake/roja`, `/intake/verde` y `/guias`; texto desde
+      config (`consent.requester`, `GET /consent/requester`), no hardcodeado. Sin checkbox ni gate para no
+      añadir fricción al camino de riesgo alto. Texto **provisional** (`v0.1.0-draft`) pendiente del texto
+      oficial de la FPV (decisión Human-in-the-Loop, análogo a las guías PAP).
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV

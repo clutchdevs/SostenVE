@@ -64,6 +64,31 @@ default: &default
         protegidos y no se divulgarán a terceros bajo ninguna circunstancia,
         cumpliendo estrictamente con las normativas éticas de la profesión.
 
+    # Aviso informativo de consentimiento/privacidad para el SOLICITANTE (issue #1).
+    # Se muestra de forma NO bloqueante en cada pantalla del solicitante para no
+    # añadir fricción al camino de riesgo alto. Texto PROVISIONAL pendiente de
+    # validación por la FPV (la sección de ética del PRD no fija aún un texto para
+    # el solicitante); sube `version` cuando cambie el texto.
+    requester:
+      version: "v0.1.0-draft"
+      updated_at: "2026-07-01"
+      text: |
+        Este es un servicio gratuito y voluntario de apoyo psicológico de la
+        Federación de Psicólogos de Venezuela (FPV).
+
+        Confidencialidad: tus datos de identidad y de contacto se tratan de forma
+        confidencial, con acceso restringido por rol al personal que te atiende, y
+        no se comparten con terceros.
+
+        Uso de tus datos: la información que proporcionas se usa únicamente para
+        brindarte acompañamiento psicológico y coordinar tu atención.
+
+        No es un servicio de emergencia: si tu vida o la de otra persona está en
+        peligro inmediato, usa las líneas de crisis o los servicios de emergencia.
+
+        Al continuar, aceptas este manejo de tu información. Puedes usar este
+        servicio de forma anónima cuando así se indique.
+
   pap:
     # Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el
     # solicitante (Módulo 1). Contenido PROVISIONAL pendiente de validación por la
