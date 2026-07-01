@@ -13,6 +13,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   asignado); cada lectura registra `clinical_note_read` en el `audit_log` inmutable. Actualizados
   charter, threat-model y clasificación de datos.
 
+### Cambiado
+- **Módulo 2 — Texto de consentimiento informado oficial de la FPV (issue #32, RF-2.1.1):** se reemplazó
+  el borrador provisional por el **texto bioético oficial** transcrito del PRD (RF-2.1.1: carácter
+  aprobatorio, uso de datos, confidencialidad) y se subió la versión a **`v1.0.0-fpv`** en
+  `config/app.config.yml`. Sin cambios de código: la web toma el texto de `GET /consent/active` y la
+  aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
+
 ### Añadido
 - **Módulo 1 — Persistencia de "Cambio de hábitos" (issue #3, RF-1.3 pantalla 5):** los cambios de hábito
   reportados en el intake de Rama Verde (los 5 checkboxes ya entregados en #24) ahora **se persisten en el
