@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
+import { ConsentNotice } from '../../../src/components/consent-notice';
 import { TagPicker } from '../../../src/features/intake/tag-picker';
 import {
   buildGreenPayload,
@@ -69,6 +70,7 @@ export default function GreenBranchPage() {
           </Link>
           .
         </p>
+        <ConsentNotice />
       </main>
     );
   }
@@ -209,6 +211,8 @@ export default function GreenBranchPage() {
           </button>
         )}
       </div>
+
+      <ConsentNotice />
     </main>
   );
 }

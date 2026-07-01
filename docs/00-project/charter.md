@@ -91,5 +91,7 @@ Estas decisiones corresponden a la Federación y **no se inventan** en este repo
 - ✅ **Acceso del coordinador a notas clínicas** (issue #25): el coordinador accede al contenido
   clínico de forma **auditada** (cada lectura registra `clinical_note_read` en `audit_log`); la PII de
   contacto sigue restringida al psicólogo asignado.
-- `<TODO — Human-in-the-Loop>` Texto de consentimiento informado mostrado al solicitante.
+- `<TODO — Human-in-the-Loop>` **Texto oficial** de consentimiento informado del solicitante (validado por
+  la FPV). El **mecanismo** de UI ya existe (issue #1): aviso no bloqueante en cada interfaz del solicitante
+  con texto **provisional** versionado en config (`consent.requester`, `v0.1.0-draft`, `GET /consent/requester`).
 - `<TODO — Human-in-the-Loop>` Nombre final del proyecto (se usa "Sostén" como placeholder).

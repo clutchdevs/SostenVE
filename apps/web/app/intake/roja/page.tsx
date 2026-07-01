@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
+import { ConsentNotice } from '../../../src/components/consent-notice';
 import { apiFetch } from '../../../src/lib/api-client';
 import {
   FALLBACK_CRISIS_LINES,
@@ -102,6 +103,8 @@ export default function RedBranchPage() {
           Registramos tu solicitud. Mientras tanto, las líneas de arriba siguen disponibles.
         </p>
       )}
+
+      <ConsentNotice />
     </main>
   );
 }

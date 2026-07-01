@@ -134,6 +134,13 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           responses: { '200': { description: 'version + updated_at + text' } },
         },
       },
+      '/consent/requester': {
+        get: {
+          tags: ['consent'],
+          summary: 'Aviso de consentimiento/privacidad del solicitante (issue #1, no bloqueante)',
+          responses: { '200': { description: 'version + updated_at + text' } },
+        },
+      },
       '/pap': {
         get: {
           tags: ['pap'],

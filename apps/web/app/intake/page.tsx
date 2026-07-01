@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
+import { ConsentNotice } from '../../src/components/consent-notice';
 
 const OPTIONS = [
   { value: 1, label: 'Estoy en crisis / en peligro ahora' },
@@ -63,6 +64,8 @@ export default function IntakePage() {
         </Link>
         .
       </p>
+
+      <ConsentNotice />
     </main>
   );
 }

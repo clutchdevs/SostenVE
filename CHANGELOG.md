@@ -21,6 +21,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 1 — Consentimiento informado en cada interfaz del solicitante (issue #1):** aviso de
+  consentimiento/privacidad **no bloqueante** (`ConsentNotice`, colapsable) presente en **todas** las
+  pantallas del solicitante (`/intake`, `/intake/roja`, `/intake/verde`, `/guias`), no solo al inicio. Es
+  intencionadamente informativo (sin checkbox ni gate) para **no añadir fricción** al camino de riesgo alto
+  ni a las líneas de crisis. El texto vive en **config** (`consent.requester`, nuevo endpoint público
+  `GET /consent/requester`), nunca hardcodeado. Texto **provisional** (`v0.1.0-draft`) pendiente del texto
+  oficial de la FPV — el PRD aún no fija un consentimiento para el solicitante (decisión Human-in-the-Loop,
+  igual que las guías PAP).
 - **Módulo 2 — Cambio y reseteo de contraseña (issue #36, RF-2.2.4):** el personal ya puede **cambiar su
   contraseña autenticado** (`POST /auth/change-password`, re-verifica la actual) y **recuperar una
   olvidada** mediante un **token de un solo uso enviado por correo** (`POST /auth/forgot-password` →
