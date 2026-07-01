@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, HeartHandshake, HeartPulse, LogOut, Users } from 'lucide-react';
+import { BarChart3, HeartHandshake, HeartPulse, LogOut, UserCog, Users } from 'lucide-react';
 import { clearSession } from '../lib/session';
 
 interface NavItem {
@@ -15,6 +15,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: '/coordinador', label: 'Cola de casos', icon: HeartPulse, exact: true },
   { href: '/coordinador/psicologos', label: 'Psicólogos en atención', icon: Users },
+  { href: '/coordinador/voluntarios', label: 'Voluntarios', icon: UserCog },
   { href: '/coordinador/reportes', label: 'Reportes', icon: BarChart3 },
 ];
 

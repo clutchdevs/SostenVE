@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { TagPicker } from '../../../src/features/intake/tag-picker';
@@ -60,6 +61,13 @@ export default function GreenBranchPage() {
         <p className="rounded-lg bg-emerald-50 p-4 text-emerald-800">
           Recibimos tu solicitud. Un psicólogo voluntario te contactará. Si la situación empeora,
           usa las líneas de crisis.
+        </p>
+        <p className="text-center text-sm text-slate-600">
+          Mientras esperas, puedes ver{' '}
+          <Link href="/guias" className="font-semibold text-brand underline">
+            guías de autoayuda
+          </Link>
+          .
         </p>
       </main>
     );

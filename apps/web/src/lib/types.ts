@@ -99,6 +99,15 @@ export interface VolunteerView {
   creado_en: string;
 }
 
+/** Confidential coordinator note about a volunteer (RF-2.4). */
+export interface VolunteerNoteView {
+  id: string;
+  voluntario_id: string;
+  autor_id: string | null;
+  contenido: string;
+  creada_en: string;
+}
+
 export interface CoordinatorInvitationView {
   id: string;
   nombre: string;

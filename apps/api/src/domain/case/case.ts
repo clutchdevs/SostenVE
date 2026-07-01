@@ -48,6 +48,8 @@ export interface CaseRepository {
   listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]>;
   updateStatus(id: string, status: CaseStatus): Promise<void>;
   updateRiskLevel(id: string, riskLevel: RiskLevel): Promise<void>;
+  /** Resets (or clears) the acceptance SLA, e.g. on manual reassignment. */
+  updateSlaExpiresAt(id: string, slaExpiresAt: Date | null): Promise<void>;
 }
 
 /** Separated PII (ADR-0011), linked to a case by pseudonymId. */

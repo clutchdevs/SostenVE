@@ -1,6 +1,11 @@
 import { Hono } from 'hono';
+import { getConfig } from '../../../config';
 import { acceptCase } from '../../../application/assignment/accept-case';
 import { addClinicalNote } from '../../../application/cases/add-note';
+import {
+  coordinatorCloseCase,
+  reassignCase,
+} from '../../../application/cases/coordinator-actions';
 import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator';
 import { getCaseForVolunteer } from '../../../application/cases/get-case';
 import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases';
@@ -16,9 +21,19 @@ import {
   presentCoordinatorCaseSummary,
   presentNote,
 } from './presenters';
-import { addNoteSchema, caseClosureSchema, type AddNoteBody, type CaseClosureBody } from './schemas';
+import {
+  addNoteSchema,
+  caseClosureSchema,
+  coordinatorCloseSchema,
+  reassignCaseSchema,
+  type AddNoteBody,
+  type CaseClosureBody,
+  type CoordinatorCloseBody,
+  type ReassignCaseBody,
+} from './schemas';
 
 const STAFF_ROLES = ['psychologist', 'coordinator', 'admin'];
+const COORDINATOR_ROLES = ['coordinator', 'admin'];
 
 /** Case actions for authenticated volunteers, psychologists and coordinators. */
 export function createCasesRouter(): Hono {
@@ -119,6 +134,52 @@ export function createCasesRouter(): Hono {
         getCaseDeps(),
       );
       return c.json({ cierre: presentCaseClosure(closure) }, 201);
+    },
+  );
+
+  // Coordinator manually reassigns a case to a specific active psychologist (RF-2.3).
+  router.post(
+    '/:id/reassign',
+    requireAuth({ roles: COORDINATOR_ROLES }),
+    validateBody(reassignCaseSchema),
+    async (c) => {
+      const actor = getAuthUser(c);
+      const body = getValidated<ReassignCaseBody>(c, 'body');
+      const caseDeps = getCaseDeps();
+      const assignmentDeps = getAssignmentDeps();
+      await reassignCase(
+        c.req.param('id'),
+        body.voluntario_id,
+        { id: actor.sub, role: actor.role },
+        {
+          cases: caseDeps.cases,
+          assignments: caseDeps.assignments,
+          volunteers: assignmentDeps.volunteers,
+          notifier: assignmentDeps.notifier,
+          audit: caseDeps.audit,
+          config: getConfig(),
+        },
+      );
+      return c.json({ ok: true });
+    },
+  );
+
+  // Coordinator administratively closes a stalled case (RF-2.3).
+  router.post(
+    '/:id/coordinator-close',
+    requireAuth({ roles: COORDINATOR_ROLES }),
+    validateBody(coordinatorCloseSchema),
+    async (c) => {
+      const actor = getAuthUser(c);
+      const body = getValidated<CoordinatorCloseBody>(c, 'body');
+      const caseDeps = getCaseDeps();
+      await coordinatorCloseCase(
+        c.req.param('id'),
+        body.motivo,
+        { id: actor.sub, role: actor.role },
+        { cases: caseDeps.cases, assignments: caseDeps.assignments, audit: caseDeps.audit },
+      );
+      return c.json({ ok: true });
     },
   );
 

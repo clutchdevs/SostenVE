@@ -13,6 +13,9 @@ import {
 interface Props {
   cases: CaseSummary[];
   now: Date;
+  /** Coordinator actions per case (omitted hides the actions column). */
+  onReassign?: (c: CaseSummary) => void;
+  onClose?: (c: CaseSummary) => void;
 }
 
 const RISK: Record<string, { label: string; badge: string }> = {
@@ -29,7 +32,8 @@ const SLA_TONE: Record<SlaTone, string> = {
 };
 
 /** Mission-control table of the live case queue (fast visual scanning). */
-export function CaseQueueTable({ cases, now }: Props) {
+export function CaseQueueTable({ cases, now, onReassign, onClose }: Props) {
+  const showActions = Boolean(onReassign || onClose);
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-surface-card shadow-card">
       <div className="overflow-x-auto">
@@ -41,6 +45,7 @@ export function CaseQueueTable({ cases, now }: Props) {
               <th className="px-5 py-3 font-semibold">Asignado a</th>
               <th className="px-5 py-3 font-semibold">Estado</th>
               <th className="px-5 py-3 font-semibold">SLA</th>
+              {showActions && <th className="px-5 py-3 font-semibold">Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -73,12 +78,36 @@ export function CaseQueueTable({ cases, now }: Props) {
                       {sla.label}
                     </span>
                   </td>
+                  {showActions && (
+                    <td className="px-5 py-4">
+                      <div className="flex gap-2">
+                        {onReassign && (
+                          <button
+                            type="button"
+                            onClick={() => onReassign(c)}
+                            className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            Reasignar
+                          </button>
+                        )}
+                        {onClose && (
+                          <button
+                            type="button"
+                            onClick={() => onClose(c)}
+                            className="rounded-lg border border-accent-coral px-2.5 py-1 text-xs font-medium text-accent-coral hover:bg-red-50"
+                          >
+                            Cerrar
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
             {cases.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-slate-500">
+                <td colSpan={showActions ? 6 : 5} className="px-5 py-12 text-center text-slate-500">
                   No hay casos activos en la cola.
                 </td>
               </tr>
