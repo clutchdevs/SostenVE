@@ -46,13 +46,15 @@
   - [ ] Si el envío falla por red, se reintenta sin perder lo capturado.
   - [ ] No compromete el principio no negociable: las líneas de crisis siguen mostrándose sin backend.
 
-#### A3 · Pantalla "Cambio de hábitos" (Rama Verde, Pantalla 5) 🟠
+#### A3 · Pantalla "Cambio de hábitos" (Rama Verde, Pantalla 5) ✅
 - **RF:** RF-1.3 / Pantalla 5 del PRD (checkboxes táctiles: alimentación, concentración, aseo,
   relaciones, sueño).
-- **Estado actual:** la Rama Verde tiene Likert + tags; falta esta pantalla.
+- **Estado:** los checkboxes y el payload se entregaron en #24 (wizard de Rama Verde); #3 añade la
+  **persistencia en el caso** (columna `cases.habit_changes`) y su visualización para el psicólogo asignado.
 - **Criterios de aceptación:**
-  - [ ] Checkboxes de un toque para las 5 variaciones de hábitos.
-  - [ ] Los valores se incluyen en el payload del intake y se persisten en el caso.
+  - [x] Checkboxes de un toque para las 5 variaciones de hábitos (issue #24).
+  - [x] Los valores se incluyen en el payload del intake (#24) **y se persisten en el caso** (#3,
+        `cases.habit_changes`; visibles en el detalle del caso del psicólogo).
 
 ### Épica 2 — Expediente clínico (Módulo 4)
 

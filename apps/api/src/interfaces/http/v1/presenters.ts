@@ -100,6 +100,7 @@ export function presentCaseSummary(caseRecord: CaseRecord) {
     zona: caseRecord.zone ?? null,
     modalidad: caseRecord.preferredModality ? modalityToDb[caseRecord.preferredModality] : null,
     edad: caseRecord.age ?? null,
+    cambio_habitos: caseRecord.habitChanges ?? [],
     creado_en: caseRecord.createdAt.toISOString(),
     sla_vence_en: caseRecord.slaExpiresAt?.toISOString() ?? null,
   };
