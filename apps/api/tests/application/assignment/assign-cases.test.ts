@@ -29,7 +29,9 @@ function makeVolunteer(id: string): Volunteer {
   };
 }
 
-function deps(pending: CaseRecord[], volunteers: Volunteer[]) {
+function deps(pending: CaseRecord[], volunteers: Volunteer[], online?: Set<string>) {
+  // Default: every listed volunteer is online (presence not under test here).
+  const onlineIds = online ?? new Set(volunteers.map((v) => v.id));
   const assignedOrder: string[] = [];
   const statusUpdates: string[] = [];
   const d = {
@@ -50,6 +52,11 @@ function deps(pending: CaseRecord[], volunteers: Volunteer[]) {
       async create({ caseId }: { caseId: string }) {
         assignedOrder.push(caseId);
         return { id: `a-${caseId}`, caseId, volunteerId: 'v', assignedAt: new Date() };
+      },
+    },
+    presence: {
+      async filterOnline(ids: readonly string[]) {
+        return new Set(ids.filter((id) => onlineIds.has(id)));
       },
     },
     notifier: {
@@ -83,5 +90,39 @@ describe('assignPendingCases — urgency ordering (RF-1.5)', () => {
     await assignPendingCases(d);
 
     expect(assignedOrder).toEqual(['older', 'newer']);
+  });
+});
+
+describe('assignPendingCases — presence gate (RF-2.5 / RF-3.1)', () => {
+  it('only assigns to online volunteers', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    const pending = [makeCase('c1', 50, now)];
+    // v1 is active but offline; v2 is active and online.
+    const { d, assignedOrder } = deps(
+      pending,
+      [makeVolunteer('v1'), makeVolunteer('v2')],
+      new Set(['v2']),
+    );
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(1);
+    expect(assignedOrder).toEqual(['c1']);
+  });
+
+  it('leaves cases queued when no volunteer is online', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    const pending = [makeCase('c1', 50, now)];
+    const { d, assignedOrder, statusUpdates } = deps(
+      pending,
+      [makeVolunteer('v1')],
+      new Set(), // nobody online
+    );
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(0);
+    expect(assignedOrder).toEqual([]);
+    expect(statusUpdates).toEqual([]); // stays PENDING for the SLA sweep
   });
 });

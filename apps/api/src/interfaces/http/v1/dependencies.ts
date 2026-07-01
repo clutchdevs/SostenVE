@@ -13,8 +13,10 @@ import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure
 import { SupabasePasswordResetTokenRepository } from '../../../infrastructure/repositories/supabase-password-reset-token-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { createNotifier } from '../../../infrastructure/notifications';
+import { createPresenceStore } from '../../../infrastructure/presence';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
 import type { AssignmentDeps } from '../../../application/assignment/ports';
+import type { PresenceStore } from '../../../application/presence/ports';
 import type { CaseDeps } from '../../../application/cases/ports';
 import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines';
 import type { InvitationDeps } from '../../../application/coordinator/manage-invitations';
@@ -109,9 +111,15 @@ export function getAssignmentDeps(): AssignmentDeps {
       assignments: new SupabaseAssignmentRepository(client),
       volunteers: new SupabaseVolunteerRepository(client),
       notifier: new LogAssignmentNotifier(),
+      presence: createPresenceStore(getConfig()),
     };
   }
   return assignmentCached;
+}
+
+/** Shared presence store for the heartbeat endpoint and coordinator visibility. */
+export function getPresenceStore(): PresenceStore {
+  return createPresenceStore(getConfig());
 }
 
 let crisisLineRepoCached: CrisisLineRepository | null = null;

@@ -95,6 +95,14 @@ export const appConfigSchema = z.object({
       username: z.string(),
     }),
   }),
+  // Real-time volunteer presence (RF-2.5). `provider`: memory (dev/tests, single
+  // process) | upstash (production Redis over REST). TTL/interval mirror the PRD
+  // (65 s expiry refreshed by a 30 s heartbeat).
+  presence: z.object({
+    provider: z.enum(['memory', 'upstash']),
+    heartbeat_ttl_seconds: z.number().int().positive(),
+    heartbeat_interval_seconds: z.number().int().positive(),
+  }),
   rbac: z.object({
     roles: z.array(z.string().min(1)).min(1),
   }),

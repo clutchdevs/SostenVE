@@ -21,6 +21,20 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 2/3 — Presencia en tiempo real + filtro de asignación por presencia (RF-2.5 / RF-3.1, issue #18):**
+  los psicólogos ahora tienen **presencia en vivo**. La PWA envía un **latido cada 30 s** (`POST
+  /volunteers/me/presence`) y el servidor la mantiene `Online` con **TTL de 65 s**, que expira solo si cesan
+  los latidos (RF-2.5.3). El **motor de asignación solo asigna a psicólogos `Online`** (RF-3.1): si ninguno lo
+  está, el caso queda en cola honestamente y lo rescata el barrido de SLA. Nuevo **toggle de disponibilidad**
+  en la PWA del psicólogo (Disponible/En pausa + indicador de conexión, RF-4.3) e **indicador En
+  línea/Desconectado** por psicólogo en el panel del coordinador (RF-2.5.4). Implementado tras un puerto
+  `PresenceStore` con adaptadores **Upstash Redis** (REST vía `fetch`, sin dependencias; producción) y
+  **memoria** (dev/tests), seleccionables por `presence.provider` (ADR-0014). Activación en prod: setear
+  `presence.provider: upstash` + `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`.
+- **Módulo 1 — Edad en Rama Roja (RF-1.2.2 / RF-1.2.3):** el formulario mínimo de emergencia (recibir llamada
+  / WhatsApp silencioso) ahora captura la **edad**, parámetro clínico crítico para priorizar minoría de edad o
+  atención geriátrica. El backend ya la persistía en el caso; se añadió el campo en la UI (y al draft offline)
+  para que alimente el ruteo por especialidad.
 - **Módulo 1 — Intake offline-first: guardado local + reintento (issue #2, Charter in-scope #1):** el intake
   del solicitante ahora tolera conexión intermitente. Lo capturado se **guarda en `localStorage`** (draft) y
   **sobrevive a una recarga**; si el envío falla por red o error de servidor (5xx), la solicitud se **encola**

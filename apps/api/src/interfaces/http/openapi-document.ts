@@ -12,6 +12,7 @@ import {
   forgotPasswordSchema,
   greenBranchSchema,
   loginSchema,
+  presenceSchema,
   resetPasswordSchema,
   reassignCaseSchema,
   redBranchSchema,
@@ -210,6 +211,18 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             },
           ],
           responses: { '200': { description: 'Lista de voluntarios' }, '401': { description: 'No autenticado' }, '403': { description: 'Sin permiso' } },
+        },
+      },
+      '/volunteers/me/presence': {
+        post: {
+          tags: ['volunteers'],
+          summary: 'Heartbeat / disponibilidad del voluntario (RF-2.5 / RF-4.3.1)',
+          security: bearer,
+          requestBody: jsonBody(presenceSchema),
+          responses: {
+            '204': { description: 'Presencia actualizada' },
+            '401': { description: 'No autenticado' },
+          },
         },
       },
       '/volunteers/{id}/approve': {

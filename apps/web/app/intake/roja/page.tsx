@@ -18,6 +18,7 @@ interface RedDraft {
   sub: SubChannel | null;
   name: string;
   contact: string;
+  age: string;
 }
 
 export default function RedBranchPage() {
@@ -27,6 +28,7 @@ export default function RedBranchPage() {
   const [sub, setSub] = useState<SubChannel | null>(null);
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
+  const [age, setAge] = useState('');
   const [done, setDone] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -41,17 +43,26 @@ export default function RedBranchPage() {
       setSub(draft.sub);
       setName(draft.name);
       setContact(draft.contact);
+      setAge(draft.age ?? '');
     }
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated && !done) saveDraft<RedDraft>(INTAKE_DRAFT_KEYS.roja, { sub, name, contact });
-  }, [hydrated, done, sub, name, contact]);
+    if (hydrated && !done) saveDraft<RedDraft>(INTAKE_DRAFT_KEYS.roja, { sub, name, contact, age });
+  }, [hydrated, done, sub, name, contact, age]);
 
   async function submit() {
     if (!sub || !contact) return;
-    const payload = { sub_canal: sub, nombre: name || undefined, contacto: contact };
+    // Age is a critical clinical parameter (minor vs geriatric priority) per
+    // RF-1.2.2 / RF-1.2.3; sent when provided.
+    const parsedAge = age.trim() === '' ? undefined : Number(age);
+    const payload = {
+      sub_canal: sub,
+      nombre: name || undefined,
+      contacto: contact,
+      edad: parsedAge !== undefined && Number.isFinite(parsedAge) ? parsedAge : undefined,
+    };
     try {
       await apiFetch('/intake/red-branch', { method: 'POST', auth: false, body: payload });
       clearDraft(INTAKE_DRAFT_KEYS.roja);
@@ -116,6 +127,16 @@ export default function RedBranchPage() {
                 placeholder="Teléfono de contacto"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
+              />
+              <input
+                className="w-full rounded-md border px-3 py-2"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={120}
+                placeholder="Edad (ayuda a priorizar la atención)"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
               />
               <button
                 type="button"

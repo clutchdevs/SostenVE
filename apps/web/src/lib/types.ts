@@ -98,6 +98,8 @@ export interface VolunteerView {
   estado: VolunteerStatus;
   /** Why it needs manual review; only set while pending_approval. */
   motivo_excepcion: ExceptionReason | null;
+  /** Live presence for the coordinator console (RF-2.5.4). */
+  en_linea?: boolean;
   creado_en: string;
 }
 

@@ -12,10 +12,12 @@ import { ApiError } from '../../../shared/errors/api-error';
 import { requireAuth, getAuthUser } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
-import { getVolunteerContainer } from './dependencies';
+import { getPresenceStore, getVolunteerContainer } from './dependencies';
 import {
+  presenceSchema,
   registerVolunteerSchema,
   volunteerNoteSchema,
+  type PresenceBody,
   type RegisterVolunteerBody,
   type VolunteerNoteBody,
 } from './schemas';
@@ -26,7 +28,7 @@ const STATUS_TO_VALIDATION: Record<VolunteerStatus, string> = {
   inactive: 'rechazado',
 };
 
-function presentVolunteer(volunteer: Volunteer) {
+function presentVolunteer(volunteer: Volunteer, online = false) {
   return {
     id: volunteer.id,
     nombre: volunteer.fullName,
@@ -36,6 +38,8 @@ function presentVolunteer(volunteer: Volunteer) {
     rol: volunteer.role,
     estado: volunteer.status,
     motivo_excepcion: volunteer.pendingReason ?? null,
+    // Real-time presence for the coordinator console (RF-2.5.4).
+    en_linea: online,
     creado_en: volunteer.createdAt.toISOString(),
   };
 }
@@ -105,7 +109,25 @@ export function createVolunteerRouter(): Hono {
       status === 'all'
         ? await volunteers.listAll()
         : await volunteers.listByStatus(status as VolunteerStatus);
-    return c.json(list.map(presentVolunteer));
+    // Annotate each row with live presence (RF-2.5.4) so the coordinator sees who
+    // is actually online right now.
+    const online = await getPresenceStore().filterOnline(list.map((v) => v.id));
+    return c.json(list.map((v) => presentVolunteer(v, online.has(v.id))));
+  });
+
+  // Presence heartbeat / availability toggle (RF-2.5, RF-4.3.1). The PWA calls
+  // this on a timer while the volunteer is available; a `false` marks them offline
+  // immediately (manual pause), removing them from the assignment pool.
+  router.post('/me/presence', requireAuth(), validateBody(presenceSchema), async (c) => {
+    const user = getAuthUser(c);
+    const body = getValidated<PresenceBody>(c, 'body');
+    const presence = getPresenceStore();
+    if (body.disponible) {
+      await presence.markOnline(user.sub, getConfig().presence.heartbeat_ttl_seconds);
+    } else {
+      await presence.markOffline(user.sub);
+    }
+    return c.body(null, 204);
   });
 
   router.post('/:id/approve', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {

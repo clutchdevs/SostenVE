@@ -13,6 +13,13 @@ export const TEPT_BLOCK_DAYS = 30;
  */
 export const SESSION_IDLE_TIMEOUT_MINUTES = 15;
 
+/**
+ * Presence heartbeat interval in seconds (RF-2.5.2). Mirrors
+ * `presence.heartbeat_interval_seconds`; the PWA pings while online so the
+ * backend keeps the volunteer's presence key alive (65 s TTL server-side).
+ */
+export const PRESENCE_HEARTBEAT_INTERVAL_SECONDS = 30;
+
 export function weeksSince(dateIso: string, now: Date = new Date()): number {
   const ms = now.getTime() - new Date(dateIso).getTime();
   return Math.floor(ms / (7 * 24 * 60 * 60 * 1000));
