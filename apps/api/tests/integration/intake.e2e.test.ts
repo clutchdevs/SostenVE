@@ -109,7 +109,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     const res = await post('/api/v1/intake/green-branch', {
       contacto: `+5842${randomUUID().slice(0, 7)}`,
       tipo_solicitante: 'familiar',
-      tags: ['persistent_sadness'],
+      tags: ['material_loss'],
     });
     expect(res.status).toBe(201);
     const body = (await res.json()) as IntakeResponse;

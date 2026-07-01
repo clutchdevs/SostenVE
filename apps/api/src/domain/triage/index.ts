@@ -9,8 +9,11 @@ export {
 } from './symptom-tag';
 export {
   DEFAULT_SEVERITY_WEIGHT,
-  PROVISIONAL_TAG_CATALOG,
-  getProvisionalTag,
+  CLINICAL_TAG_CATALOG,
+  CLINICAL_TAG_ENTRY_LIST,
+  TAG_CATALOG_VERSION,
+  getCatalogTag,
+  type CatalogEntry,
 } from './triage-catalog';
 export {
   weightedUrgencyIndex,

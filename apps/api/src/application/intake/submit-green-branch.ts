@@ -1,7 +1,7 @@
 import { ValidationError } from '../../shared/errors/api-error';
 import { generatePseudonymId } from '../../domain/identity/pseudonym';
 import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage';
-import { getProvisionalTag } from '../../domain/triage/triage-catalog';
+import { getCatalogTag } from '../../domain/triage/triage-catalog';
 import type { Modality, RequesterType } from '../../domain/case/case';
 import { getActiveCrisisLine } from './get-active-crisis-line';
 import type { IntakeCaseResult, IntakeDeps } from './types';
@@ -32,7 +32,7 @@ export async function submitGreenBranch(
   const now = deps.now?.() ?? new Date();
 
   const tags = input.tagCodes.map((code) => {
-    const tag = getProvisionalTag(code);
+    const tag = getCatalogTag(code);
     if (!tag) {
       throw new ValidationError(`Unknown clinical tag code: ${code}`);
     }
