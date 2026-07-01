@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, HeartHandshake, HeartPulse, LogOut, UserCog, Users } from 'lucide-react';
+import { BarChart3, HeartHandshake, HeartPulse, KeyRound, LogOut, UserCog, Users } from 'lucide-react';
 import { clearSession } from '../lib/session';
 
 interface NavItem {
@@ -77,10 +77,17 @@ export function CoordinatorSidebar() {
               </p>
             </div>
           </div>
+          <Link
+            href="/cambiar-contrasena"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <KeyRound className="h-4 w-4" aria-hidden />
+            Cambiar contraseña
+          </Link>
           <button
             type="button"
             onClick={signOut}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             Cerrar sesión

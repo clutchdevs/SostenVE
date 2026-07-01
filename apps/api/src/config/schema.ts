@@ -78,6 +78,9 @@ export const appConfigSchema = z.object({
     // Public URL the coordinator invitation email links to (RF-2.6); the raw
     // token is appended as a `?token=` query param.
     coordinator_invite_url: z.string().min(1),
+    // Public URL the password reset email links to (RF-2.2.4); the raw token is
+    // appended as a `?token=` query param.
+    password_reset_url: z.string().min(1),
     smtp: z.object({
       host: z.string().min(1),
       port: z.number().int().positive(),
@@ -108,6 +111,9 @@ export const appConfigSchema = z.object({
       idle_timeout_minutes: z.number().int().positive(),
       // Invitation tokens (RF-2.6) are valid for this many days.
       invitation_ttl_days: z.number().int().positive(),
+      // Password reset tokens (RF-2.2.4) are valid for this many minutes; kept
+      // short since the link grants a password change.
+      password_reset_ttl_minutes: z.number().int().positive(),
     }),
   }),
 });

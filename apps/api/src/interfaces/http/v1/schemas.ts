@@ -176,6 +176,25 @@ export const auditQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
+// Authenticated password change (RF-2.2.4): re-verify the current password and
+// require a reasonable minimum length for the new one.
+export const changePasswordSchema = z.object({
+  contrasena_actual: z.string().min(1),
+  contrasena_nueva: z.string().min(8),
+});
+
+// Public "forgot password" request (RF-2.2.4). Only the email is needed; the
+// response is uniform whether or not an account exists (no enumeration).
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+// Public reset redemption (RF-2.2.4): the single-use token plus the new password.
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  contrasena: z.string().min(8),
+});
+
 export type AddNoteBody = z.infer<typeof addNoteSchema>;
 export type CaseClosureBody = z.infer<typeof caseClosureSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
@@ -190,4 +209,7 @@ export type ReassignCaseBody = z.infer<typeof reassignCaseSchema>;
 export type CoordinatorCloseBody = z.infer<typeof coordinatorCloseSchema>;
 export type CoordinatorInviteBody = z.infer<typeof coordinatorInviteSchema>;
 export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
+export type ChangePasswordBody = z.infer<typeof changePasswordSchema>;
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
 export type AuditQuery = z.infer<typeof auditQuerySchema>;

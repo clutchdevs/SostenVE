@@ -142,6 +142,7 @@ default: &default
     from: "Sostén <no-reply@sostenve.app>"
     login_url: "http://localhost:3000/login"
     coordinator_invite_url: "http://localhost:3000/registro-coordinador"
+    password_reset_url: "http://localhost:3000/restablecer-contrasena" # RF-2.2.4 reset link
     smtp:
       host: "host.docker.internal" # API container -> host's Inbucket
       port: 54325
@@ -164,6 +165,7 @@ default: &default
     session:
       idle_timeout_minutes: 15 # RF-2.7: expire a session after inactivity
       invitation_ttl_days: 7 # RF-2.6: coordinator invitation validity window
+      password_reset_ttl_minutes: 60 # RF-2.2.4: password reset link validity window
 
 development:
   <<: *default

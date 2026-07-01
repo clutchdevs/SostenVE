@@ -73,6 +73,9 @@ export default function LoginPage() {
           Entrar
         </button>
       </form>
+      <Link href="/recuperar-contrasena" className="mt-4 inline-block text-sm text-brand underline">
+        ¿Olvidaste tu contraseña?
+      </Link>
     </main>
   );
 }

@@ -10,6 +10,7 @@ import { SupabaseClinicalNoteRepository } from '../../../infrastructure/reposito
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
 import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository';
 import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure/repositories/supabase-coordinator-invitation-repository';
+import { SupabasePasswordResetTokenRepository } from '../../../infrastructure/repositories/supabase-password-reset-token-repository';
 import { createFpvVerifier } from '../../../infrastructure/fpv';
 import { createNotifier } from '../../../infrastructure/notifications';
 import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
@@ -18,6 +19,11 @@ import type { CaseDeps } from '../../../application/cases/ports';
 import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines';
 import type { InvitationDeps } from '../../../application/coordinator/manage-invitations';
 import type { AcceptInvitationDeps } from '../../../application/coordinator/accept-invitation';
+import type { ChangePasswordDeps } from '../../../application/volunteer/change-password';
+import type {
+  RequestPasswordResetDeps,
+  ResetPasswordDeps,
+} from '../../../application/volunteer/reset-password';
 import type { QueryAuditLogDeps } from '../../../application/audit/query-audit-log';
 import type { CrisisLineRepository } from '../../../domain/crisis-line/crisis-line';
 import type { IdempotencyStore } from '../../../application/intake/idempotency';
@@ -159,6 +165,32 @@ export function getAcceptInvitationDeps(): AcceptInvitationDeps {
     };
   }
   return acceptInvitationCached;
+}
+
+interface PasswordFlowContainer {
+  change: ChangePasswordDeps;
+  requestReset: RequestPasswordResetDeps;
+  reset: ResetPasswordDeps;
+}
+
+let passwordFlowCached: PasswordFlowContainer | null = null;
+
+/** Composition root for the password change/reset flows (RF-2.2.4, issue #36). */
+export function getPasswordFlowContainer(): PasswordFlowContainer {
+  if (passwordFlowCached === null) {
+    const client = forService();
+    const config = getConfig();
+    const volunteers = new SupabaseVolunteerRepository(client);
+    const audit = new SupabaseAuditLogRepository(client);
+    const resetTokens = new SupabasePasswordResetTokenRepository(client);
+    const notifier = createNotifier(config);
+    passwordFlowCached = {
+      change: { volunteers, audit },
+      requestReset: { volunteers, resetTokens, notifier, audit, config },
+      reset: { volunteers, resetTokens, audit },
+    };
+  }
+  return passwordFlowCached;
 }
 
 let caseCached: CaseDeps | null = null;

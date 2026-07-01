@@ -112,7 +112,14 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-2.2.4 Credenciales + correo de bienvenida — contraseña **autogenerada** de alta entropía
   (el usuario no la elige), entregada por **correo de bienvenida** vía `SmtpNotifier` (nodemailer,
   seleccionable por config `email.provider`; `log` por defecto). La aprobación por admin reemite y
-  reenvía credenciales. ⚠️ Pendiente: flujo de cambio/reseteo de contraseña (la temporal viaja en claro).
+  reenvía credenciales.
+- ✅ RF-2.2.4 (cont.) **Cambio y reseteo de contraseña** (issue #36): el personal cambia su contraseña
+  autenticado (`POST /auth/change-password`, re-verifica la actual) y recupera una olvidada con un
+  **token de un solo uso por correo** (`/auth/forgot-password` → `/auth/reset-password`; solo se persiste
+  el hash del token, con TTL de 60 min). Ambos flujos hacen **bump de `token_version`** para destruir las
+  sesiones previas (RF-2.7). UI: `/cambiar-contrasena`, `/recuperar-contrasena`, `/restablecer-contrasena`.
+  ⚠️ Pendiente menor: migrar la **entrega inicial** de credenciales de "temporal en claro" a enlace
+  tokenizado (hoy el reset ya ofrece esa vía de recuperación segura).
 - ❌ RF-2.5 Presencia en tiempo real (Redis/heartbeat + TTL 65 s + heartbeat 30 s, RF-2.5.1–2.5.4).
 - ✅ RF-2.6 Registro de coordinadores por **token de invitación** (issue #23): el admin invita
   (`/admin/coordinators/invitations`), se persiste solo el hash del token (un solo uso, con TTL) y el
@@ -168,7 +175,12 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [x] **Módulo 2 — Formulario de postulación completo** (RF-2.1.2): tipo doc, FPV, universidad, año,
       PAP + detalle, colegio, multiselect de modalidad, disponibilidad horaria.
 - [x] **Módulo 2 — Alta automática real:** contraseña de alta entropía autogenerada + correo de
-      bienvenida (SmtpNotifier); regla `cédula+FPV ∧ PAP → Activo`. Pendiente: cambio/reseteo de contraseña.
+      bienvenida (SmtpNotifier); regla `cédula+FPV ∧ PAP → Activo`.
+- [x] **Módulo 2 — Cambio/reseteo de contraseña (issue #36):** cambio autenticado
+      (`/auth/change-password`) y recuperación por token de un solo uso por correo
+      (`/auth/forgot-password` → `/auth/reset-password`, TTL 60 min, solo hash persistido); ambos hacen
+      bump de `token_version`. UI en `/cambiar-contrasena`, `/recuperar-contrasena`,
+      `/restablecer-contrasena`. Follow-up menor: migrar la entrega inicial a enlace tokenizado.
 - [ ] **Presencia en tiempo real** (RF-2.5 / RF-3.1): heartbeat + estado `Online` y filtro de
       asignación por presencia. (Requiere un store compartido; ver nota de Redis/Upstash.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV

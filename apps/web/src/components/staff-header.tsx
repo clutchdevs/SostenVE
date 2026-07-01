@@ -52,6 +52,12 @@ export function StaffHeader() {
               {ROLE_LABEL[role] ?? role}
             </span>
           )}
+          <Link
+            href="/cambiar-contrasena"
+            className="font-medium text-slate-700 hover:text-brand"
+          >
+            Contraseña
+          </Link>
           <button
             type="button"
             onClick={signOut}

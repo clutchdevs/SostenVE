@@ -4,12 +4,15 @@ import {
   acceptInvitationSchema,
   addNoteSchema,
   caseClosureSchema,
+  changePasswordSchema,
   coordinatorCloseSchema,
   coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
+  forgotPasswordSchema,
   greenBranchSchema,
   loginSchema,
+  resetPasswordSchema,
   reassignCaseSchema,
   redBranchSchema,
   registerVolunteerSchema,
@@ -144,6 +147,38 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           summary: 'Login de personal (devuelve token + rol)',
           requestBody: jsonBody(loginSchema),
           responses: { '200': { description: 'Token de sesión' }, '401': { description: 'Credenciales inválidas' } },
+        },
+      },
+      '/auth/change-password': {
+        post: {
+          tags: ['auth'],
+          summary: 'Cambiar la propia contraseña (autenticado, RF-2.2.4). Invalida la sesión actual.',
+          security: bearer,
+          requestBody: jsonBody(changePasswordSchema),
+          responses: {
+            '204': { description: 'Contraseña cambiada (reautenticarse)' },
+            '400': { description: 'La nueva contraseña es igual a la actual' },
+            '401': { description: 'Contraseña actual incorrecta o sin sesión' },
+          },
+        },
+      },
+      '/auth/forgot-password': {
+        post: {
+          tags: ['auth'],
+          summary: 'Solicitar recuperación de contraseña (RF-2.2.4). Respuesta uniforme (sin enumeración).',
+          requestBody: jsonBody(forgotPasswordSchema),
+          responses: { '202': { description: 'Solicitud recibida (se envía correo si la cuenta existe)' } },
+        },
+      },
+      '/auth/reset-password': {
+        post: {
+          tags: ['auth'],
+          summary: 'Restablecer contraseña con token de un solo uso (RF-2.2.4)',
+          requestBody: jsonBody(resetPasswordSchema),
+          responses: {
+            '204': { description: 'Contraseña restablecida' },
+            '400': { description: 'Token inválido o expirado' },
+          },
         },
       },
       '/volunteers/register': {

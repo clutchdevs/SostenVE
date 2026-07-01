@@ -3,10 +3,16 @@ import type { AppConfig } from '../../config';
 import type {
   InvitationNotification,
   Notifier,
+  PasswordResetNotification,
   RegistrationNotification,
 } from '../../application/volunteer/ports';
 import { logger } from '../../shared/logger';
-import { buildInvitationEmail, buildPendingEmail, buildWelcomeEmail } from './welcome-email';
+import {
+  buildInvitationEmail,
+  buildPasswordResetEmail,
+  buildPendingEmail,
+  buildWelcomeEmail,
+} from './welcome-email';
 
 /**
  * Real volunteer notifier over SMTP (RF-2.2.4) using nodemailer. The welcome
@@ -57,5 +63,12 @@ export class SmtpNotifier implements Notifier {
     await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
     // Log WITHOUT the acceptUrl (it carries the raw token); logger redacts email.
     logger.info('coordinator invitation email sent', { email: notification.email });
+  }
+
+  async notifyPasswordReset(notification: PasswordResetNotification): Promise<void> {
+    const { subject, body } = buildPasswordResetEmail(notification);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    // Log WITHOUT the resetUrl (it carries the raw token); logger redacts email.
+    logger.info('password reset email sent', { email: notification.email });
   }
 }

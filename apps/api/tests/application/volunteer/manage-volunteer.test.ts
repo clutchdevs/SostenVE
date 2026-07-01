@@ -66,6 +66,7 @@ function recordingNotifier(): Notifier & { approved: RegistrationNotification[] 
     },
     async notifyRegistrationPending() {},
     async notifyCoordinatorInvitation() {},
+    async notifyPasswordReset() {},
   };
 }
 

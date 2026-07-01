@@ -58,6 +58,7 @@ const notifier: Notifier = {
   async notifyRegistrationApproved() {},
   async notifyRegistrationPending() {},
   async notifyCoordinatorInvitation() {},
+  async notifyPasswordReset() {},
 };
 const audit: AuditLogRepository = { async append() {} };
 
@@ -77,6 +78,7 @@ function recordingNotifier(): Notifier & {
       pending.push(n);
     },
     async notifyCoordinatorInvitation() {},
+    async notifyPasswordReset() {},
   };
 }
 

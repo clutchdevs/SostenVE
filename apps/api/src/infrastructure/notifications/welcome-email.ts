@@ -1,4 +1,8 @@
-import type { InvitationNotification, RegistrationNotification } from '../../application/volunteer/ports';
+import type {
+  InvitationNotification,
+  PasswordResetNotification,
+  RegistrationNotification,
+} from '../../application/volunteer/ports';
 
 export interface WelcomeEmail {
   subject: string;
@@ -66,6 +70,31 @@ export function buildInvitationEmail(notification: InvitationNotification): Welc
       `La invitación vence el ${notification.expiresAt.toLocaleString('es-VE')}.`,
       '',
       'Si no esperabas esta invitación, puedes ignorar este mensaje.',
+      '',
+      'Federación de Psicólogos de Venezuela · Sostén',
+    ].join('\n'),
+  };
+}
+
+/**
+ * Renders the password reset email (RF-2.2.4): a one-time link to set a new
+ * password, with the expiry. The link carries the raw token; it is never logged.
+ */
+export function buildPasswordResetEmail(notification: PasswordResetNotification): WelcomeEmail {
+  return {
+    subject: 'Sostén — recuperación de contraseña',
+    body: [
+      `Hola ${notification.fullName},`,
+      '',
+      'Recibimos una solicitud para restablecer tu contraseña de Sostén.',
+      'Abre el siguiente enlace para definir una nueva:',
+      '',
+      `  ${notification.resetUrl}`,
+      '',
+      `El enlace vence el ${notification.expiresAt.toLocaleString('es-VE')}.`,
+      '',
+      'Si no solicitaste este cambio, puedes ignorar este mensaje: tu contraseña',
+      'actual seguirá siendo válida.',
       '',
       'Federación de Psicólogos de Venezuela · Sostén',
     ].join('\n'),
