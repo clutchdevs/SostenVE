@@ -20,6 +20,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   `config/app.config.yml`. Sin cambios de código: la web toma el texto de `GET /consent/active` y la
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
+### Cambiado
+- **Módulo 3 — Escalamiento SLA basado en presencia en vivo del coordinador (issue #55, RF-3.3):** la alerta
+  crítica `high_risk_escalated_no_coordinator` ahora se dispara cuando, al escalar un caso de riesgo alto por
+  SLA vencido, **no hay ningún coordinador `Online`** (presencia en tiempo real, RF-2.5) — antes bastaba con
+  que existiera un coordinador **activo** aunque tuviera la app cerrada. Refina la señal de observabilidad
+  para que refleje quién puede realmente actuar sobre la alerta.
+
 ### Añadido
 - **Módulo 2 — Signup de coordinador completo + contraseña robusta (issue #53, RF-2.6.2):** el canje de
   invitación ahora captura los campos que pide el PRD — **Nombres, Apellidos, Cédula (tipo + número), FPV

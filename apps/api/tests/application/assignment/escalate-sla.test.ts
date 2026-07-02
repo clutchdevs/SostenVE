@@ -30,7 +30,11 @@ function coordinator(): Volunteer {
   };
 }
 
-function deps(overdue: CaseRecord[], activeStaff: Volunteer[]): AssignmentDeps {
+function deps(
+  overdue: CaseRecord[],
+  activeStaff: Volunteer[],
+  onlineIds: Set<string> = new Set(),
+): AssignmentDeps {
   return {
     cases: {
       async listOverdueHighRiskAssigned() {
@@ -44,6 +48,11 @@ function deps(overdue: CaseRecord[], activeStaff: Volunteer[]): AssignmentDeps {
         return activeStaff;
       },
     },
+    presence: {
+      async filterOnline(ids: readonly string[]) {
+        return new Set(ids.filter((id) => onlineIds.has(id)));
+      },
+    },
     notifier: { async notifyEscalated() {}, async notifyAssigned() {} },
   } as unknown as AssignmentDeps;
 }
@@ -51,7 +60,7 @@ function deps(overdue: CaseRecord[], activeStaff: Volunteer[]): AssignmentDeps {
 afterEach(() => vi.restoreAllMocks());
 
 describe('escalateOverdueCases — no-coordinator alert (fase 06)', () => {
-  it('raises a critical alert when a high-risk case escalates with no active coordinator', async () => {
+  it('raises a critical alert when a high-risk case escalates with no coordinator online', async () => {
     const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const count = await escalateOverdueCases(deps([highRiskCase('x1')], []), new Date());
 
@@ -62,9 +71,19 @@ describe('escalateOverdueCases — no-coordinator alert (fase 06)', () => {
     expect(context).toMatchObject({ alert: 'high_risk_escalated_no_coordinator', caseId: 'x1' });
   });
 
-  it('does NOT alert when an active coordinator is available', async () => {
+  it('alerts when a coordinator is active but OFFLINE (RF-2.5 presence)', async () => {
     const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
-    await escalateOverdueCases(deps([highRiskCase('x1')], [coordinator()]), new Date());
+    // Coordinator exists and is active, but not online → cannot act → alert.
+    await escalateOverdueCases(deps([highRiskCase('x1')], [coordinator()], new Set()), new Date());
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT alert when a coordinator is online (RF-3.3)', async () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    await escalateOverdueCases(
+      deps([highRiskCase('x1')], [coordinator()], new Set(['c1'])),
+      new Date(),
+    );
     expect(errorSpy).not.toHaveBeenCalled();
   });
 
