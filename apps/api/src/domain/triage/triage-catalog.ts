@@ -84,3 +84,17 @@ export const CLINICAL_TAG_ENTRY_LIST: readonly CatalogEntry[] = CLINICAL_TAG_ENT
 export function getCatalogTag(code: string): SymptomTag | undefined {
   return CLINICAL_TAG_CATALOG.get(code);
 }
+
+/** Tag codes the PRD flags as "Infancia" (prioritise a child specialist, RF-1.3). */
+const CHILD_SPECIALTY_TAG_CODES: ReadonlySet<string> = new Set(
+  CLINICAL_TAG_ENTRIES.filter((entry) => entry.childSpecialty).map((entry) => entry.code),
+);
+
+/**
+ * True if any of the selected tags is a childhood tag, so the case should be
+ * routed to a psychologist with a child specialty (RF-1.3, "Enrutamiento por
+ * Perfil de Especialidad"). Unknown codes are ignored (validated elsewhere).
+ */
+export function requiresChildSpecialty(codes: readonly string[]): boolean {
+  return codes.some((code) => CHILD_SPECIALTY_TAG_CODES.has(code));
+}

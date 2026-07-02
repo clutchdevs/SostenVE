@@ -4,6 +4,7 @@ import {
   CLINICAL_TAG_ENTRY_LIST,
   TAG_CATALOG_VERSION,
   getCatalogTag,
+  requiresChildSpecialty,
 } from '../../../src/domain/triage/triage-catalog';
 import { classifyRisk } from '../../../src/domain/triage/classify-risk';
 import { RiskLevel } from '../../../src/domain/triage/risk-level';
@@ -44,6 +45,12 @@ describe('clinical tag catalog (FPV PRD RF-1.3)', () => {
       'child_psychoeducation',
       'child_sleep_regression',
     ]);
+  });
+
+  it('requiresChildSpecialty detects childhood tags in a selection (RF-1.3 routing)', () => {
+    expect(requiresChildSpecialty(['acute_insomnia', 'child_mutism'])).toBe(true);
+    expect(requiresChildSpecialty(['acute_insomnia', 'hypervigilance'])).toBe(false);
+    expect(requiresChildSpecialty([])).toBe(false);
   });
 
   it('keeps the interruption rule: 1 red or 3 orange → high risk', () => {

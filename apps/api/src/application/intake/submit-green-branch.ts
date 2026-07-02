@@ -1,7 +1,7 @@
 import { ValidationError } from '../../shared/errors/api-error';
 import { generatePseudonymId } from '../../domain/identity/pseudonym';
 import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage';
-import { getCatalogTag } from '../../domain/triage/triage-catalog';
+import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog';
 import type { Modality, RequesterType } from '../../domain/case/case';
 import { getActiveCrisisLine } from './get-active-crisis-line';
 import type { IntakeCaseResult, IntakeDeps } from './types';
@@ -62,6 +62,8 @@ export async function submitGreenBranch(
     preferredModality: input.modality,
     age: input.age,
     habitChanges: input.habitChanges,
+    // Route to a child specialist if any "Infancia" tag is present (RF-1.3).
+    requiresChildSpecialty: requiresChildSpecialty(input.tagCodes),
     slaExpiresAt: high ? new Date(now.getTime() + slaMs) : undefined,
   });
 

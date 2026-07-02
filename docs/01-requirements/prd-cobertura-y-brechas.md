@@ -139,10 +139,11 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   (`idle_timeout_minutes: 15`). Falta la **destrucción de sesiones duplicadas en caliente** (RF-2.7).
 
 ### Módulo 3 — Asignación y SLA
-- ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + especialidad infantil por edad + **filtro de
-  presencia**: solo se asigna a psicólogos `Online` (RF-2.5); si ninguno está en línea, el caso queda en cola
-  y lo rescata el barrido de SLA. (Pendiente: filtrado por clúster regional.)
-- ⚠️ Filtro de elegibilidad — usa estado `Activo`; **falta** el filtro `Online` (presencia).
+- ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + **especialidad infantil por edad y por tags de
+  infancia** (RF-1.3, issue #50) + **filtro de presencia**: solo se asigna a psicólogos `Online` (RF-2.5); si
+  ninguno está en línea, el caso queda en cola y lo rescata el barrido de SLA. (Pendiente: filtrado por
+  clúster regional, #51.)
+- ✅ Filtro de elegibilidad — estado `Activo` **y** presencia `Online` (RF-2.5).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
 - ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron.
 - ⚠️ Notificación — `LogNotifier`; faltan push PWA y correo reales.
@@ -208,8 +209,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       la pausa manual en offline es una simplificación documentada.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV
       (issue #19, RF-1.3): 22 tags versionados en dominio + espejo web; el motor de triage lo usa.
-      Pendiente (follow-up): ruteo a psicólogo con **especialidad infantil** disparado por los tags de
-      infancia (hoy el ruteo infantil es por edad del solicitante); afinado final de pesos por la FPV.
+- [x] **Ruteo por especialidad infantil disparado por tags (issue #50, RF-1.3):** si el caso trae tags de
+      **infancia** (mutismo, desregulación, psicoeducación, regresión del sueño) se persiste
+      `requires_child_specialty` y la asignación **prefiere un psicólogo con especialidad infantil** —
+      además del caso por edad del solicitante. Pendiente: afinado final de pesos/umbrales por la FPV (#11).
 - [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,

@@ -24,6 +24,8 @@ export interface CaseRecord {
   age?: number;
   /** Recent habit changes reported at intake (green-branch screen 5, RF-1.3). */
   habitChanges?: string[];
+  /** Case carries "Infancia" tags → prefer a child-specialist psychologist (RF-1.3). */
+  requiresChildSpecialty?: boolean;
   createdAt: Date;
   slaExpiresAt?: Date;
 }
@@ -39,6 +41,7 @@ export interface NewCase {
   preferredModality?: Modality;
   age?: number;
   habitChanges?: string[];
+  requiresChildSpecialty?: boolean;
   slaExpiresAt?: Date;
 }
 

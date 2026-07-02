@@ -38,4 +38,19 @@ describe('selectVolunteerForCase', () => {
   it('returns any candidate when age is unknown', () => {
     expect(selectVolunteerForCase([volunteer('a')], {})?.id).toBe('a');
   });
+
+  it('prefers a child specialist when the case has childhood tags (RF-1.3), even for an adult requester', () => {
+    const candidates = [volunteer('a', 'adultos'), volunteer('b', 'psicología infantil')];
+    // Adult requester (age 35) reporting a child's symptoms → routed to child specialist.
+    expect(
+      selectVolunteerForCase(candidates, { age: 35, requiresChildSpecialty: true })?.id,
+    ).toBe('b');
+  });
+
+  it('falls back to any candidate when child specialty is needed but none exists', () => {
+    const candidates = [volunteer('a', 'adultos'), volunteer('b', 'trauma')];
+    expect(
+      selectVolunteerForCase(candidates, { requiresChildSpecialty: true })?.id,
+    ).toBe('a');
+  });
 });
