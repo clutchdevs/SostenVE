@@ -39,6 +39,8 @@ export interface Volunteer {
   availability?: string;
   /** Colegio de Psicólogos (Venezuelan state) — proxy for the regional cluster (RF-3.1). */
   colegio?: string;
+  /** Contact phone (coordinator sign-up, RF-2.6.2). */
+  phone?: string;
   role: VolunteerRole;
   tokenVersion: number;
   status: VolunteerStatus;
@@ -58,6 +60,14 @@ export interface NewVolunteer {
   status?: VolunteerStatus;
   /** Manual-review reason recorded when status is `pending_approval` (RF-2.2). */
   pendingReason?: PendingReason;
+  /**
+   * Identity fields captured outside the psychologist `application` (e.g. the
+   * coordinator sign-up, RF-2.6.2): document type/number and phone. When an
+   * `application` is present its values take precedence.
+   */
+  documentType?: DocumentType;
+  documentNumber?: string;
+  phone?: string;
   /** Full applicant profile (RF-2.1.2); optional for minimal/seeded inserts. */
   application?: VolunteerApplication;
   /** Informed-consent acceptance recorded at registration (RF-2.1.1). */

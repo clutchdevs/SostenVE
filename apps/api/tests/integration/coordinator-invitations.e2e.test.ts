@@ -9,6 +9,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
  * coordinator can then log in. Runs against the local Supabase DB (Docker);
  * skipped when no DB is reachable.
  */
+/** Structured coordinator sign-up fields (RF-2.6.2) + a robust password. */
+const COORD_PASSWORD = 'Str0ng-P4ssw0rd!!';
+const SIGNUP_FIELDS = {
+  nombres: 'Coral',
+  apellidos: 'Coordinadora',
+  tipo_documento: 'V',
+  numero_documento: '12345678',
+  telefono: '0414-1234567',
+};
+
 const DB_URL =
   process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
@@ -96,7 +106,11 @@ describe.skipIf(!dbAvailable)('coordinator invitations (e2e)', () => {
     const accepted = await app.request('/api/v1/coordinators/accept-invitation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: invitation.token, contrasena: 'a-strong-password' }),
+      body: JSON.stringify({
+        token: invitation.token,
+        ...SIGNUP_FIELDS,
+        contrasena: COORD_PASSWORD,
+      }),
     });
     expect(accepted.status).toBe(201);
     const { voluntario_id } = (await accepted.json()) as { voluntario_id: string };
@@ -106,7 +120,7 @@ describe.skipIf(!dbAvailable)('coordinator invitations (e2e)', () => {
     const login = await app.request('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, contrasena: 'a-strong-password' }),
+      body: JSON.stringify({ email, contrasena: COORD_PASSWORD }),
     });
     expect(login.status).toBe(200);
     expect(((await login.json()) as { rol: string }).rol).toBe('coordinator');
@@ -115,7 +129,11 @@ describe.skipIf(!dbAvailable)('coordinator invitations (e2e)', () => {
     const reuse = await app.request('/api/v1/coordinators/accept-invitation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: invitation.token, contrasena: 'another-password' }),
+      body: JSON.stringify({
+        token: invitation.token,
+        ...SIGNUP_FIELDS,
+        contrasena: COORD_PASSWORD,
+      }),
     });
     expect(reuse.status).toBe(400);
   });
@@ -124,7 +142,11 @@ describe.skipIf(!dbAvailable)('coordinator invitations (e2e)', () => {
     const res = await app.request('/api/v1/coordinators/accept-invitation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: 'not-a-real-token', contrasena: 'a-strong-password' }),
+      body: JSON.stringify({
+        token: 'not-a-real-token',
+        ...SIGNUP_FIELDS,
+        contrasena: COORD_PASSWORD,
+      }),
     });
     expect(res.status).toBe(400);
   });

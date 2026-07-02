@@ -4,7 +4,7 @@ import { hashToken } from '../../shared/security/invitation-token';
 import { isAcceptable } from '../../domain/coordinator/invitation';
 import type { AuditLogRepository } from '../../domain/audit/audit';
 import type { CoordinatorInvitationRepository } from '../../domain/coordinator/invitation';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
+import type { DocumentType, VolunteerRepository } from '../../domain/volunteer/volunteer';
 
 /** Dependencies for the public coordinator self-activation flow (RF-2.6). */
 export interface AcceptInvitationDeps {
@@ -16,6 +16,14 @@ export interface AcceptInvitationDeps {
 export interface AcceptInvitationInput {
   token: string;
   password: string;
+  /** Structured sign-up fields (RF-2.6.2). */
+  firstName: string;
+  lastName: string;
+  documentType: DocumentType;
+  documentNumber: string;
+  /** FPV number — optional for support/logistics coordinators. */
+  fpv?: string;
+  phone: string;
 }
 
 export interface AcceptInvitationResult {
@@ -43,12 +51,17 @@ export async function acceptInvitation(
   }
 
   const passwordHash = await hashPassword(input.password);
+  const fpv = input.fpv?.trim();
   const volunteer = await deps.volunteers.create({
-    fullName: invitation.fullName,
-    // Coordinators have no FPV number; reuse the (unique) email as the identifier.
-    professionalId: `coord:${invitation.email}`,
+    fullName: `${input.firstName.trim()} ${input.lastName.trim()}`.trim(),
+    // Identify by FPV when provided; otherwise the (unique) cédula. The email
+    // still comes from the invitation, which is address-targeted.
+    professionalId: fpv && fpv.length > 0 ? fpv : `coord:${input.documentNumber.trim()}`,
     email: invitation.email,
     role: 'coordinator',
+    documentType: input.documentType,
+    documentNumber: input.documentNumber.trim(),
+    phone: input.phone.trim(),
     passwordHash,
     status: 'active',
   });
