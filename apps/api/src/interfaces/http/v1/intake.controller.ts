@@ -83,6 +83,7 @@ export function createIntakeRouter(): Hono {
           ? requesterFromDb[body.tipo_solicitante]
           : undefined,
         zone,
+        region: body.estado,
         modality: body.modalidad ? modalityFromDb[body.modalidad] : undefined,
         age: body.edad,
         tagCodes: body.tags,

@@ -11,6 +11,8 @@ export interface GreenBranchInput {
   contact: string;
   requesterType?: RequesterType;
   zone?: string;
+  /** Requester's state for the regional cluster (RF-3.1). */
+  region?: string;
   modality?: Modality;
   age?: number;
   tagCodes: string[];
@@ -59,6 +61,7 @@ export async function submitGreenBranch(
     status: 'PENDING',
     requesterType: input.requesterType,
     zone: input.zone,
+    region: input.region,
     preferredModality: input.modality,
     age: input.age,
     habitChanges: input.habitChanges,
