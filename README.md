@@ -14,13 +14,28 @@ electricidad y telecomunicaciones. El gremio de psicólogos voluntarios necesita
 atención y registrar diagnóstico, notas clínicas y contacto de cada caso.
 
 ## Qué hace
-- Formulario de solicitud dentro de la app, tolerante a conexión intermitente.
-- Triage automático y determinístico del nivel de riesgo (alto / moderado / seguimiento).
-- Ante **riesgo alto**: muestra de inmediato las líneas de crisis, antes e independientemente de toda asignación.
-- Asignación automática por especialidad y disponibilidad para el resto; cola visible y honesta ante saturación.
-- Panel de psicólogo (solo casos propios; diagnóstico y notas) y panel de coordinador (todos los casos, prioridad de riesgo alto).
-- Líneas de crisis/respaldo editables sin tocar código.
-- PostgreSQL con cifrado en reposo de campos clínicos, HTTPS, respaldos automáticos y control de acceso por rol.
+- **Solicitante:** formulario de solicitud dentro de la app **offline-first** (guarda el borrador local
+  y reintenta el envío al recuperar conexión), con **aviso de consentimiento** no bloqueante en cada
+  pantalla y **guías de Primeros Auxilios Psicológicos (PAP)** de autoayuda.
+- **Triage** automático y determinístico del nivel de riesgo (alto / moderado / seguimiento) con índice
+  de urgencia ponderado y catálogo clínico de tags de la FPV.
+- Ante **riesgo alto**: muestra de inmediato las líneas de crisis, antes e independientemente de toda
+  asignación (fail-safe: se muestran aun con el backend caído).
+- **Asignación automática** por especialidad, **clúster regional** y **presencia en vivo** (solo asigna a
+  psicólogos `Online`); cola visible y honesta ante saturación, con **SLA de 10 min** y escalamiento.
+- **Panel de psicólogo** (solo casos propios; identidad del solicitante, notas y **cierre clínico
+  estructurado**; toggle de disponibilidad en vivo) y **panel de coordinador** (todos los casos,
+  prioridad de riesgo alto, reasignar/cerrar, notas de voluntario, presencia por psicólogo).
+- **Registro de voluntarios validado contra el padrón real de la FPV**; alta automática
+  (`cédula+FPV ∧ PAP → Activo`) con credenciales por correo. Coordinadores por **invitación tokenizada**.
+- **Panel de administración:** padrón de voluntarios, invitaciones de coordinador, líneas de crisis
+  editables sin tocar código y consulta de la **bitácora de auditoría**.
+- **Seguridad de cuenta:** cambio/reseteo de contraseña, expiración de sesión por inactividad e
+  invalidación de sesiones duplicadas.
+- **Observabilidad:** métricas de SLA por nivel de riesgo y alerta crítica cuando un caso de riesgo alto
+  se escala sin coordinador en línea.
+- PostgreSQL con **cifrado en reposo** de campos clínicos, HTTPS, control de acceso por rol (RLS) y
+  auditoría inmutable.
 
 ## Niveles de riesgo
 | Nivel | Significado | Acción del sistema |
@@ -34,7 +49,10 @@ atención y registrar diagnóstico, notas clínicas y contacto de cada caso.
 Aplicación web (PWA) **serverless**: frontend y backend en **Vercel** (backend como funciones
 `/api/*`, ADR-0009), base de datos **PostgreSQL gestionada en Supabase** (ADR-0002, aislada del
 cPanel de la Federación), y el **SLA de 10 min** resuelto con un **Vercel Cron Job** en vez de un
-proceso persistente. El triage sigue el PRD de la Federación ("Sistema PPV 2026", ADR-0010).
+proceso persistente. La **presencia en tiempo real** de los psicólogos usa **Upstash Redis** (REST,
+sin proceso persistente; en dev/tests hay un adaptador en memoria — ADR-0014). La validación de
+voluntarios llama al **padrón real de la FPV** por HTTP tras un adaptador con Circuit Breaker
+(ADR-0013). El triage sigue el PRD de la Federación ("Sistema PPV 2026", ADR-0010).
 
 - Contexto: [`docs/architecture/c4-context.md`](docs/architecture/c4-context.md)
 - Contenedores: [`docs/architecture/c4-container.md`](docs/architecture/c4-container.md)
@@ -46,7 +64,7 @@ proceso persistente. El triage sigue el PRD de la Federación ("Sistema PPV 2026
 - **Responsable y dueña de los datos:** la Federación de Psicólogos de Venezuela (ADR-0003). El equipo de desarrollo es proveedor de la plataforma, no operador de datos.
 - **Datos clínicos = restringidos:** cifrado en tránsito (HTTPS) y en reposo por columna (ADR-0004).
 - **Seudonimización de PII** (tabla separada + ID hash SHA-256 con salt, ADR-0011) y **bitácora de auditoría inmutable** de accesos (ADR-0012), según NFR 6.1 de la Federación.
-- Control de acceso por rol (RLS en Supabase), alta de voluntarios validada contra la BD de la FPV.
+- Control de acceso por rol (RLS en Supabase), alta de voluntarios validada contra el padrón real de la FPV (ADR-0013).
 - Ver [`docs/00-project/data-classification.md`](docs/00-project/data-classification.md) y [`docs/02-design/threat-model.md`](docs/02-design/threat-model.md).
 
 > **⚠️ Deuda técnica (MVP):** el MVP usa el **plan gratuito de Supabase**, que **no incluye respaldos
@@ -69,8 +87,8 @@ docs/
   02-design/        Arquitectura, threat model, contratos de API, OpenAPI
   03-implementation/  Backlog de implementación
   04-testing/         Estrategia de pruebas, checklist del threat model, plan piloto
-  05-deployment/      (pendiente)
-  06-monitoring/      (pendiente)
+  05-deployment/      Guía de despliegue (pendiente de ejecutar el go-live)
+  06-monitoring/      Observabilidad: métricas de SLA y alertas
   architecture/     Diagramas C4 (Mermaid)
 CHANGELOG.md  LICENSE  README.md
 ```
@@ -80,15 +98,16 @@ CHANGELOG.md  LICENSE  README.md
 |---|---|---|
 | 00 · Project | — | ✅ Charter, glosario, clasificación de datos |
 | 01 · Requirements | Gate 0 | ✅ PRD del flujo central con escenarios de riesgo |
-| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0013, contrato OpenAPI |
-| 03 · Implementation | Gate 2 | ✅ API (Hono/DDD), migraciones Supabase (RLS + auditoría inmutable), frontend Next.js/PWA con fail-safe de líneas de crisis. Módulo 4 offline-first pendiente de decisión de alcance |
+| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0014, contrato OpenAPI |
+| 03 · Implementation | Gate 2 | ✅ Módulos 1-4 (online): intake offline-first + consentimiento + PAP, triage, asignación por presencia/región/especialidad + SLA, portales de psicólogo/coordinador/admin, registro validado contra el padrón real de la FPV, presencia en vivo y seguridad de sesión. Módulo 4 offline-first (SQLCipher) pendiente de decisión de alcance |
 | 04 · Testing | Gate 3 | ✅ Tests de unidad/integración (API), Playwright e2e (incl. fail-safe de crisis) y carga con autocannon |
-| 05 · Deployment | Gate 4 | ⬜ Pendiente |
-| 06 · Monitoring | Gate 5 | ⬜ Pendiente |
+| 05 · Deployment | Gate 4 | ⬜ Guía escrita; go-live pendiente |
+| 06 · Monitoring | Gate 5 | 🟡 Métricas de SLA + alertas implementadas; dashboards/observabilidad externa pendientes |
 
-> Próximo foco: cerrar las decisiones abiertas con la FPV (alcance del Módulo 4, verificador FPV real,
-> texto de consentimiento), preparar el despliegue (fase 05) y la observabilidad (fase 06).
-> Backlog detallado en [`docs/03-implementation/backlog.md`](docs/03-implementation/backlog.md).
+> Próximo foco: **validar el verificador FPV con datos reales del padrón** y provisionar sus credenciales,
+> aprovisionar Upstash (presencia) y el envío real de correo, cerrar con la FPV el **alcance del Módulo 4**
+> y **preparar el despliegue** (fase 05). Backlog detallado en
+> [`docs/03-implementation/backlog.md`](docs/03-implementation/backlog.md).
 
 ## Decisiones de alcance frente al PRD de la Federación
 Decisiones de alcance **explícitas y documentadas** (no omisiones): el cronograma de la Federación
@@ -105,13 +124,18 @@ equipo. Detalle en [`docs/01-requirements/flujo-central.md`](docs/01-requirement
 Las define la Federación; no se inventan en este repo:
 - Esquema de turnos de coordinación.
 - Política de retención de historias clínicas (y de la bitácora de auditoría, ADR-0012).
-- Texto de consentimiento informado (debe mostrarse en **cada** interfaz del solicitante).
+- **Texto de consentimiento del solicitante:** el del psicólogo ya es el oficial de la FPV
+  (`v1.0.0-fpv`); el del **solicitante** sigue con texto provisional (`v0.1.0-draft`) a la espera del
+  oficial. Se muestra en **cada** interfaz del solicitante.
+- **Pesos/umbrales finales de los tags clínicos** (índice de urgencia, RF-1.5) — validación de un
+  psicólogo de la FPV.
 - **Plan de Supabase (gratuito vs. pago):** el plan gratuito pausa el proyecto por inactividad y **no
   incluye respaldos automáticos**; el NFR 6.2 de la propia Federación exige **respaldo cada 6 h**,
   que el plan gratuito no cumple (ver ADR-0002).
-- **Alcance del Módulo 4** (expediente clínico): versión simple vs. completa offline-first con
-  SQLCipher (ADR/anexo). A resolver antes de pasar de diseño a implementación.
-- Nombre definitivo del proyecto.
+- **Alcance del Módulo 4** (expediente clínico): versión simple (ya implementada, online) vs. completa
+  offline-first con SQLCipher (ADR/anexo). A resolver antes de implementar la variante pesada.
 
-> Ya resueltas (antes abiertas): lenguaje de backend = **Node.js** (ADR-0001) y hosting =
-> **Vercel + Supabase** (ADR-0006/0009).
+> Ya resueltas (antes abiertas): lenguaje de backend = **Node.js** (ADR-0001); hosting =
+> **Vercel + Supabase** (ADR-0006/0009); **nombre = PPV** (Programa de Psicólogos Voluntarios);
+> **contrato del verificador FPV** entregado e implementado (ADR-0013, issue #6); texto de
+> consentimiento del **psicólogo** oficial de la FPV (issue #32).
