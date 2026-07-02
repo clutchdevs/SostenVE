@@ -4,7 +4,10 @@
  */
 
 export interface FpvVerificationInput {
+  /** FPV registration number (`numero_fpv`); the `fpv` query param of the API. */
   professionalId: string;
+  /** National ID / cédula (`numero_documento`); the `national_id` query param. */
+  nationalId: string;
   fullName: string;
 }
 

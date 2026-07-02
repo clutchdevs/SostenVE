@@ -9,6 +9,10 @@
 *.key
 secrets/
 
+# Archivos .http de REST Client con credenciales reales; versionar solo el .example
+*.http
+!*.http.example
+
 # --- Node.js ---
 node_modules/
 npm-debug.log*

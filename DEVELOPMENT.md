@@ -58,6 +58,11 @@ Copia `.env.example` a `.env` y complétalo con los valores que imprime `npx sup
 (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) y secretos de desarrollo
 (`JWT_SECRET`, `PSEUDONYMIZATION_SALT`, `ENCRYPTION_KEY`, `CRON_SECRET`).
 
+> **Validación FPV en local:** development usa el padrón **real** (`fpv.verifier: http`) para poder
+> probar respuestas y fallos reales, así que necesitas `FPV_API_TOKEN` en tu `.env`. Sin él, el registro
+> de voluntarios no se bloquea: cae a `pending_approval`. Los tests (`NODE_ENV=test`) usan el dummy y no
+> requieren token. Para probar el servicio de forma aislada tienes `apps/api/http/fpv-padron.http`.
+
 ## Base de datos
 - Migraciones versionadas en `supabase/migrations/`.
 - `npm run dev:reset` (o `npm run db:reset`) recrea la BD y aplica migraciones — **borra datos locales**.

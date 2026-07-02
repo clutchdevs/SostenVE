@@ -25,7 +25,17 @@ class CircuitBreakerFpvVerifier implements FpvVerifier {
 }
 
 export function createFpvVerifier(config: AppConfig): FpvVerifier {
-  const inner = config.fpv.verifier === 'http' ? new HttpFpvVerifier() : new DummyFpvVerifier();
+  const inner =
+    config.fpv.verifier === 'http'
+      ? new HttpFpvVerifier({
+          baseUrl: config.fpv.base_url,
+          // Secret: kept out of config (see .env.example). Missing token makes
+          // verify() throw NotConfiguredError → registration falls back to
+          // pending_approval instead of silently approving everyone.
+          token: process.env.FPV_API_TOKEN ?? '',
+          timeoutMs: config.fpv.request_timeout_seconds * 1000,
+        })
+      : new DummyFpvVerifier();
   const breaker = new CircuitBreaker({
     failureThreshold: config.fpv.circuit_breaker.failure_threshold,
     cooldownMs: config.fpv.circuit_breaker.cooldown_seconds * 1000,

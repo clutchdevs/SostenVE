@@ -6,6 +6,26 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Añadido
+- **Módulo 2 — Validación real contra el padrón de la FPV (`HttpFpvVerifier`, issue #6):** se implementó
+  el verificador HTTP que sustituye al dummy. Llama a `GET /api/v1/public/validate?national_id=…&fpv=…`
+  con el header `X-API-TOKEN` y mapea la respuesta al flujo de registro: `200` + `data.valid` **y**
+  `data.status === 'active'` → auto-activa; licencia hallada pero **no activa** → revisión manual (nunca
+  se auto-activa una licencia no vigente); `404` → inválido; `401` → `NotConfiguredError`; error de
+  red/timeout → el Circuit Breaker corta y el registro cae a `pending_approval` (RF-2.2). Se elige por
+  config (`fpv.verifier`); `fpv.base_url` y `fpv.request_timeout_seconds` viven en `app.config.yml` y el
+  token secreto en la env **`FPV_API_TOKEN`**. Se extendió `FpvVerificationInput` con `nationalId` (la
+  cédula) para poder consultar el padrón. **La verificación ya queda enrutada al servicio real: `development`
+  y `production` usan `http`** (para probar respuestas y fallos reales del padrón en local); **solo los tests
+  automatizados** (`NODE_ENV=test`, nueva sección `test` en `app.config.yml`) conservan el dummy
+  (deterministas, sin token ni red). Requiere `FPV_API_TOKEN` en el entorno (dev y prod). El mapeo honra el `status` del envelope
+  (por si la API responde HTTP 200 para todo) y parsea el cuerpo de forma defensiva. Además se añadió
+  `HttpFpvVerifier.getProfile(nationalId)` que consulta `GET /public/psicologo/{national_id}` y mapea el
+  padrón completo (`fpv_number`, `colleges`, `national_id`, nombres, `degree_title`, `university`…) a un
+  `FpvPsychologistProfile` en camelCase (404 → `null`). Actualizado ADR-0013.
+- **Pruebas manuales del padrón FPV:** `apps/api/http/fpv-padron.http.example` (REST Client) con las 2 APIs
+  del padrón; el `.http` real (con token) queda ignorado por git.
+
 ### Seguridad
 - **Acceso del coordinador a notas clínicas (issue #25, decisión FPV):** resuelto como acceso
   **auditado**. La RLS de `clinical_notes` amplía la lectura a coordinator/admin y `GET /cases/:id`
