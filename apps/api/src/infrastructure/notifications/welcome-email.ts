@@ -19,7 +19,7 @@ export function buildWelcomeEmail(
   loginUrl: string,
 ): WelcomeEmail {
   return {
-    subject: 'Bienvenido/a a Sostén — credenciales de acceso',
+    subject: 'Bienvenido/a a PPV — credenciales de acceso',
     body: [
       `Hola ${notification.fullName},`,
       '',
@@ -31,7 +31,7 @@ export function buildWelcomeEmail(
       '',
       'Por seguridad, te recomendamos cambiarla en cuanto esté disponible esa opción.',
       '',
-      'Federación de Psicólogos de Venezuela · Sostén',
+      'Federación de Psicólogos de Venezuela · PPV',
     ].join('\n'),
   };
 }
@@ -39,14 +39,14 @@ export function buildWelcomeEmail(
 /** Pending-review email (no credentials yet). */
 export function buildPendingEmail(notification: RegistrationNotification): WelcomeEmail {
   return {
-    subject: 'Sostén — tu registro está en revisión',
+    subject: 'PPV — tu registro está en revisión',
     body: [
       `Hola ${notification.fullName},`,
       '',
       'Recibimos tu registro como psicólogo voluntario. Está en revisión por la FPV;',
       'te enviaremos tus credenciales de acceso en cuanto sea aprobado.',
       '',
-      'Federación de Psicólogos de Venezuela · Sostén',
+      'Federación de Psicólogos de Venezuela · PPV',
     ].join('\n'),
   };
 }
@@ -58,11 +58,11 @@ export function buildPendingEmail(notification: RegistrationNotification): Welco
  */
 export function buildInvitationEmail(notification: InvitationNotification): WelcomeEmail {
   return {
-    subject: 'Sostén — invitación para coordinar',
+    subject: 'PPV — invitación para coordinar',
     body: [
       `Hola ${notification.fullName},`,
       '',
-      'Has sido invitado/a a unirte a Sostén como coordinador/a de la FPV.',
+      'Has sido invitado/a a unirte a PPV como coordinador/a de la FPV.',
       'Abre el siguiente enlace para definir tu contraseña y activar tu cuenta:',
       '',
       `  ${notification.acceptUrl}`,
@@ -71,7 +71,7 @@ export function buildInvitationEmail(notification: InvitationNotification): Welc
       '',
       'Si no esperabas esta invitación, puedes ignorar este mensaje.',
       '',
-      'Federación de Psicólogos de Venezuela · Sostén',
+      'Federación de Psicólogos de Venezuela · PPV',
     ].join('\n'),
   };
 }
@@ -82,11 +82,11 @@ export function buildInvitationEmail(notification: InvitationNotification): Welc
  */
 export function buildPasswordResetEmail(notification: PasswordResetNotification): WelcomeEmail {
   return {
-    subject: 'Sostén — recuperación de contraseña',
+    subject: 'PPV — recuperación de contraseña',
     body: [
       `Hola ${notification.fullName},`,
       '',
-      'Recibimos una solicitud para restablecer tu contraseña de Sostén.',
+      'Recibimos una solicitud para restablecer tu contraseña de PPV.',
       'Abre el siguiente enlace para definir una nueva:',
       '',
       `  ${notification.resetUrl}`,
@@ -96,7 +96,7 @@ export function buildPasswordResetEmail(notification: PasswordResetNotification)
       'Si no solicitaste este cambio, puedes ignorar este mensaje: tu contraseña',
       'actual seguirá siendo válida.',
       '',
-      'Federación de Psicólogos de Venezuela · Sostén',
+      'Federación de Psicólogos de Venezuela · PPV',
     ].join('\n'),
   };
 }

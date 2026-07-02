@@ -28,7 +28,7 @@ describe('session idle expiration (RF-2.7)', () => {
   it('expires and clears the session after the inactivity timeout', () => {
     saveSession(futureToken, 'coordinator');
     // Simulate the last activity happening just past the idle window.
-    window.localStorage.setItem('sostenve.lastActivity', String(Date.now() - IDLE_MS - 1));
+    window.localStorage.setItem('ppv.lastActivity', String(Date.now() - IDLE_MS - 1));
     expect(isSessionIdle()).toBe(true);
     expect(isSessionActive()).toBe(false);
     // isSessionActive cleared the stored token as a side effect.
@@ -37,7 +37,7 @@ describe('session idle expiration (RF-2.7)', () => {
 
   it('touchActivity resets the idle window', () => {
     saveSession(futureToken, 'coordinator');
-    window.localStorage.setItem('sostenve.lastActivity', String(Date.now() - IDLE_MS - 1));
+    window.localStorage.setItem('ppv.lastActivity', String(Date.now() - IDLE_MS - 1));
     expect(isSessionIdle()).toBe(true);
     touchActivity();
     expect(isSessionIdle()).toBe(false);
@@ -53,6 +53,6 @@ describe('session idle expiration (RF-2.7)', () => {
   it('clearSession removes the activity marker', () => {
     saveSession(futureToken, 'coordinator');
     clearSession();
-    expect(window.localStorage.getItem('sostenve.lastActivity')).toBeNull();
+    expect(window.localStorage.getItem('ppv.lastActivity')).toBeNull();
   });
 });

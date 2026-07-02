@@ -1,9 +1,9 @@
 {
-  "name": "@sostenve/api",
+  "name": "@ppv/api",
   "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "SostenVE backend — serverless Hono API on Vercel + Supabase",
+  "description": "PPV backend — serverless Hono API on Vercel + Supabase",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch dev.ts",

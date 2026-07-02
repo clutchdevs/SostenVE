@@ -1,4 +1,4 @@
--- SostenVE schema (Block 2).
+-- PPV schema (Block 2).
 -- PII is separated from clinical content and linked by a pseudonymized id
 -- (ADR-0011). Clinical columns hold app-encrypted payloads (ADR-0004).
 -- Code identifiers are English; enum values mirror the API contract (Spanish).

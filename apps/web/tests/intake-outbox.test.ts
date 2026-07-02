@@ -6,7 +6,7 @@ import {
   type PendingSubmission,
 } from '../src/lib/intake-outbox';
 
-const KEY = 'sostenve.intakeOutbox';
+const KEY = 'ppv.intakeOutbox';
 
 function okResponse() {
   return { ok: true, status: 201, json: async () => ({}) };

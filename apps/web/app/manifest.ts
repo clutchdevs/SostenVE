@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Sostén',
-    short_name: 'Sostén',
+    name: 'PPV — Programa de Psicólogos Voluntarios',
+    short_name: 'PPV',
     description: 'Apoyo psicológico tras el terremoto · Venezuela',
     start_url: '/',
     display: 'standalone',

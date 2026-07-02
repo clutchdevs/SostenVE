@@ -1,4 +1,4 @@
-# PRD — Flujo central de Sostén (Sistema PPV 2026)
+# PRD — Flujo central de PPV (Sistema PPV 2026)
 
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** aprobado para diseño
 > **Autor:** equipo de desarrollo, sobre el PRD "Sistema PPV 2026" de la Federación

@@ -1,4 +1,4 @@
-# Arquitectura — Proyecto Sostén
+# Arquitectura — Proyecto PPV
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta
 > **Decisiones relacionadas:** ADR-0001 (Node.js serverless), ADR-0002 (PostgreSQL/Supabase),

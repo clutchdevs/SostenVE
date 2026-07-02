@@ -1,9 +1,9 @@
 /** Minimal client-side session storage (access token + role) in localStorage. */
 import { SESSION_IDLE_TIMEOUT_MINUTES } from './config';
 
-const TOKEN_KEY = 'sostenve.token';
-const ROLE_KEY = 'sostenve.role';
-const ACTIVITY_KEY = 'sostenve.lastActivity';
+const TOKEN_KEY = 'ppv.token';
+const ROLE_KEY = 'ppv.role';
+const ACTIVITY_KEY = 'ppv.lastActivity';
 
 const IDLE_TIMEOUT_MS = SESSION_IDLE_TIMEOUT_MINUTES * 60_000;
 

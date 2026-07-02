@@ -15,7 +15,7 @@ export interface PendingSubmission {
   attempts: number;
 }
 
-const KEY = 'sostenve.intakeOutbox';
+const KEY = 'ppv.intakeOutbox';
 
 function read(): PendingSubmission[] {
   if (typeof window === 'undefined') return [];

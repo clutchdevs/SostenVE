@@ -6,8 +6,8 @@
  * crisis-lines fail-safe.
  */
 export const INTAKE_DRAFT_KEYS = {
-  verde: 'sostenve.intakeDraft.verde',
-  roja: 'sostenve.intakeDraft.roja',
+  verde: 'ppv.intakeDraft.verde',
+  roja: 'ppv.intakeDraft.roja',
 } as const;
 
 export function saveDraft<T>(key: string, value: T): void {

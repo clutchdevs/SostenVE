@@ -1,4 +1,4 @@
-# Charter — Proyecto Sostén
+# Charter — Proyecto PPV
 
 > **Fase AI-DLC:** `00-project`  ·  **Estado:** vigente
 > **Dueño del producto:** Federación de Psicólogos de Venezuela
@@ -94,4 +94,5 @@ Estas decisiones corresponden a la Federación y **no se inventan** en este repo
 - `<TODO — Human-in-the-Loop>` **Texto oficial** de consentimiento informado del solicitante (validado por
   la FPV). El **mecanismo** de UI ya existe (issue #1): aviso no bloqueante en cada interfaz del solicitante
   con texto **provisional** versionado en config (`consent.requester`, `v0.1.0-draft`, `GET /consent/requester`).
-- `<TODO — Human-in-the-Loop>` Nombre final del proyecto (se usa "Sostén" como placeholder).
+- ✅ **Nombre del proyecto (decisión FPV):** la Federación definió el nombre **PPV — Programa de Psicólogos
+  Voluntarios** (antes se usaba "Sostén" como placeholder).

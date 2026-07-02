@@ -9,7 +9,8 @@ export default function LandingPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-4 py-10">
       <header className="text-center">
-        <h1 className="font-serif text-4xl font-semibold text-brand">Sostén</h1>
+        <h1 className="font-serif text-4xl font-semibold text-brand">PPV</h1>
+        <p className="mt-1 text-sm font-medium text-ink">Programa de Psicólogos Voluntarios</p>
         <p className={`mt-2 ${ui.muted}`}>
           Apoyo psicológico tras el terremoto · Federación de Psicólogos de Venezuela
         </p>

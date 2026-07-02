@@ -1,10 +1,10 @@
-# SostenVE — non-secret application configuration (versioned).
+# PPV — non-secret application configuration (versioned).
 # Secrets live in .env (see .env.example). Loaded once by the config singleton
 # in apps/api/src/config and validated with Zod. No module reads this file directly.
 
 default: &default
   app:
-    name: "SostenVE"
+    name: "PPV"
     locale: "es-VE"
 
   triage:
@@ -164,7 +164,7 @@ default: &default
     # in local dev point it at the Supabase Inbucket SMTP (enable smtp_port = 54325
     # in supabase/config.toml) and read the emails at http://localhost:54324.
     provider: "log"
-    from: "Sostén <no-reply@sostenve.app>"
+    from: "PPV <no-reply@ppv.org.ve>"
     login_url: "http://localhost:3000/login"
     coordinator_invite_url: "http://localhost:3000/registro-coordinador"
     password_reset_url: "http://localhost:3000/restablecer-contrasena" # RF-2.2.4 reset link
@@ -188,7 +188,7 @@ default: &default
   security:
     cors:
       development_origins: ["http://localhost:3000"]
-      production_origins: ["https://sostenve.app"] # placeholder, confirm final domain
+      production_origins: ["https://ppv.org.ve"] # placeholder, confirm final domain
     rate_limit:
       intake_requests_per_minute: 10
       login_attempts_before_lockout: 5
@@ -204,7 +204,7 @@ default: &default
 development:
   <<: *default
   app:
-    name: "SostenVE (dev)"
+    name: "PPV (dev)"
     locale: "es-VE"
 
 production:

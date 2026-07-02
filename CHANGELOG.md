@@ -14,6 +14,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Cambiado
+- **Rebranding: Sostén → PPV (Programa de Psicólogos Voluntarios):** la FPV definió el nombre oficial. Se
+  renombró en toda la app y el repo: nombre visible/wordmark (landing, sidebars, header), `app.name`, título
+  del navegador y **PWA manifest** (nombre completo + `short_name: PPV`), asuntos y firmas de **correos**,
+  título del **OpenAPI**, scope de paquetes **`@sostenve/*` → `@ppv/*`** (con lockfile sincronizado), **claves
+  de `localStorage`** (`sostenve.*` → `ppv.*`), `project_id` de Supabase, usuarios semilla y **toda la
+  documentación** (charter, PRD, C4, ADRs, guías). Dominio placeholder `sostenve.app` → `ppv.org.ve` (correo
+  remitente + CORS de producción, pendiente de confirmar el dominio real). Se resolvió el TODO del nombre en
+  el charter. (Pendiente, acción del dueño: renombrar el repo de GitHub y la carpeta local.)
 - **UI — Unificación visual de las pantallas públicas y de auth con la paleta del dashboard:** las
   superficies que quedaban con el estilo viejo (`brand`/`rounded-md`) ahora comparten el sistema de los
   paneles de personal — lienzo `surface`, texto `ink`, tarjetas `surface-card` con `shadow-card` y

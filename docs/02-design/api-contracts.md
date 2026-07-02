@@ -1,4 +1,4 @@
-# Contratos de API — Proyecto Sostén
+# Contratos de API — Proyecto PPV
 
 > **Fase AI-DLC:** `02-design`  ·  **Estado:** propuesta
 > Resumen legible de los endpoints REST (funciones serverless `/api/*` en Vercel, ver ADR-0009). Todos

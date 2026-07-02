@@ -1,8 +1,8 @@
 {
-  "name": "@sostenve/web",
+  "name": "@ppv/web",
   "version": "0.3.0",
   "private": true,
-  "description": "SostenVE frontend — Next.js PWA (intake, psychologist portal, coordinator panel)",
+  "description": "PPV frontend — Next.js PWA (intake, psychologist portal, coordinator panel)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

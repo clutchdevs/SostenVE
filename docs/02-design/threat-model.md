@@ -1,4 +1,4 @@
-# Modelo de amenazas — Proyecto Sostén
+# Modelo de amenazas — Proyecto PPV
 
 > **Fase AI-DLC:** `02-design`  ·  **Método:** STRIDE + priorización DREAD
 > **Estado:** propuesta  ·  **Fecha:** 2026-06-27 (actualizado 2026-06-28 — arquitectura serverless)

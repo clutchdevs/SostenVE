@@ -1,4 +1,4 @@
-# Decisiones de infraestructura — Sostén
+# Decisiones de infraestructura — PPV
 
 > **Fase AI-DLC:** `00-project` (respaldo de decisión)  ·  **Fecha:** 2026-06-28
 > Documento de respaldo del análisis que sustenta los ADRs 0002, 0006 y 0009. Referenciado desde
