@@ -14,6 +14,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Cambiado
+- **Documentación sincronizada con la app (2026-07-02):** se actualizó el **README** (qué hace, arquitectura
+  con presencia Upstash y padrón FPV real, ADRs 0001-0014, tabla de estado, decisiones abiertas — nombre PPV
+  y verificador FPV ya resueltos), el **backlog** (A1/A2/A4/A6 y B2 marcados hechos; A5 parcial), la **tabla
+  de rutas** de `DEVELOPMENT.md` (páginas de personal/admin que faltaban) y el mapa de cobertura del PRD
+  (RF-2.2 contra el padrón real).
 - **Rebranding: Sostén → PPV (Programa de Psicólogos Voluntarios):** la FPV definió el nombre oficial. Se
   renombró en toda la app y el repo: nombre visible/wordmark (landing, sidebars, header), `app.name`, título
   del navegador y **PWA manifest** (nombre completo + `short_name: PPV`), asuntos y firmas de **correos**,

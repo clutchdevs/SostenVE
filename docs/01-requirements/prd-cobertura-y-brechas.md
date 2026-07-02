@@ -1,8 +1,8 @@
 # Cobertura del PRD (Sistema PPV 2026) y brechas — mapa de TODO
 
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** vivo (actualizar conforme se cierren brechas)
-> **Fuente canónica:** `Documento de Requisitos de Producto (PRD).pdf` (FPV, "Sistema PPV 2026") · **Evaluado:** 2026-06-30
-> Trazabilidad de lo construido (Bloques 0–7 + issues #16–#25) contra el PRD. Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta.
+> **Fuente canónica:** `Documento de Requisitos de Producto (PRD).pdf` (FPV, "Sistema PPV 2026") · **Evaluado:** 2026-07-02
+> Trazabilidad de lo construido (Bloques 0–7 + issues #1–#55) contra el PRD. Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta.
 
 > **Nota de alcance del PDF.** Esta versión del PRD describe **Módulos 1–4** (intake/triage,
 > registro/validación de psicólogos, asignación/SLA y panel/expediente del psicólogo). **No** incluye
@@ -111,7 +111,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   `professional_id` (= nº FPV), universidad, año de egreso, colegio, PAP (sí/no) + detalle obligatorio,
   modalidad (multiselect presencial/distancia) y disponibilidad horaria estructurada (día × bloque).
   Persistido en `volunteers` (migración `…0008`, columnas nullable) y validado en la API (Zod).
-- ✅ RF-2.2 Validación contra FPV vía **Adapter** (dummy always-OK; HTTP pendiente de contrato, ADR-0013)
+- ✅ RF-2.2 Validación contra el **padrón real de la FPV** vía **Adapter** `HttpFpvVerifier`
+  (`validate` + `getProfile`, Circuit Breaker → `pending_approval`; dummy solo en tests, ADR-0013, issue #6)
   con la regla de activación automática `cédula+FPV ∧ PAP=Sí → Activo` (si no, queda `pending_approval`).
 - ✅ Estados `active` / `pending_approval` / `inactive`.
 - ✅ RF-2.2.4 Credenciales + correo de bienvenida — contraseña **autogenerada** de alta entropía

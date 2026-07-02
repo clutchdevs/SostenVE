@@ -88,14 +88,27 @@ Detalle de estrategia, checklist del threat model y plan de piloto: [`docs/04-te
 | `/` | Todos | Bienvenida con dos caminos: solicitar apoyo o acceso de personal | No |
 | `/intake` | Solicitante | Pregunta Likert (triage de baja fricción) | No |
 | `/intake/roja` | Solicitante | Rama Roja: líneas de crisis + sub-canales | No |
-| `/intake/verde` | Solicitante | Rama Verde: tags de síntomas y envío | No |
-| `/login` | Personal | Inicio de sesión (enruta por rol) | No |
-| `/psicologo` | Psicólogo | Lista de casos asignados | Sí (psicólogo) |
-| `/psicologo/casos/[id]` | Psicólogo | Detalle del caso, notas, aceptar/cerrar | Sí (psicólogo) |
-| `/coordinador` | Coordinador / Admin | Panel de casos (prioridad + SLA) y capacidad | Sí (coordinador/admin) |
+| `/intake/verde` | Solicitante | Rama Verde: tags de síntomas, ubicación, hábitos y envío | No |
+| `/guias` | Solicitante | Guías de Primeros Auxilios Psicológicos (PAP) de autoayuda | No |
+| `/registro` | Psicólogo | Postulación de voluntario (validación FPV + consentimiento) | No |
+| `/login` | Personal | Inicio de sesión del psicólogo (enruta por rol) | No |
+| `/login-coordinador` | Coordinador | Acceso dedicado de coordinador | No |
+| `/registro-coordinador` | Coordinador | Activación por invitación tokenizada | No |
+| `/recuperar-contrasena` · `/restablecer-contrasena` | Personal | Reseteo de contraseña por correo | No |
+| `/psicologo` | Psicólogo | Lista de casos asignados + toggle de disponibilidad | Sí (psicólogo) |
+| `/psicologo/casos/[id]` | Psicólogo | Detalle del caso, notas, aceptar/cierre clínico | Sí (psicólogo) |
+| `/coordinador` | Coordinador / Admin | Panel de casos (prioridad + SLA), reasignar/cerrar, capacidad | Sí (coordinador/admin) |
+| `/coordinador/voluntarios` · `/coordinador/psicologos` | Coordinador / Admin | Gestión de voluntarios y presencia por psicólogo | Sí (coordinador/admin) |
+| `/coordinador/reportes` | Coordinador / Admin | Reportes/observabilidad de SLA | Sí (coordinador/admin) |
+| `/cambiar-contrasena` | Personal | Cambio de contraseña autenticado | Sí |
+| `/admin` | Admin | Panel de administración (entrada) | Sí (admin) |
+| `/admin/lineas` | Admin | CRUD de líneas de crisis | Sí (admin) |
+| `/admin/coordinadores` | Admin | Invitaciones de coordinador | Sí (admin) |
+| `/admin/padron` | Admin | Padrón de voluntarios (roster por estado) | Sí (admin) |
+| `/admin/auditoria` | Admin | Consulta de la bitácora de auditoría | Sí (admin) |
 
 > Al iniciar sesión, el coordinador/admin va a `/coordinador` y el psicólogo a `/psicologo`. Las
-> pantallas de personal tienen un encabezado con navegación y **Cerrar sesión**.
+> pantallas de personal tienen un encabezado/navegación con **Cerrar sesión**.
 
 **API / Swagger:** `GET /api/v1/docs` (Swagger UI interactivo) y `GET /api/v1/openapi.json`
 (documento OpenAPI). Health: `GET /api/v1/health`.
