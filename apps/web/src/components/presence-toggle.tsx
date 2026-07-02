@@ -82,7 +82,7 @@ export function PresenceToggle() {
       type="button"
       onClick={() => setAvailable((a) => !a)}
       aria-pressed={available}
-      title="Cambia tu disponibilidad para recibir casos (RF-4.3.1)"
+      title="Cambia tu disponibilidad para recibir casos"
       className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
     >
       <span

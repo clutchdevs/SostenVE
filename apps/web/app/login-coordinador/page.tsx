@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { AuthShell } from '../../src/components/auth-shell';
 import { apiFetch } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
 import { getRole, homePathForRole, isSessionActive, saveSession } from '../../src/lib/session';
 
 /**
@@ -44,45 +46,40 @@ export default function CoordinatorLoginPage() {
   if (checking) return null;
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <Link href="/" className="text-sm text-brand underline">
-        ← Volver al inicio
-      </Link>
-      <h1 className="mt-4 text-xl font-bold text-brand">Acceso de coordinación</h1>
-      <p className="mt-1 text-sm text-slate-600">Coordinadores de la FPV.</p>
+    <AuthShell title="Acceso de coordinación" subtitle="Coordinadores de la FPV." backHref="/">
       <form
-        className="mt-6 space-y-3"
+        className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
       >
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="email"
           placeholder="Correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {error && <p className="text-sm text-risk-high">{error}</p>}
-        <button type="submit" className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white">
+        {error && <p className={ui.error}>{error}</p>}
+        <button type="submit" className={`w-full ${ui.primaryBtn}`}>
           Entrar
         </button>
       </form>
-      <p className="mt-4 text-sm text-slate-600">
+      <p className={`mt-4 ${ui.muted}`}>
         ¿Recibiste una invitación?{' '}
-        <Link href="/registro-coordinador" className="text-brand underline">
+        <Link href="/registro-coordinador" className={ui.link}>
           Actívala aquí
         </Link>
         .
       </p>
-    </main>
+    </AuthShell>
   );
 }

@@ -14,6 +14,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Cambiado
+- **UI — Unificación visual de las pantallas públicas y de auth con la paleta del dashboard:** las
+  superficies que quedaban con el estilo viejo (`brand`/`rounded-md`) ahora comparten el sistema de los
+  paneles de personal — lienzo `surface`, texto `ink`, tarjetas `surface-card` con `shadow-card` y
+  `rounded-2xl`, títulos serif y acentos de marca. Alcance: `login`, `login-coordinador`,
+  `registro-coordinador`, cambiar/recuperar/restablecer contraseña, la landing `/`, `registro` (postulación
+  del psicólogo) y el flujo del solicitante (`intake` landing/roja/verde y `guías`, conservando tap-targets
+  grandes y alto contraste para crisis). Se centralizó la "receta" en `src/lib/ui.ts` (constantes de clases)
+  y un `AuthShell` compartido para las pantallas de auth; el fondo global pasó a `bg-surface`.
 - **Módulo 2 — Seguridad de sesión RF-2.7 (issue #54):** el cierre de sesión por inactividad pasó de **15 a
   30 minutos** (`security.session.idle_timeout_minutes: 30` + espejo web), alineado con el PRD. Además se
   implementó la **destrucción de sesiones duplicadas en caliente**: cada **login bumpea `token_version`** y el

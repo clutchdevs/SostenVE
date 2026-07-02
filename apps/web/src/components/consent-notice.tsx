@@ -32,7 +32,6 @@ export function ConsentNotice() {
         ⓘ Servicio gratuito y confidencial de la FPV — aviso de privacidad
       </summary>
       <div className="mt-2 whitespace-pre-line leading-relaxed">{consent.text}</div>
-      <p className="mt-2 text-[11px] text-slate-400">Versión {consent.version}</p>
     </details>
   );
 }

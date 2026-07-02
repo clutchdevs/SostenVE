@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { AuthShell } from '../../src/components/auth-shell';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
 
 /**
  * Coordinator self-activation page (RF-2.6). Opened from the invitation email
@@ -85,26 +86,22 @@ export default function CoordinatorOnboardingPage() {
 
   if (done) {
     return (
-      <main className="mx-auto max-w-sm px-4 py-12">
-        <h1 className="text-xl font-bold text-brand">¡Cuenta activada!</h1>
-        <p className="mt-2 text-sm text-slate-600">Redirigiendo al inicio de sesión…</p>
-      </main>
+      <AuthShell title="¡Cuenta activada!">
+        <p className={ui.muted}>Redirigiendo al inicio de sesión…</p>
+      </AuthShell>
     );
   }
 
-  const inputClass = 'w-full rounded-md border px-3 py-2';
+  const inputClass = ui.field;
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <Link href="/" className="text-sm text-brand underline">
-        ← Volver al inicio
-      </Link>
-      <h1 className="mt-4 text-xl font-bold text-brand">Registro de coordinador</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Completa tus datos y define una contraseña para activar tu cuenta de coordinador de la FPV.
-      </p>
+    <AuthShell
+      title="Registro de coordinador"
+      subtitle="Completa tus datos y define una contraseña para activar tu cuenta de coordinador de la FPV."
+      backHref="/"
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
@@ -130,7 +127,7 @@ export default function CoordinatorOnboardingPage() {
         />
         <div className="flex gap-2">
           <select
-            className="rounded-md border px-2 py-2"
+            className="rounded-xl border border-slate-300 bg-white px-2 py-2 text-ink"
             value={tipoDocumento}
             onChange={(e) => setTipoDocumento(e.target.value as 'V' | 'E' | 'P')}
             aria-label="Tipo de documento"
@@ -174,15 +171,11 @@ export default function CoordinatorOnboardingPage() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        {error && <p className="text-sm text-risk-high">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy || !token}
-          className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
+        {error && <p className={ui.error}>{error}</p>}
+        <button type="submit" disabled={busy || !token} className={`w-full ${ui.primaryBtn}`}>
           Activar cuenta
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

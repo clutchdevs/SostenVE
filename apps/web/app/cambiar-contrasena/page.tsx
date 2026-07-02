@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { AuthShell } from '../../src/components/auth-shell';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
 import { clearSession, homePathForRole, getRole, isSessionActive } from '../../src/lib/session';
 
 /**
@@ -78,33 +79,28 @@ export default function ChangePasswordPage() {
 
   if (done) {
     return (
-      <main className="mx-auto max-w-sm px-4 py-12">
-        <h1 className="text-xl font-bold text-brand">Contraseña actualizada</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Por seguridad, cerramos tu sesión. Redirigiendo al inicio de sesión…
-        </p>
-      </main>
+      <AuthShell title="Contraseña actualizada">
+        <p className={ui.muted}>Por seguridad, cerramos tu sesión. Redirigiendo al inicio de sesión…</p>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <Link href={homePathForRole(getRole())} className="text-sm text-brand underline">
-        ← Volver
-      </Link>
-      <h1 className="mt-4 text-xl font-bold text-brand">Cambiar contraseña</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Al cambiarla se cerrará tu sesión y deberás iniciar de nuevo.
-      </p>
+    <AuthShell
+      title="Cambiar contraseña"
+      subtitle="Al cambiarla se cerrará tu sesión y deberás iniciar de nuevo."
+      backHref={homePathForRole(getRole())}
+      backLabel="← Volver"
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
       >
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="password"
           placeholder="Contraseña actual"
           autoComplete="current-password"
@@ -112,7 +108,7 @@ export default function ChangePasswordPage() {
           onChange={(e) => setCurrent(e.target.value)}
         />
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="password"
           placeholder="Nueva contraseña (mín. 12, con mayúsculas, números y símbolo)"
           autoComplete="new-password"
@@ -120,22 +116,18 @@ export default function ChangePasswordPage() {
           onChange={(e) => setNext(e.target.value)}
         />
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="password"
           placeholder="Confirmar nueva contraseña"
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        {error && <p className="text-sm text-risk-high">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
+        {error && <p className={ui.error}>{error}</p>}
+        <button type="submit" disabled={busy} className={`w-full ${ui.primaryBtn}`}>
           Cambiar contraseña
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

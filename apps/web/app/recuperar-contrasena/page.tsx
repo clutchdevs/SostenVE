@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { AuthShell } from '../../src/components/auth-shell';
 import { apiFetch } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
 
 /**
  * Public "forgot password" request (RF-2.2.4, issue #36). We always show the same
@@ -32,50 +34,43 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <main className="mx-auto max-w-sm px-4 py-12">
-        <h1 className="text-xl font-bold text-brand">Revisa tu correo</h1>
-        <p className="mt-2 text-sm text-slate-600">
+      <AuthShell title="Revisa tu correo">
+        <p className={ui.muted}>
           Si el correo corresponde a una cuenta activa, te enviamos un enlace para restablecer tu
           contraseña. El enlace vence en 1 hora.
         </p>
-        <Link href="/login" className="mt-4 inline-block text-sm text-brand underline">
+        <Link href="/login" className={`mt-4 inline-block ${ui.link}`}>
           ← Volver al inicio de sesión
         </Link>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <Link href="/login" className="text-sm text-brand underline">
-        ← Volver al inicio de sesión
-      </Link>
-      <h1 className="mt-4 text-xl font-bold text-brand">Recuperar contraseña</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Ingresa tu correo y te enviaremos un enlace para definir una nueva contraseña.
-      </p>
+    <AuthShell
+      title="Recuperar contraseña"
+      subtitle="Ingresa tu correo y te enviaremos un enlace para definir una nueva contraseña."
+      backHref="/login"
+      backLabel="← Volver al inicio de sesión"
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
       >
         <input
-          className="w-full rounded-md border px-3 py-2"
+          className={ui.field}
           type="email"
           placeholder="Correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button
-          type="submit"
-          disabled={busy || !email}
-          className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={busy || !email} className={`w-full ${ui.primaryBtn}`}>
           Enviar enlace
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

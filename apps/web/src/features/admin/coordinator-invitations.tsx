@@ -58,7 +58,7 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
     <section>
       <h1 className="font-serif text-3xl font-semibold text-ink">Coordinadores</h1>
       <p className="mt-1 text-sm text-slate-600">
-        Invita coordinadores por token (RF-2.6). El enlace de invitación se envía por correo; el token
+        Invita coordinadores por token. El enlace de invitación se envía por correo; el token
         también se muestra aquí una sola vez para compartirlo manualmente si hace falta.
       </p>
 
@@ -142,8 +142,7 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
           />
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          La sesión del coordinador caduca tras {SESSION_IDLE_TIMEOUT_MINUTES} minutos de inactividad
-          (RF-2.7).
+          La sesión del coordinador caduca tras {SESSION_IDLE_TIMEOUT_MINUTES} minutos de inactividad.
         </p>
         <button
           type="submit"

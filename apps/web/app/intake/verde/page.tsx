@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
@@ -13,6 +14,7 @@ import {
   type GreenFormState,
 } from '../../../src/features/intake/green-form';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
+import { ui } from '../../../src/lib/ui';
 import { FALLBACK_CRISIS_LINES, getCrisisLines } from '../../../src/lib/crisis-lines';
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
@@ -30,6 +32,7 @@ interface GreenDraft {
 const STEPS = ['Síntomas', 'Ubicación', 'Hábitos', 'Contacto'] as const;
 
 export default function GreenBranchPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<GreenFormState>(EMPTY_GREEN_FORM);
   const [result, setResult] = useState<GreenResult | null>(null);
@@ -98,14 +101,14 @@ export default function GreenBranchPage() {
     return (
       <main className="mx-auto max-w-md space-y-4 px-4 py-8">
         {result?.nivel_riesgo === 'riesgo_alto' && <CrisisLinesPanel lines={escalatedLines} />}
-        <p className="rounded-lg bg-emerald-50 p-4 text-emerald-800">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
           {queued
             ? 'Guardamos tu solicitud en este dispositivo y la enviaremos automáticamente cuando vuelva la conexión. Si es una emergencia, usa las líneas de crisis.'
             : 'Recibimos tu solicitud. Un psicólogo voluntario te contactará. Si la situación empeora, usa las líneas de crisis.'}
         </p>
-        <p className="text-center text-sm text-slate-600">
+        <p className={`text-center ${ui.muted}`}>
           Mientras esperas, puedes ver{' '}
-          <Link href="/guias" className="font-semibold text-brand underline">
+          <Link href="/guias" className={`font-semibold ${ui.link}`}>
             guías de autoayuda
           </Link>
           .
@@ -135,7 +138,7 @@ export default function GreenBranchPage() {
 
       {step === 0 && (
         <section className="space-y-3">
-          <h1 className="text-xl font-bold text-brand">Cuéntanos cómo te sientes</h1>
+          <h1 className="text-xl font-serif font-semibold text-ink">Cuéntanos cómo te sientes</h1>
           <p className="text-slate-600">Toca lo que aplique a ti:</p>
           <TagPicker selected={form.tags} onToggle={(c) => toggle('tags', c)} />
         </section>
@@ -143,12 +146,12 @@ export default function GreenBranchPage() {
 
       {step === 1 && (
         <section className="space-y-3">
-          <h1 className="text-xl font-bold text-brand">¿Dónde te encuentras?</h1>
+          <h1 className="text-xl font-serif font-semibold text-ink">¿Dónde te encuentras?</h1>
           <p className="text-slate-600">Nos ayuda a orientar el apoyo en tu zona.</p>
           <label className="block text-sm font-medium text-slate-700">
             Estado
             <select
-              className="mt-1 w-full rounded-md border bg-white px-3 py-2"
+              className={`mt-1 ${ui.field}`}
               value={form.estado}
               onChange={(e) => update({ estado: e.target.value })}
             >
@@ -163,7 +166,7 @@ export default function GreenBranchPage() {
           <label className="block text-sm font-medium text-slate-700">
             Ciudad (opcional)
             <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
+              className={`mt-1 ${ui.field}`}
               placeholder="Tu ciudad o municipio"
               value={form.ciudad}
               onChange={(e) => update({ ciudad: e.target.value })}
@@ -174,7 +177,7 @@ export default function GreenBranchPage() {
 
       {step === 2 && (
         <section className="space-y-3">
-          <h1 className="text-xl font-bold text-brand">¿Notaste cambios recientes?</h1>
+          <h1 className="text-xl font-serif font-semibold text-ink">¿Notaste cambios recientes?</h1>
           <p className="text-slate-600">Marca lo que haya cambiado desde el sismo (opcional):</p>
           <div className="space-y-2">
             {HABIT_CHANGES.map((h) => {
@@ -207,15 +210,15 @@ export default function GreenBranchPage() {
 
       {step === 3 && (
         <section className="space-y-3">
-          <h1 className="text-xl font-bold text-brand">¿Cómo te contactamos?</h1>
+          <h1 className="text-xl font-serif font-semibold text-ink">¿Cómo te contactamos?</h1>
           <input
-            className="w-full rounded-md border px-3 py-2"
+            className={ui.field}
             placeholder="Nombre (opcional)"
             value={form.name}
             onChange={(e) => update({ name: e.target.value })}
           />
           <input
-            className="w-full rounded-md border px-3 py-2"
+            className={ui.field}
             placeholder="Teléfono de contacto"
             value={form.contact}
             onChange={(e) => update({ contact: e.target.value })}
@@ -234,8 +237,10 @@ export default function GreenBranchPage() {
                   type="button"
                   aria-pressed={form.contactMethod === opt.value}
                   onClick={() => update({ contactMethod: opt.value })}
-                  className={`flex-1 rounded-md border px-3 py-2 text-sm ${
-                    form.contactMethod === opt.value ? 'bg-brand text-white' : 'bg-white'
+                  className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${
+                    form.contactMethod === opt.value
+                      ? 'border-brand bg-brand text-white'
+                      : 'border-slate-300 bg-white text-ink'
                   }`}
                 >
                   {opt.label}
@@ -246,14 +251,13 @@ export default function GreenBranchPage() {
         </section>
       )}
 
-      {error && <p className="text-sm text-risk-high">{error}</p>}
+      {error && <p className={ui.error}>{error}</p>}
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <button
           type="button"
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
-          disabled={step === 0}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-40"
+          onClick={() => (step === 0 ? router.push('/intake') : setStep((s) => s - 1))}
+          className={ui.secondaryBtn}
         >
           Atrás
         </button>
@@ -262,7 +266,7 @@ export default function GreenBranchPage() {
             type="button"
             onClick={submit}
             disabled={!form.contact.trim() || busy}
-            className="rounded-md bg-brand px-5 py-2 font-medium text-white disabled:opacity-50"
+            className={ui.primaryBtn}
           >
             Enviar solicitud
           </button>
@@ -270,7 +274,7 @@ export default function GreenBranchPage() {
           <button
             type="button"
             onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-            className="rounded-md bg-brand px-5 py-2 font-medium text-white"
+            className={ui.primaryBtn}
           >
             Siguiente
           </button>

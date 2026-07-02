@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
 
 interface ConsentText {
   version: string;
@@ -34,7 +35,7 @@ const MODALIDADES = [
   ['distancia', 'A distancia'],
 ] as const;
 
-const inputClass = 'w-full rounded-md border px-3 py-2';
+const inputClass = ui.field;
 
 /**
  * Complete psychologist application form (RF-2.1.2, Módulo 2) with mandatory
@@ -128,16 +129,13 @@ export default function RegistroPage() {
     const pendiente = result.estado_validacion !== 'validado';
     return (
       <main className="mx-auto max-w-sm px-4 py-12">
-        <h1 className="text-xl font-bold text-brand">Registro recibido</h1>
+        <h1 className="text-xl font-serif font-semibold text-ink">Registro recibido</h1>
         <p className="mt-3 text-sm text-slate-600">
           {pendiente
             ? 'Tu cuenta quedó pendiente de validación por la FPV. Te avisaremos por correo cuando esté aprobada.'
             : 'Tu cuenta fue validada. Ya puedes iniciar sesión.'}
         </p>
-        <Link
-          href="/login"
-          className="mt-6 block rounded-md bg-brand px-4 py-2 text-center font-medium text-white"
-        >
+        <Link href="/login" className={`mt-6 block text-center ${ui.primaryBtn}`}>
           Ir a iniciar sesión
         </Link>
       </main>
@@ -150,11 +148,11 @@ export default function RegistroPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-12">
-      <Link href="/" className="text-sm text-brand underline">
+      <Link href="/" className={ui.link}>
         ← Volver al inicio
       </Link>
-      <h1 className="mt-4 text-xl font-bold text-brand">Registro de psicólogos</h1>
-      <p className="mt-1 text-sm text-slate-600">Voluntarios de la Federación de Psicólogos de Venezuela.</p>
+      <h1 className="mt-4 text-xl font-serif font-semibold text-ink">Registro de psicólogos</h1>
+      <p className={`mt-1 ${ui.muted}`}>Voluntarios de la Federación de Psicólogos de Venezuela.</p>
 
       <form
         className="mt-6 space-y-4"
@@ -174,7 +172,7 @@ export default function RegistroPage() {
 
         <div className="flex gap-2">
           <select
-            className="rounded-md border px-3 py-2"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-ink"
             aria-label="Tipo de documento"
             value={tipoDocumento}
             onChange={(e) => setTipoDocumento(e.target.value)}
@@ -247,7 +245,7 @@ export default function RegistroPage() {
           onChange={(e) => setEspecialidad(e.target.value)}
         />
 
-        <fieldset className="rounded-md border border-slate-300 p-3">
+        <fieldset className="rounded-xl border border-slate-300 p-3">
           <legend className="px-1 text-sm font-medium text-slate-700">Modalidad de atención</legend>
           <div className="flex gap-4">
             {MODALIDADES.map(([value, label]) => (
@@ -263,7 +261,7 @@ export default function RegistroPage() {
           </div>
         </fieldset>
 
-        <fieldset className="rounded-md border border-slate-300 p-3">
+        <fieldset className="rounded-xl border border-slate-300 p-3">
           <legend className="px-1 text-sm font-medium text-slate-700">Disponibilidad horaria</legend>
           <table className="w-full text-center text-xs text-slate-700">
             <thead>
@@ -296,7 +294,7 @@ export default function RegistroPage() {
           </table>
         </fieldset>
 
-        <fieldset className="rounded-md border border-slate-300 p-3">
+        <fieldset className="rounded-xl border border-slate-300 p-3">
           <legend className="px-1 text-sm font-medium text-slate-700">
             Formación en Primeros Auxilios Psicológicos (PAP)
           </legend>
@@ -306,7 +304,7 @@ export default function RegistroPage() {
           </label>
           {pap && (
             <textarea
-              className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
+              className={`mt-2 text-sm ${ui.field}`}
               placeholder="Detalle de la formación en PAP"
               value={papDetalle}
               onChange={(e) => setPapDetalle(e.target.value)}
@@ -315,11 +313,8 @@ export default function RegistroPage() {
           )}
         </fieldset>
 
-        <fieldset className="rounded-md border border-slate-300 p-3">
-          <legend className="px-1 text-sm font-medium text-slate-700">
-            Consentimiento informado
-            {consent && <span className="ml-1 text-xs text-slate-400">({consent.version})</span>}
-          </legend>
+        <fieldset className="rounded-xl border border-slate-300 p-3">
+          <legend className="px-1 text-sm font-medium text-slate-700">Consentimiento informado</legend>
           <div className="max-h-40 overflow-y-auto whitespace-pre-line rounded bg-slate-50 p-2 text-xs text-slate-600">
             {consent ? consent.text : 'Cargando…'}
           </div>
@@ -334,20 +329,20 @@ export default function RegistroPage() {
           </label>
         </fieldset>
 
-        {error && <p className="text-sm text-risk-high">{error}</p>}
+        {error && <p className={ui.error}>{error}</p>}
 
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className={`w-full ${ui.primaryBtn} disabled:cursor-not-allowed`}
         >
           {submitting ? 'Enviando…' : 'Registrarme'}
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-slate-600">
+      <p className={`mt-4 text-center ${ui.muted}`}>
         ¿Ya tienes cuenta?{' '}
-        <Link href="/login" className="font-semibold text-brand underline">
+        <Link href="/login" className={`font-semibold ${ui.link}`}>
           Iniciar sesión
         </Link>
       </p>
