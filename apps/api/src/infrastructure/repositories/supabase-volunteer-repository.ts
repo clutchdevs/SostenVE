@@ -16,6 +16,7 @@ interface VolunteerRow {
   specialty: string | null;
   availability: string | null;
   colegio: string | null;
+  phone: string | null;
   role: string;
   token_version: number;
   status: string;
@@ -32,6 +33,7 @@ function toDomain(row: VolunteerRow): Volunteer {
     specialty: row.specialty ?? undefined,
     availability: row.availability ?? undefined,
     colegio: row.colegio ?? undefined,
+    phone: row.phone ?? undefined,
     role: row.role as VolunteerRole,
     tokenVersion: row.token_version,
     status: row.status as VolunteerStatus,
@@ -56,8 +58,9 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
         password_hash: input.passwordHash,
         status: input.status ?? 'pending_approval',
         pending_reason: input.pendingReason ?? null,
-        document_type: input.application?.documentType ?? null,
-        document_number: input.application?.documentNumber ?? null,
+        document_type: input.application?.documentType ?? input.documentType ?? null,
+        document_number: input.application?.documentNumber ?? input.documentNumber ?? null,
+        phone: input.phone ?? null,
         university: input.application?.university ?? null,
         graduation_year: input.application?.graduationYear ?? null,
         colegio: input.application?.colegio ?? null,

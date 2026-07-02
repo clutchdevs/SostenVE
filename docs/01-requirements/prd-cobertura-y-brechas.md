@@ -131,9 +131,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-2.6 Registro de coordinadores por **token de invitación** (issue #23): el admin invita
   (`/admin/coordinators/invitations`), se persiste solo el hash del token (un solo uso, con TTL) y el
   invitado lo canjea en `/coordinators/accept-invitation` para activarse como coordinador; auditado.
-  ⚠️ **Desvío del PRD:** el form de canje hoy solo fija la contraseña (nombre/correo vienen de la
-  invitación); el PRD (RF-2.6.2) pide capturar Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono, y
-  **contraseña ≥ 12** caracteres complejos (hoy el mínimo es **8**).
+- ✅ RF-2.6.2 Campos del signup + contraseña robusta (issue #53): el canje captura **Nombres, Apellidos,
+  Cédula (tipo+número), FPV (opcional) y Teléfono**, y exige una **contraseña ≥ 12 con complejidad**
+  (mayúsculas, minúsculas, números y símbolo). La misma política se aplica a cambio/reset de contraseña
+  (para que no se pueda degradar). El correo sigue tomándose de la invitación (address-targeted).
 - ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout 15 min configurable) **+ expiración de
   sesión por inactividad** (`security.session.idle_timeout_minutes`, enforce en cliente sobre el `exp`
   del JWT) **+ ruta separada `/login-coordinador`** (issue #23).
@@ -249,8 +250,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### D. Desvíos del PRD por ajustar (implementado pero no exacto al texto)
 Funcionalidad construida que se aparta de la letra del PRD; cada uno es un cambio chico:
 - [ ] **Inactividad de coordinador = 30 min (RF-2.7):** hoy `idle_timeout_minutes: 15`. Subir a 30 (1 línea de config).
-- [ ] **Contraseña de coordinador ≥ 12 complejos (RF-2.6.2):** hoy el canje exige ≥ 8. Subir el mínimo + regla de complejidad.
-- [ ] **Campos del signup de coordinador (RF-2.6.2):** capturar Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono en el canje (hoy solo contraseña; nombre/correo vienen de la invitación).
+- [x] **Contraseña de coordinador ≥ 12 complejos (RF-2.6.2, issue #53):** política robusta (≥12 + mayúsc/minúsc/número/símbolo) en el canje **y** en cambio/reset de contraseña.
+- [x] **Campos del signup de coordinador (RF-2.6.2, issue #53):** el canje captura Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono (correo desde la invitación).
 - [ ] **Destrucción de sesiones duplicadas en caliente (RF-2.7):** no implementada.
 - [ ] **Hashing:** el PRD sugiere `bcrypt` (factor 12); usamos **argon2id** por decisión documentada (ADR-0005). Mantener argon2id; queda anotado como desvío consciente.
 - [ ] **Bandera de seguimiento a 5 días por ideación suicida (RF-4.2.4):** hoy se audita el evento; falta el plazo programado para el clúster de coordinadores.

@@ -27,8 +27,16 @@ export default function ResetPasswordPage() {
 
   async function submit() {
     setError('');
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
+    if (
+      password.length < 12 ||
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      setError(
+        'La contraseña debe tener al menos 12 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial.',
+      );
       return;
     }
     if (password !== confirm) {
@@ -87,7 +95,7 @@ export default function ResetPasswordPage() {
         <input
           className="w-full rounded-md border px-3 py-2"
           type="password"
-          placeholder="Nueva contraseña (mínimo 8 caracteres)"
+          placeholder="Nueva contraseña (mín. 12, con mayúsculas, números y símbolo)"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

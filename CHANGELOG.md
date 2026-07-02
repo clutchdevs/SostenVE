@@ -21,6 +21,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 2 — Signup de coordinador completo + contraseña robusta (issue #53, RF-2.6.2):** el canje de
+  invitación ahora captura los campos que pide el PRD — **Nombres, Apellidos, Cédula (tipo + número), FPV
+  (opcional) y Teléfono** — además de la contraseña (el correo sigue viniendo de la invitación). Se persiste
+  `phone` en `volunteers` (migración `20260628000018`); la cédula va a `document_number` y el FPV (si se da)
+  al `professional_id`. Se introduce una **política de contraseña robusta** (`strongPasswordSchema`: **≥12
+  caracteres con mayúsculas, minúsculas, números y símbolo**) aplicada al **signup de coordinador y también a
+  cambio/reset de contraseña** (para que una contraseña fuerte no pueda degradarse luego; las autogeneradas
+  del psicólogo ya la superan). UI de `/registro-coordinador` ampliada con los campos y la validación.
 - **Módulo 1 — Método de contacto preferido en Rama Verde (issue #52, RF-1.3 Pantalla 2):** el intake verde
   ahora captura, junto al teléfono, **cómo prefiere el solicitante ser contactado (WhatsApp / Llamada)**. Se
   persiste en el caso (`cases.preferred_contact_method`, migración `20260628000017`), viaja en el contrato

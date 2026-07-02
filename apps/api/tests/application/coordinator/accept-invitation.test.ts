@@ -16,6 +16,15 @@ import type {
 
 const TOKEN = 'a-raw-invitation-token';
 
+/** Structured sign-up fields (RF-2.6.2) reused by the error-path cases. */
+const SIGNUP = {
+  firstName: 'Coral',
+  lastName: 'Coordinadora',
+  documentType: 'V' as const,
+  documentNumber: '12345678',
+  phone: '0414-1234567',
+};
+
 function invitationFixture(overrides: Partial<CoordinatorInvitation> = {}): CoordinatorInvitation {
   return {
     id: 'inv-1',
@@ -118,7 +127,16 @@ describe('acceptInvitation', () => {
     const audit = recordingAudit();
 
     const result = await acceptInvitation(
-      { token: TOKEN, password: 'a-strong-password' },
+      {
+        token: TOKEN,
+        password: 'Str0ng-P4ssw0rd!!',
+        firstName: 'Coral',
+        lastName: 'Coordinadora',
+        documentType: 'V',
+        documentNumber: '12345678',
+        fpv: 'FPV-999',
+        phone: '0414-1234567',
+      },
       { invitations: invitations.repo, volunteers: volunteers.repo, audit },
     );
 
@@ -127,9 +145,14 @@ describe('acceptInvitation', () => {
     expect(created.role).toBe('coordinator');
     expect(created.status).toBe('active');
     expect(created.email).toBe('coord@example.com');
+    // Structured sign-up fields (RF-2.6.2) are captured on the volunteer.
+    expect(created.fullName).toBe('Coral Coordinadora');
+    expect(created.professionalId).toBe('FPV-999');
+    expect(created.documentNumber).toBe('12345678');
+    expect(created.phone).toBe('0414-1234567');
     // Password is hashed, not stored in clear.
-    expect(created.passwordHash).not.toBe('a-strong-password');
-    expect(await verifyPassword('a-strong-password', created.passwordHash)).toBe(true);
+    expect(created.passwordHash).not.toBe('Str0ng-P4ssw0rd!!');
+    expect(await verifyPassword('Str0ng-P4ssw0rd!!', created.passwordHash)).toBe(true);
     expect(invitations.calls.accepted).toEqual([{ id: 'inv-1', volunteerId: 'vol-new' }]);
     expect(audit.actions).toContain('coordinator_invitation_accepted');
   });
@@ -139,7 +162,7 @@ describe('acceptInvitation', () => {
     const volunteers = volunteerRepo();
     await expect(
       acceptInvitation(
-        { token: 'wrong-token', password: 'a-strong-password' },
+        { token: 'wrong-token', password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
@@ -153,7 +176,7 @@ describe('acceptInvitation', () => {
     const volunteers = volunteerRepo();
     await expect(
       acceptInvitation(
-        { token: TOKEN, password: 'a-strong-password' },
+        { token: TOKEN, password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
@@ -165,7 +188,7 @@ describe('acceptInvitation', () => {
     const volunteers = volunteerRepo();
     await expect(
       acceptInvitation(
-        { token: TOKEN, password: 'a-strong-password' },
+        { token: TOKEN, password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();

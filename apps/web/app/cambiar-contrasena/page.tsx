@@ -31,8 +31,16 @@ export default function ChangePasswordPage() {
 
   async function submit() {
     setError('');
-    if (next.length < 8) {
-      setError('La nueva contraseña debe tener al menos 8 caracteres.');
+    if (
+      next.length < 12 ||
+      !/[a-z]/.test(next) ||
+      !/[A-Z]/.test(next) ||
+      !/[0-9]/.test(next) ||
+      !/[^A-Za-z0-9]/.test(next)
+    ) {
+      setError(
+        'La contraseña debe tener al menos 12 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial.',
+      );
       return;
     }
     if (next !== confirm) {
@@ -106,7 +114,7 @@ export default function ChangePasswordPage() {
         <input
           className="w-full rounded-md border px-3 py-2"
           type="password"
-          placeholder="Nueva contraseña (mínimo 8 caracteres)"
+          placeholder="Nueva contraseña (mín. 12, con mayúsculas, números y símbolo)"
           autoComplete="new-password"
           value={next}
           onChange={(e) => setNext(e.target.value)}
