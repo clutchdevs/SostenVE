@@ -197,7 +197,7 @@ default: &default
       access_token_ttl_minutes: 15
       refresh_token_ttl_days: 7
     session:
-      idle_timeout_minutes: 15 # RF-2.7: expire a session after inactivity
+      idle_timeout_minutes: 30 # RF-2.7: expire a session after 30 min inactivity
       invitation_ttl_days: 7 # RF-2.6: coordinator invitation validity window
       password_reset_ttl_minutes: 60 # RF-2.2.4: password reset link validity window
 

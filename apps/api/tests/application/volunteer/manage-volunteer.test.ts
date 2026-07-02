@@ -48,6 +48,9 @@ function fakeRepo(): VolunteerRepository & { status?: string; passwordHash?: str
     async setStatus(_id, status) {
       repo.status = status;
     },
+    async getTokenVersion() {
+      return 1;
+    },
     async bumpTokenVersion() {
       return 2;
     },

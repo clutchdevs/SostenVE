@@ -41,7 +41,11 @@ export async function loginVolunteer(input: LoginInput, deps: LoginDeps): Promis
     throw new UnauthorizedError('Account is not active');
   }
 
-  const claims = { sub: volunteer.id, role: volunteer.role, tokenVersion: volunteer.tokenVersion };
+  // Destroy any prior session in-place (RF-2.7): bump token_version so previously
+  // issued tokens (carrying the old version) are rejected, and mint this session
+  // with the new version.
+  const tokenVersion = await deps.volunteers.bumpTokenVersion(volunteer.id);
+  const claims = { sub: volunteer.id, role: volunteer.role, tokenVersion };
   const accessToken = await signToken(claims, {
     ttlSeconds: deps.config.security.jwt.access_token_ttl_minutes * 60,
     type: 'access',

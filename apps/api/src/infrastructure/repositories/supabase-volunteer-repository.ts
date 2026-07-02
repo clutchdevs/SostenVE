@@ -148,6 +148,16 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
     if (error) throw new Error(`Failed to set volunteer status: ${error.message}`);
   }
 
+  async getTokenVersion(id: string): Promise<number | null> {
+    const { data, error } = await this.client
+      .from('volunteers')
+      .select('token_version')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(`Failed to load token version: ${error.message}`);
+    return data ? (data as { token_version: number }).token_version : null;
+  }
+
   async bumpTokenVersion(id: string): Promise<number> {
     const current = await this.findById(id);
     if (!current) throw new Error('Volunteer not found');

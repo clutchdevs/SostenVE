@@ -14,6 +14,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   charter, threat-model y clasificación de datos.
 
 ### Cambiado
+- **Módulo 2 — Seguridad de sesión RF-2.7 (issue #54):** el cierre de sesión por inactividad pasó de **15 a
+  30 minutos** (`security.session.idle_timeout_minutes: 30` + espejo web), alineado con el PRD. Además se
+  implementó la **destrucción de sesiones duplicadas en caliente**: cada **login bumpea `token_version`** y el
+  **middleware de autenticación valida la versión del token contra la BD en cada request** (resolver
+  configurado en el bootstrap; `getTokenVersion`), de modo que un login nuevo **invalida al instante** las
+  sesiones previas del mismo usuario. Nuevo test del middleware (versión válida → 200; superada/inexistente →
+  401).
 - **Módulo 2 — Texto de consentimiento informado oficial de la FPV (issue #32, RF-2.1.1):** se reemplazó
   el borrador provisional por el **texto bioético oficial** transcrito del PRD (RF-2.1.1: carácter
   aprobatorio, uso de datos, confidencialidad) y se subió la versión a **`v1.0.0-fpv`** en

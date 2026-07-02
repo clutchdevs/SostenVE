@@ -11,7 +11,7 @@ export const TEPT_BLOCK_DAYS = 30;
  * `security.session.idle_timeout_minutes`; the backend bounds sessions
  * server-side via the short access-token TTL regardless.
  */
-export const SESSION_IDLE_TIMEOUT_MINUTES = 15;
+export const SESSION_IDLE_TIMEOUT_MINUTES = 30;
 
 /**
  * Presence heartbeat interval in seconds (RF-2.5.2). Mirrors
