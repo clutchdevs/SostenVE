@@ -35,6 +35,8 @@ export const HABIT_CHANGES: readonly { code: string; label: string }[] = [
   { code: 'sueno', label: 'Sueño' },
 ];
 
+export type ContactMethod = 'whatsapp' | 'llamada';
+
 export interface GreenFormState {
   tags: string[];
   estado: string;
@@ -42,6 +44,8 @@ export interface GreenFormState {
   habitChanges: string[];
   name: string;
   contact: string;
+  /** Preferred contact channel (RF-1.3 screen 2); empty until chosen. */
+  contactMethod: ContactMethod | '';
 }
 
 export const EMPTY_GREEN_FORM: GreenFormState = {
@@ -51,6 +55,7 @@ export const EMPTY_GREEN_FORM: GreenFormState = {
   habitChanges: [],
   name: '',
   contact: '',
+  contactMethod: '',
 };
 
 /** Request body for POST /intake/green-branch (omits empty optionals). */
@@ -63,5 +68,6 @@ export function buildGreenPayload(form: GreenFormState): Record<string, unknown>
   if (form.name.trim()) body.nombre = form.name.trim();
   if (form.estado) body.estado = form.estado;
   if (form.ciudad.trim()) body.ciudad = form.ciudad.trim();
+  if (form.contactMethod) body.metodo_contacto = form.contactMethod;
   return body;
 }

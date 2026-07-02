@@ -89,6 +89,8 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   los **22 tags** del PRD RF-1.3 (rojo/naranja/amarillo, con duelo, infancia y disociación), **versionado**
   (`TAG_CATALOG_VERSION`), en el dominio y espejado en el web (mismos códigos). Pesos por severidad con
   ajustes marcados por el PRD (duelo traumático, culpa del superviviente); afinado final pendiente FPV.
+- ✅ RF-1.3 Pantalla 2 (Contacto): teléfono **+ método de contacto preferido (WhatsApp / Llamada)**
+  (issue #52); se persiste en el caso (`preferred_contact_method`) y se muestra al psicólogo asignado.
 - ✅ Regla de interrupción (1 rojo o 3+ naranja → riesgo alto).
 - ✅ RF-1.5 Índice de urgencia **ponderado completo** (issue #24): `U = w_id·I_ideacion + Σ peso(tag) +
   w_hab·n_cambios_habito`, con `I_ideacion` dominante (cualquier tag rojo lleva el caso a la cima). El

@@ -17,6 +17,11 @@ const REQUESTER_LABEL: Record<string, string> = {
   voluntario: 'Voluntario / rescatista',
 };
 
+const CONTACT_METHOD_LABEL: Record<string, string> = {
+  whatsapp: 'WhatsApp',
+  llamada: 'Llamada',
+};
+
 function waLink(phone: string): string {
   const digits = phone.replace(/[^\d]/g, '');
   return `https://wa.me/${digits}`;
@@ -52,6 +57,11 @@ export function CaseIdentityCard({
           <a href={waLink(contacto.contacto)} target="_blank" rel="noreferrer" className="rounded-md border px-3 py-1 font-medium text-brand">
             WhatsApp
           </a>
+          {caso.metodo_contacto && CONTACT_METHOD_LABEL[caso.metodo_contacto] && (
+            <span className="rounded-md bg-brand/10 px-3 py-1 font-medium text-brand">
+              Prefiere: {CONTACT_METHOD_LABEL[caso.metodo_contacto]}
+            </span>
+          )}
         </div>
       )}
 

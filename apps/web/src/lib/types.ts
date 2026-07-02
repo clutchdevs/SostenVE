@@ -8,6 +8,8 @@ export interface CaseSummary {
   tipo_solicitante?: string | null;
   zona?: string | null;
   modalidad?: string | null;
+  /** Preferred contact channel (green-branch screen 2): whatsapp | llamada. */
+  metodo_contacto?: string | null;
   edad?: number | null;
   /** Habit changes reported at intake (green-branch screen 5). */
   cambio_habitos?: string[];
