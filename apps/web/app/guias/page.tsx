@@ -57,7 +57,7 @@ export default function PapGuidesPage() {
         {data?.guides.map((guide) => (
           <details key={guide.id} className={`group p-4 ${ui.card}`}>
             <summary className="cursor-pointer list-none">
-              <span className="font-semibold text-brand">{guide.title}</span>
+              <span className="font-semibold text-ppv-blue">{guide.title}</span>
               <p className={`mt-1 ${ui.muted}`}>{guide.summary}</p>
             </summary>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700">

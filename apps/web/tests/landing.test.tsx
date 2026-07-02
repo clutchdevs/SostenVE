@@ -6,7 +6,7 @@ describe('landing page', () => {
   it('offers a path to request support and a staff access', () => {
     render(<LandingPage />);
     const support = screen.getByRole('link', { name: /necesito apoyo/i });
-    const staff = screen.getByRole('link', { name: /psicólogo o coordinador/i });
+    const staff = screen.getByRole('link', { name: /ingresar como profesional/i });
     expect(support.getAttribute('href')).toBe('/intake');
     expect(staff.getAttribute('href')).toBe('/login');
   });

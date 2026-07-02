@@ -101,7 +101,7 @@ export default function RedBranchPage() {
               type="button"
               aria-pressed={sub === 'recibir-llamada'}
               onClick={() => setSub('recibir-llamada')}
-              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'recibir-llamada' ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white text-ink'}`}
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'recibir-llamada' ? 'border-ppv-blue bg-ppv-blue text-white' : 'border-slate-300 bg-white text-ink'}`}
             >
               Recibir una llamada
             </button>
@@ -109,7 +109,7 @@ export default function RedBranchPage() {
               type="button"
               aria-pressed={sub === 'whatsapp-silencioso'}
               onClick={() => setSub('whatsapp-silencioso')}
-              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'whatsapp-silencioso' ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white text-ink'}`}
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'whatsapp-silencioso' ? 'border-ppv-blue bg-ppv-blue text-white' : 'border-slate-300 bg-white text-ink'}`}
             >
               WhatsApp silencioso
             </button>
