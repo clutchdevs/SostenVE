@@ -136,10 +136,11 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   (mayúsculas, minúsculas, números y símbolo). La misma política se aplica a cambio/reset de contraseña
   (para que no se pueda degradar). El correo sigue tomándose de la invitación (address-targeted).
 - ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout 15 min configurable) **+ expiración de
-  sesión por inactividad** (`security.session.idle_timeout_minutes`, enforce en cliente sobre el `exp`
-  del JWT) **+ ruta separada `/login-coordinador`** (issue #23).
-  ⚠️ **Desvío del PRD:** RF-2.7 fija la inactividad en **30 min**; hoy está configurada en **15 min**
-  (`idle_timeout_minutes: 15`). Falta la **destrucción de sesiones duplicadas en caliente** (RF-2.7).
+  sesión por inactividad de 30 min** (`security.session.idle_timeout_minutes: 30`, enforce en cliente sobre
+  el `exp` del JWT) **+ ruta separada `/login-coordinador`** (issue #23) **+ destrucción de sesiones
+  duplicadas en caliente** (issue #54): cada login **bumpea `token_version`** y el middleware **valida la
+  versión del token contra la BD en cada request**, así un login nuevo invalida las sesiones previas al
+  instante.
 
 ### Módulo 3 — Asignación y SLA
 - ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + **especialidad infantil por edad y por tags de
@@ -251,10 +252,11 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### D. Desvíos del PRD por ajustar (implementado pero no exacto al texto)
 Funcionalidad construida que se aparta de la letra del PRD; cada uno es un cambio chico:
-- [ ] **Inactividad de coordinador = 30 min (RF-2.7):** hoy `idle_timeout_minutes: 15`. Subir a 30 (1 línea de config).
+- [x] **Inactividad de sesión = 30 min (RF-2.7, issue #54):** `idle_timeout_minutes: 30` (config + espejo web).
 - [x] **Contraseña de coordinador ≥ 12 complejos (RF-2.6.2, issue #53):** política robusta (≥12 + mayúsc/minúsc/número/símbolo) en el canje **y** en cambio/reset de contraseña.
 - [x] **Campos del signup de coordinador (RF-2.6.2, issue #53):** el canje captura Nombres, Apellidos, Cédula, FPV (opcional) y Teléfono (correo desde la invitación).
-- [ ] **Destrucción de sesiones duplicadas en caliente (RF-2.7):** no implementada.
+- [x] **Destrucción de sesiones duplicadas en caliente (RF-2.7, issue #54):** login bumpea `token_version` y
+      el middleware valida la versión del token contra la BD en cada request → el login nuevo invalida los previos.
 - [ ] **Hashing:** el PRD sugiere `bcrypt` (factor 12); usamos **argon2id** por decisión documentada (ADR-0005). Mantener argon2id; queda anotado como desvío consciente.
 - [ ] **Bandera de seguimiento a 5 días por ideación suicida (RF-4.2.4):** hoy se audita el evento; falta el plazo programado para el clúster de coordinadores.
 

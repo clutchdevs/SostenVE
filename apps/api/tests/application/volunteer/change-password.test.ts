@@ -54,6 +54,9 @@ function deps(state: FakeState): { volunteers: VolunteerRepository; audit: Audit
       state.updated = passwordHash;
     },
     async setStatus() {},
+    async getTokenVersion() {
+      return 1;
+    },
     async bumpTokenVersion() {
       state.bumped += 1;
       return 2;

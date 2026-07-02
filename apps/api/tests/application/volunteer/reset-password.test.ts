@@ -55,6 +55,9 @@ function volunteerRepo(v: Volunteer | null, sink: { updated: string | null; bump
       sink.updated = passwordHash;
     },
     async setStatus() {},
+    async getTokenVersion() {
+      return 1;
+    },
     async bumpTokenVersion() {
       sink.bumped += 1;
       return 2;

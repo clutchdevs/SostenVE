@@ -16,6 +16,8 @@ import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coo
 import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller';
 import { createMonitoringRouter } from '../src/interfaces/http/v1/monitoring.controller';
 import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller';
+import { configureSessionValidation } from '../src/interfaces/http/middleware/auth';
+import { getVolunteerContainer } from '../src/interfaces/http/v1/dependencies';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).
@@ -41,6 +43,11 @@ app.use('*', (c, next) =>
 );
 app.use('*', buildCors(corsOrigins));
 app.onError(errorHandler);
+
+// Enforce in-place session destruction (RF-2.7): validate each request's token
+// version against the account's current one (bumped on every login). Lazy — the
+// Supabase client is only built when a request actually hits an authed route.
+configureSessionValidation((userId) => getVolunteerContainer().volunteers.getTokenVersion(userId));
 
 app.get('/health', (c) => {
   return c.json({ status: 'ok', app: config.app.name, uptime_seconds: Math.round(process.uptime()) });

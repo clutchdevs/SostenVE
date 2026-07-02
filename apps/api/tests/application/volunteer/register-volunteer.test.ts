@@ -48,6 +48,9 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
     },
     async updatePasswordHash() {},
     async setStatus() {},
+    async getTokenVersion() {
+      return 1;
+    },
     async bumpTokenVersion() {
       return 2;
     },

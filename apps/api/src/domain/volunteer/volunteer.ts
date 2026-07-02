@@ -90,4 +90,6 @@ export interface VolunteerRepository {
   setStatus(id: string, status: VolunteerStatus): Promise<void>;
   /** Bumps token_version to invalidate previously issued tokens (ADR-0005). */
   bumpTokenVersion(id: string): Promise<number>;
+  /** Current token_version for per-request session validation (RF-2.7), or null. */
+  getTokenVersion(id: string): Promise<number | null>;
 }

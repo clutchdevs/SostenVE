@@ -99,6 +99,9 @@ function volunteerRepo() {
     },
     async updatePasswordHash() {},
     async setStatus() {},
+    async getTokenVersion() {
+      return 1;
+    },
     async bumpTokenVersion() {
       return 2;
     },
