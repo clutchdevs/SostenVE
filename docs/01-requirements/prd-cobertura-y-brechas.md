@@ -149,7 +149,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   estado dentro del `colegio` del voluntario) **sin varar** el caso si no hay nadie de la región en línea.
 - ✅ Filtro de elegibilidad — estado `Activo` **y** presencia `Online` (RF-2.5).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
-- ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron.
+- ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron. La alerta
+  crítica `high_risk_escalated_no_coordinator` se basa ahora en **presencia en vivo** (issue #55): salta si al
+  escalar **no hay ningún coordinador `Online`** (RF-2.5), no solo si no hay coordinador activo.
 - ⚠️ Notificación — `LogNotifier`; faltan push PWA y correo reales.
 
 ### Módulo 4 — Panel del psicólogo y expediente clínico (versión online ✅)

@@ -9,9 +9,10 @@ import type { AssignmentDeps } from './ports';
  * then reassign it. This is the life-safety net: it does not depend on a human
  * reviewing the platform in time.
  *
- * Observability (fase 06): if a high-risk case escalates and there is **no active
- * coordinator** to catch it, raise a critical alert. Real-time presence (RF-2.5)
- * is not tracked yet, so "available" is proxied by an active coordinator existing.
+ * Observability (fase 06): if a high-risk case escalates and there is **no
+ * coordinator online** to catch it, raise a critical alert. "Available" now means
+ * a coordinator whose real-time presence is Online (RF-2.5), not merely one whose
+ * account is active — a coordinator with the app closed can't act on the alert.
  */
 export async function escalateOverdueCases(
   deps: AssignmentDeps,
@@ -22,8 +23,11 @@ export async function escalateOverdueCases(
     return 0;
   }
 
-  const activeStaff = await deps.volunteers.listByStatus('active');
-  const coordinatorAvailable = activeStaff.some((v) => v.role === 'coordinator');
+  const activeCoordinatorIds = (await deps.volunteers.listByStatus('active'))
+    .filter((v) => v.role === 'coordinator')
+    .map((v) => v.id);
+  const onlineCoordinators = await deps.presence.filterOnline(activeCoordinatorIds);
+  const coordinatorAvailable = onlineCoordinators.size > 0;
 
   for (const caseRecord of overdue) {
     await deps.assignments.deleteByCaseId(caseRecord.id);

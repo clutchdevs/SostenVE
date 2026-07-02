@@ -41,6 +41,6 @@ inmediato (pausa manual). La lista de voluntarios del coordinador anota `en_line
   producción **debe** usar `upstash`. Requiere aprovisionar un proyecto Upstash (decisión de infra, ligada a
   #13/NFR-6.2).
 - **Desviaciones documentadas:** la **pausa manual** (RF-4.3.1) se modela colapsándola a "offline" en la
-  misma clave de presencia (no hay un estado "en pausa" distinto de "desconectado" en el store); el
-  **escalamiento por SLA** (RF-3.3) aún aproxima "coordinador disponible" por existencia de un coordinador
-  activo, no por presencia en vivo (mejora futura).
+  misma clave de presencia (no hay un estado "en pausa" distinto de "desconectado" en el store).
+- **Actualización (issue #55):** el **escalamiento por SLA** (RF-3.3) ya usa **presencia en vivo** — la alerta
+  `high_risk_escalated_no_coordinator` salta si no hay ningún coordinador `Online` (no solo activo).
