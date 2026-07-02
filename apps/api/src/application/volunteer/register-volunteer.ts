@@ -57,6 +57,7 @@ async function resolveStatus(
   try {
     const result = await deps.fpvVerifier.verify({
       professionalId: input.professionalId,
+      nationalId: input.application.documentNumber,
       fullName: input.fullName,
     });
     if (!result.valid) return { status: 'pending_approval', reason: 'fpv_not_found' };

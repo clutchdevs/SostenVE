@@ -152,8 +152,13 @@ default: &default
           - "No minimices ('no fue para tanto') ni fuerces consejos; acompaña."
           - "Si hay riesgo para su vida, comunícate con una línea de crisis ya."
 
-  fpv:
-    verifier: "dummy" # dummy | http (http pending the real FPV API contract)
+  fpv: &fpv
+    # http: real FPV padrón API (issue #6) — the default routing. dummy: an
+    # always-approves stand-in used ONLY in development/tests (overridden below).
+    # Production uses http and requires FPV_API_TOKEN in the environment.
+    verifier: "http" # dummy | http
+    base_url: "https://api.sistema.fpv.org.ve"
+    request_timeout_seconds: 8
     circuit_breaker:
       failure_threshold: 3
       cooldown_seconds: 30
@@ -206,6 +211,18 @@ development:
   app:
     name: "PPV (dev)"
     locale: "es-VE"
+  # Dev usa el servicio REAL de la FPV (fpv.verifier: http, heredado del default)
+  # para poder probar respuestas y fallos reales del padrón. Requiere FPV_API_TOKEN
+  # en el .env; sin token, verify() lanza y el registro cae a pending_approval.
+
+test:
+  <<: *default
+  # Los tests automatizados NO deben depender de un servicio externo (sin token, sin
+  # red, deterministas): usan el dummy. vitest corre con NODE_ENV=test, así que esta
+  # sección se selecciona automáticamente en la suite.
+  fpv:
+    <<: *fpv
+    verifier: "dummy"
 
 production:
   <<: *default

@@ -1,0 +1,35 @@
+# API del padrón de la FPV (issue #6) — pruebas manuales
+# Requiere la extensión "REST Client" de VS Code (humao.rest-client).
+#
+# USO: copia este archivo a `fpv-padron.http` (ignorado por git) y pon ahí tu
+# token real. NUNCA pongas el token en este .example ni lo commitees.
+#   cp fpv-padron.http.example fpv-padron.http
+
+@baseUrl = https://api.sistema.fpv.org.ve
+@token = TU_TOKEN
+
+# Datos de prueba (cámbialos por unos reales del padrón)
+@nationalId = 12345678
+@fpv = 12345
+
+###
+
+# 1) Validar psicólogo por cédula + FPV
+# 200 {data:{valid:true,status:"active",...}} | 404 {data:{valid:false}} | 401 sin/token inválido
+GET {{baseUrl}}/api/v1/public/validate?national_id={{nationalId}}&fpv={{fpv}}
+X-API-TOKEN: {{token}}
+Accept: application/json
+
+###
+
+# 2) Obtener datos completos por cédula
+# 200 {data:{id,fpv_number,colleges,specializations,full_name,...}} | 404 | 401
+GET {{baseUrl}}/api/v1/public/psicologo/{{nationalId}}
+X-API-TOKEN: {{token}}
+Accept: application/json
+
+###
+
+# 3) Caso de error de autenticación (sin token) → 401
+GET {{baseUrl}}/api/v1/public/validate?national_id={{nationalId}}&fpv={{fpv}}
+Accept: application/json

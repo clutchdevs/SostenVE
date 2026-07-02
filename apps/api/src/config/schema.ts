@@ -73,6 +73,13 @@ export const appConfigSchema = z.object({
   }),
   fpv: z.object({
     verifier: z.enum(['dummy', 'http']),
+    // Base URL of the FPV validation API (issue #6). Only used by the `http`
+    // verifier; the `X-API-TOKEN` credential is a secret read from the
+    // FPV_API_TOKEN env var (not stored here).
+    base_url: z.string().min(1),
+    // Abort the FPV request after this many seconds so a slow registry never
+    // hangs a registration; on timeout the flow falls back to pending_approval.
+    request_timeout_seconds: z.number().int().positive(),
     circuit_breaker: z.object({
       failure_threshold: z.number().int().positive(),
       cooldown_seconds: z.number().int().positive(),
