@@ -31,6 +31,8 @@ export const greenBranchSchema = z.object({
   estado: z.string().min(1).optional(),
   ciudad: z.string().min(1).optional(),
   modalidad: z.enum(['presencial', 'distancia']).optional(),
+  // Preferred contact channel (RF-1.3 screen 2): WhatsApp or phone call.
+  metodo_contacto: z.enum(['whatsapp', 'llamada']).optional(),
   edad: z.number().int().min(0).max(120).optional(),
   tags: z.array(z.string().min(1)).default([]),
   cambio_habitos: z.array(habitChangeEnum).default([]),

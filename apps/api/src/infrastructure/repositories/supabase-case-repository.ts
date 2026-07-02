@@ -11,6 +11,8 @@ import type { RiskLevel } from '../../domain/triage';
 import {
   branchFromDb,
   branchToDb,
+  contactMethodFromDb,
+  contactMethodToDb,
   modalityFromDb,
   modalityToDb,
   requesterFromDb,
@@ -32,6 +34,7 @@ interface CaseRow {
   zone: string | null;
   region: string | null;
   preferred_modality: string | null;
+  preferred_contact_method: string | null;
   age: number | null;
   habit_changes: string[] | null;
   requires_child_specialty: boolean | null;
@@ -52,6 +55,9 @@ function toDomain(row: CaseRow): CaseRecord {
     region: row.region ?? undefined,
     preferredModality: row.preferred_modality
       ? modalityFromDb[row.preferred_modality]
+      : undefined,
+    preferredContactMethod: row.preferred_contact_method
+      ? contactMethodFromDb[row.preferred_contact_method]
       : undefined,
     age: row.age ?? undefined,
     habitChanges: row.habit_changes ?? undefined,
@@ -78,6 +84,9 @@ export class SupabaseCaseRepository implements CaseRepository {
         region: input.region ?? null,
         preferred_modality: input.preferredModality
           ? modalityToDb[input.preferredModality]
+          : null,
+        preferred_contact_method: input.preferredContactMethod
+          ? contactMethodToDb[input.preferredContactMethod]
           : null,
         age: input.age ?? null,
         habit_changes: input.habitChanges ?? null,

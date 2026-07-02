@@ -35,6 +35,18 @@ describe('buildGreenPayload', () => {
     expect(body.estado).toBe('Yaracuy');
     expect(body.ciudad).toBe('San Felipe');
   });
+
+  it('includes the preferred contact method when chosen, omits it otherwise (RF-1.3 screen 2)', () => {
+    expect(
+      buildGreenPayload({ ...EMPTY_GREEN_FORM, contact: '0212' }).metodo_contacto,
+    ).toBeUndefined();
+    const body = buildGreenPayload({
+      ...EMPTY_GREEN_FORM,
+      contact: '0212',
+      contactMethod: 'whatsapp',
+    });
+    expect(body.metodo_contacto).toBe('whatsapp');
+  });
 });
 
 describe('catalog constants', () => {

@@ -220,6 +220,29 @@ export default function GreenBranchPage() {
             value={form.contact}
             onChange={(e) => update({ contact: e.target.value })}
           />
+          <div>
+            <p className="mb-2 text-sm text-slate-600">¿Cómo prefieres que te contactemos?</p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { value: 'llamada', label: 'Llamada' },
+                  { value: 'whatsapp', label: 'WhatsApp' },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={form.contactMethod === opt.value}
+                  onClick={() => update({ contactMethod: opt.value })}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm ${
+                    form.contactMethod === opt.value ? 'bg-brand text-white' : 'bg-white'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
       )}
 

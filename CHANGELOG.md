@@ -21,6 +21,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 1 — Método de contacto preferido en Rama Verde (issue #52, RF-1.3 Pantalla 2):** el intake verde
+  ahora captura, junto al teléfono, **cómo prefiere el solicitante ser contactado (WhatsApp / Llamada)**. Se
+  persiste en el caso (`cases.preferred_contact_method`, migración `20260628000017`), viaja en el contrato
+  como `metodo_contacto` y se muestra al **psicólogo asignado** en su tarjeta de identidad del caso
+  ("Prefiere: WhatsApp/Llamada") para que contacte por el canal correcto.
 - **Módulo 3 — Preferencia de asignación por clúster regional (issue #51, RF-3.1):** el intake de Rama Verde
   persiste el `estado` del solicitante (`cases.region`, migración `20260628000016`) y el motor de asignación
   ahora **prefiere psicólogos del mismo estado** — comparando el estado del caso contra el `colegio` del

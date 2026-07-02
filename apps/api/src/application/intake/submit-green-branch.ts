@@ -2,7 +2,7 @@ import { ValidationError } from '../../shared/errors/api-error';
 import { generatePseudonymId } from '../../domain/identity/pseudonym';
 import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage';
 import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog';
-import type { Modality, RequesterType } from '../../domain/case/case';
+import type { ContactMethod, Modality, RequesterType } from '../../domain/case/case';
 import { getActiveCrisisLine } from './get-active-crisis-line';
 import type { IntakeCaseResult, IntakeDeps } from './types';
 
@@ -14,6 +14,8 @@ export interface GreenBranchInput {
   /** Requester's state for the regional cluster (RF-3.1). */
   region?: string;
   modality?: Modality;
+  /** Preferred contact channel (RF-1.3 screen 2). */
+  contactMethod?: ContactMethod;
   age?: number;
   tagCodes: string[];
   /** Recent habit changes reported on screen 5 (feeds the urgency index, RF-1.5). */
@@ -63,6 +65,7 @@ export async function submitGreenBranch(
     zone: input.zone,
     region: input.region,
     preferredModality: input.modality,
+    preferredContactMethod: input.contactMethod,
     age: input.age,
     habitChanges: input.habitChanges,
     // Route to a child specialist if any "Infancia" tag is present (RF-1.3).

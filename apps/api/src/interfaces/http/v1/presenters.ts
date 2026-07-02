@@ -1,5 +1,6 @@
 import {
   branchToDb,
+  contactMethodToDb,
   modalityToDb,
   requesterToDb,
   riskToDb,
@@ -99,6 +100,9 @@ export function presentCaseSummary(caseRecord: CaseRecord) {
     tipo_solicitante: caseRecord.requesterType ? requesterToDb[caseRecord.requesterType] : null,
     zona: caseRecord.zone ?? null,
     modalidad: caseRecord.preferredModality ? modalityToDb[caseRecord.preferredModality] : null,
+    metodo_contacto: caseRecord.preferredContactMethod
+      ? contactMethodToDb[caseRecord.preferredContactMethod]
+      : null,
     edad: caseRecord.age ?? null,
     cambio_habitos: caseRecord.habitChanges ?? [],
     creado_en: caseRecord.createdAt.toISOString(),

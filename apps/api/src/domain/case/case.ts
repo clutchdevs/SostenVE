@@ -10,6 +10,8 @@ export type CaseBranch = 'RED' | 'GREEN';
 export type CaseStatus = 'PENDING' | 'ASSIGNED' | 'ACCEPTED' | 'IN_FOLLOW_UP' | 'CLOSED';
 export type RequesterType = 'VICTIM' | 'FAMILY' | 'VOLUNTEER';
 export type Modality = 'IN_PERSON' | 'REMOTE';
+/** Requester's preferred contact channel (green-branch screen 2, RF-1.3). */
+export type ContactMethod = 'WHATSAPP' | 'CALL';
 
 export interface CaseRecord {
   id: string;
@@ -23,6 +25,8 @@ export interface CaseRecord {
   /** Requester's state (green-branch location) — the regional cluster (RF-3.1). */
   region?: string;
   preferredModality?: Modality;
+  /** Requester's preferred contact channel (green-branch screen 2, RF-1.3). */
+  preferredContactMethod?: ContactMethod;
   age?: number;
   /** Recent habit changes reported at intake (green-branch screen 5, RF-1.3). */
   habitChanges?: string[];
@@ -42,6 +46,7 @@ export interface NewCase {
   zone?: string;
   region?: string;
   preferredModality?: Modality;
+  preferredContactMethod?: ContactMethod;
   age?: number;
   habitChanges?: string[];
   requiresChildSpecialty?: boolean;

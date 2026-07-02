@@ -1,5 +1,11 @@
 import { RiskLevel } from '../../domain/triage';
-import type { CaseBranch, CaseStatus, Modality, RequesterType } from '../../domain/case/case';
+import type {
+  CaseBranch,
+  CaseStatus,
+  ContactMethod,
+  Modality,
+  RequesterType,
+} from '../../domain/case/case';
 
 /**
  * Bidirectional maps between domain enums (English) and DB/contract values
@@ -43,3 +49,9 @@ export const modalityToDb: Record<Modality, string> = {
   REMOTE: 'distancia',
 };
 export const modalityFromDb = reverse(modalityToDb);
+
+export const contactMethodToDb: Record<ContactMethod, string> = {
+  WHATSAPP: 'whatsapp',
+  CALL: 'llamada',
+};
+export const contactMethodFromDb = reverse(contactMethodToDb);

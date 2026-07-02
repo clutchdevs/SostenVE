@@ -5,7 +5,12 @@ import { submitRedBranch } from '../../../application/intake/submit-red-branch';
 import { submitGreenBranch } from '../../../application/intake/submit-green-branch';
 import { withIdempotency } from '../../../application/intake/idempotency';
 import type { IntakeCaseResult } from '../../../application/intake/types';
-import { branchToDb, modalityFromDb, requesterFromDb } from '../../../infrastructure/repositories/enum-maps';
+import {
+  branchToDb,
+  contactMethodFromDb,
+  modalityFromDb,
+  requesterFromDb,
+} from '../../../infrastructure/repositories/enum-maps';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
 import { getIntakeContainer } from './dependencies';
@@ -85,6 +90,7 @@ export function createIntakeRouter(): Hono {
         zone,
         region: body.estado,
         modality: body.modalidad ? modalityFromDb[body.modalidad] : undefined,
+        contactMethod: body.metodo_contacto ? contactMethodFromDb[body.metodo_contacto] : undefined,
         age: body.edad,
         tagCodes: body.tags,
         habitChanges: body.cambio_habitos,
