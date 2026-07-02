@@ -130,7 +130,7 @@ export default function GreenBranchPage() {
           {STEPS.map((s, i) => (
             <span
               key={s}
-              className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-brand' : 'bg-slate-200'}`}
+              className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-ppv-blue' : 'bg-slate-200'}`}
             />
           ))}
         </div>
@@ -189,12 +189,12 @@ export default function GreenBranchPage() {
                   aria-pressed={on}
                   onClick={() => toggle('habitChanges', h.code)}
                   className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition ${
-                    on ? 'border-brand bg-brand/5 text-brand' : 'border-slate-200 bg-white text-slate-700'
+                    on ? 'border-ppv-blue bg-ppv-blue/5 text-ppv-blue' : 'border-slate-200 bg-white text-slate-700'
                   }`}
                 >
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded border ${
-                      on ? 'border-brand bg-brand text-white' : 'border-slate-300'
+                      on ? 'border-ppv-blue bg-ppv-blue text-white' : 'border-slate-300'
                     }`}
                     aria-hidden
                   >
@@ -239,7 +239,7 @@ export default function GreenBranchPage() {
                   onClick={() => update({ contactMethod: opt.value })}
                   className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${
                     form.contactMethod === opt.value
-                      ? 'border-brand bg-brand text-white'
+                      ? 'border-ppv-blue bg-ppv-blue text-white'
                       : 'border-slate-300 bg-white text-ink'
                   }`}
                 >

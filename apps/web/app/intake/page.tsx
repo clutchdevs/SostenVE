@@ -51,7 +51,7 @@ export default function IntakePage() {
             type="button"
             disabled={loading}
             onClick={() => choose(opt.value)}
-            className={`w-full px-4 py-3.5 text-left font-medium text-ink transition-colors hover:border-brand disabled:opacity-50 ${ui.card}`}
+            className={`w-full px-4 py-3.5 text-left font-medium text-ink transition-colors hover:border-ppv-blue disabled:opacity-50 ${ui.card}`}
           >
             {opt.label}
           </button>

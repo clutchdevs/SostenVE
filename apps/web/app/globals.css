@@ -7,5 +7,5 @@
 }
 
 body {
-  @apply bg-surface text-ink antialiased;
+  @apply bg-ppv-tint text-ink antialiased;
 }

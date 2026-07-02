@@ -13,8 +13,9 @@ interface AuthShellProps {
 
 /**
  * Centered card shell for the staff auth / onboarding screens (login, password
- * flows, coordinator sign-up) so they match the dashboard palette: warm surface
- * canvas, serif heading, `surface-card` panel with `shadow-card`.
+ * flows, coordinator sign-up) on the public PPV palette: soft blue canvas (from
+ * the body / `ppv-tint`), serif heading, white `surface-card` panel with
+ * `shadow-card`.
  */
 export function AuthShell({
   title,

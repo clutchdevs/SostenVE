@@ -5,11 +5,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#0f766e', dark: '#115e59' },
+        // PPV brand palette, derived from the institutional logo (blue briefcase +
+        // navy hands). These drive the whole app's brand identity.
+        ppv: {
+          blue: { DEFAULT: '#1F5FA6', dark: '#17487D' }, // medium logo blue (actions)
+          sky: '#4A93D6', // lighter logo blue (accents)
+          navy: '#1A2A5C', // deep logo navy (headings)
+          tint: '#EEF4FB', // soft blue canvas
+        },
+        // Brand = the PPV logo blue (was teal). `risk.followup` stays green — it is
+        // a semantic urgency level (red/amber/green traffic light), not the brand.
+        brand: { DEFAULT: '#1F5FA6', dark: '#17487D' },
         risk: { high: '#dc2626', moderate: '#d97706', followup: '#0f766e' },
-        // Premium dashboard palette (warm, calm, enterprise).
-        surface: { DEFAULT: '#F8F5EF', card: '#FFFFFF' },
-        navy: { DEFAULT: '#203B5A', light: '#2C4F77', hover: '#28598A' },
+        // App canvas + sidebar, aligned to the logo (soft blue tint, deep navy).
+        surface: { DEFAULT: '#EEF4FB', card: '#FFFFFF' },
+        navy: { DEFAULT: '#1A2A5C', light: '#26407C', hover: '#2E4E96' },
         ink: '#1F2A37',
         accent: {
           orange: '#E07A3F',
