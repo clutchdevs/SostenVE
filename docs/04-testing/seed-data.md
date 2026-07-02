@@ -14,9 +14,9 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 
 | Rol | Correo | Contraseña | Redirige a |
 |---|---|---|---|
-| Coordinador | `coordinador@sostenve.test` | `Coordinador123!` | `/coordinador` |
-| Psicólogo | `psicologo@sostenve.test` | `Psicologo123!` | `/psicologo` |
-| Administrador | `admin@sostenve.test` | `Admin123!` | `/admin` |
+| Coordinador | `coordinador@ppv.test` | `Coordinador123!` | `/coordinador` |
+| Psicólogo | `psicologo@ppv.test` | `Psicologo123!` | `/psicologo` |
+| Administrador | `admin@ppv.test` | `Admin123!` | `/admin` |
 
 - El psicólogo tiene especialidad **"psicología infantil"** (útil para probar la priorización por edad).
 - Ambos quedan en estado **`active`** (pueden iniciar sesión de inmediato).

@@ -1,8 +1,8 @@
 {
-  "name": "sostenve",
+  "name": "ppv",
   "version": "0.3.0",
   "private": true,
-  "description": "Sostén — post-earthquake psychological support platform (Venezuela 2026)",
+  "description": "PPV — post-earthquake psychological support platform (Venezuela 2026)",
   "license": "MIT",
   "engines": {
     "node": ">=22"

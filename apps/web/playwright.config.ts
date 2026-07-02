@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright config (scaffold). Install browsers once with `npm run e2e:install`,
  * then `npm run e2e`. Specs that hit the API (intake/staff) need the API running
- * (`npm run dev -w @sostenve/api`) with Supabase up and `.env` set; the
+ * (`npm run dev -w @ppv/api`) with Supabase up and `.env` set; the
  * `crisis-failsafe` spec runs with only the web server (it aborts the API route).
  */
 export default defineConfig({

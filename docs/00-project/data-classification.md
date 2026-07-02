@@ -1,4 +1,4 @@
-# Clasificación de datos — Proyecto Sostén
+# Clasificación de datos — Proyecto PPV
 
 > **Fase AI-DLC:** `00-project`
 > Inventario de datos por sensibilidad. Define el trato mínimo obligatorio (cifrado, acceso) de

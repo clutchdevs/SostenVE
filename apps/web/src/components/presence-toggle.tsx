@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api-client';
 import { PRESENCE_HEARTBEAT_INTERVAL_SECONDS } from '../lib/config';
 
-const AVAILABLE_KEY = 'sostenve.available';
+const AVAILABLE_KEY = 'ppv.available';
 
 async function sendPresence(disponible: boolean): Promise<void> {
   try {

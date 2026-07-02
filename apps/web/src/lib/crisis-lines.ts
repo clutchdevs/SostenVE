@@ -17,7 +17,7 @@ export interface CrisisLines {
   backups: CrisisLine[];
 }
 
-const CACHE_KEY = 'sostenve.crisisLines';
+const CACHE_KEY = 'ppv.crisisLines';
 
 /** Verified fallback numbers (kept in sync with config/app.config.yml). */
 export const FALLBACK_CRISIS_LINES: CrisisLines = {

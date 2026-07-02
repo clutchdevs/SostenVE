@@ -1,7 +1,7 @@
-# Sostén
+# PPV — Programa de Psicólogos Voluntarios
 
 > Plataforma de apoyo psicológico post-terremoto · Venezuela, 2026
-> *("Sostén" es un nombre de trabajo — `<TODO — Human-in-the-Loop>` el nombre final lo confirma la Federación.)*
+> Nombre definido por la Federación de Psicólogos de Venezuela (antes se usó "Sostén" como placeholder).
 
 **Visión:** conectar de forma rápida, priorizada y segura a personas afectadas por el terremoto con
 psicólogos voluntarios disponibles, asegurando que **ninguna persona en riesgo de vida dependa de

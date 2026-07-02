@@ -31,12 +31,12 @@ describe('getCrisisLines (fail-safe)', () => {
     const lines = await getCrisisLines();
     expect(lines.active?.phone).toBe('+58000');
     // cached for offline reuse
-    expect(window.localStorage.getItem('sostenve.crisisLines')).toContain('+58000');
+    expect(window.localStorage.getItem('ppv.crisisLines')).toContain('+58000');
   });
 
   it('uses the cache when the API later fails', async () => {
     window.localStorage.setItem(
-      'sostenve.crisisLines',
+      'ppv.crisisLines',
       JSON.stringify({ active: { name: 'Cacheada', phone: '+58111' }, backups: [] }),
     );
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')));

@@ -1,17 +1,17 @@
 # C4 — Diagrama de contenedores
 
-> **Fase AI-DLC:** `02-design`  ·  Nivel 2 (Contenedores del sistema Sostén).
+> **Fase AI-DLC:** `02-design`  ·  Nivel 2 (Contenedores del sistema PPV).
 > El motor de triage es un contenedor **lógico dentro del backend**, no un servicio separado.
 
 ```mermaid
 C4Container
-    title Contenedores — Plataforma Sostén
+    title Contenedores — Plataforma PPV
 
     Person(solicitante, "Solicitante")
     Person(psicologo, "Psicólogo voluntario")
     Person(coordinador, "Coordinador de turno")
 
-    System_Boundary(sosten, "Sostén") {
+    System_Boundary(ppv, "PPV") {
         Container(frontend, "Frontend web", "React/Vue o server-rendered", "Formulario de solicitud y paneles de psicólogo y coordinador; guardado local/reintento")
         Container(api, "API / Backend", "Node.js o Python (ADR-0001)", "Autenticación, triage, asignación/cola, gestión de líneas de crisis")
         ContainerDb(db, "Base de datos", "PostgreSQL (ADR-0002)", "Casos, usuarios, asignaciones, notas clínicas (cifradas), líneas de respaldo")

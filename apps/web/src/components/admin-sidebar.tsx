@@ -50,7 +50,7 @@ export function AdminSidebar() {
           <HeartHandshake className="h-5 w-5 text-white" aria-hidden />
         </span>
         <span className="text-lg font-semibold tracking-tight">
-          Sosten<span className="text-brand">Ve</span>
+          PP<span className="text-brand">V</span>
         </span>
       </div>
 

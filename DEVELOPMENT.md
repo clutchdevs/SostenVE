@@ -1,4 +1,4 @@
-# Guía de desarrollo — SostenVE
+# Guía de desarrollo — PPV
 
 Cómo levantar la app completa en local, correr la base de datos y ejecutar las pruebas.
 
@@ -51,8 +51,8 @@ Si prefieres no contenerizar API/Web (HMR más rápido en algunos equipos):
 ```bash
 npm run db:start                         # Supabase (Docker)
 npm run db:reset                         # migraciones
-npm run dev --workspace @sostenve/api    # API en :3001  (requiere .env con llaves de Supabase)
-npm run dev --workspace @sostenve/web    # Web en :3000
+npm run dev --workspace @ppv/api    # API en :3001  (requiere .env con llaves de Supabase)
+npm run dev --workspace @ppv/web    # Web en :3000
 ```
 Copia `.env.example` a `.env` y complétalo con los valores que imprime `npx supabase status`
 (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) y secretos de desarrollo

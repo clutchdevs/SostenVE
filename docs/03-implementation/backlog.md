@@ -1,4 +1,4 @@
-# Backlog de implementación — Sostén (Sistema PPV 2026)
+# Backlog de implementación — PPV (Sistema PPV 2026)
 
 > **Fase AI-DLC:** `03-implementation` · **Estado:** vigente · **Actualizado:** 2026-06-29
 >

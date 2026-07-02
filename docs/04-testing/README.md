@@ -20,7 +20,7 @@ configurados (scaffold) para correr en CI/preview; la carga se ejecuta contra AP
   - `intake.spec.ts` — la pantalla Likert bifurca a Rama Roja/Verde.
   - `staff-flow.spec.ts` — login a los portales (requiere API+Supabase y credenciales sembradas vía
     `E2E_STAFF_EMAIL`/`E2E_STAFF_PASSWORD`; se omite si no están).
-- Requisitos para los specs que tocan la API: `npm run dev -w @sostenve/api` (+ Supabase + `.env`).
+- Requisitos para los specs que tocan la API: `npm run dev -w @ppv/api` (+ Supabase + `.env`).
 
 ### Carga (autocannon)
 ```

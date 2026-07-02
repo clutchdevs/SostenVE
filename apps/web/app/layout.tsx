@@ -12,7 +12,7 @@ const serif = Fraunces({
 });
 
 export const metadata = {
-  title: 'Sostén',
+  title: 'PPV — Programa de Psicólogos Voluntarios',
   description: 'Apoyo psicológico tras el terremoto · Venezuela 2026',
 };
 

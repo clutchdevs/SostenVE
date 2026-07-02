@@ -1,4 +1,4 @@
-# SostenVE — local app stack (API + Web).
+# PPV — local app stack (API + Web).
 #
 # The database is the Supabase local stack, managed by the Supabase CLI
 # (`supabase start`), NOT this compose file — reproducing all of Supabase here
@@ -36,7 +36,7 @@ services:
   api:
     image: node:22-bookworm-slim
     working_dir: /app
-    command: sh -c "npm run dev --workspace @sostenve/api"
+    command: sh -c "npm run dev --workspace @ppv/api"
     environment:
       <<: *node-env
       PORT: 3001
@@ -56,7 +56,7 @@ services:
   web:
     image: node:22-bookworm-slim
     working_dir: /app
-    command: sh -c "npm run dev --workspace @sostenve/web -- -H 0.0.0.0"
+    command: sh -c "npm run dev --workspace @ppv/web -- -H 0.0.0.0"
     environment:
       # The browser calls the API on the host-published port.
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}

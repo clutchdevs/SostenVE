@@ -51,7 +51,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Sostén — API (Sistema PPV 2026)',
+      title: 'PPV — API (Sistema PPV 2026)',
       version: '0.3.0',
       description:
         'API de la plataforma de respuesta psicosocial. Contrato vivo de los endpoints implementados.',

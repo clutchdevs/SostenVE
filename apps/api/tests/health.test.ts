@@ -8,6 +8,6 @@ describe('GET /api/v1/health', () => {
 
     const body = (await response.json()) as { status: string; app: string };
     expect(body.status).toBe('ok');
-    expect(body.app).toContain('SostenVE');
+    expect(body.app).toContain('PPV');
   });
 });

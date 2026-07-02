@@ -1,4 +1,4 @@
-# Contributing — SostenVE
+# Contributing — PPV
 
 Conventions that every contributor and every pull request must follow. Several of these are
 **security-critical** for a system that handles clinical data of people in crisis.
