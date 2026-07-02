@@ -21,6 +21,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 1/3 — Ruteo por especialidad infantil disparado por tags (issue #50, RF-1.3 / RF-3.1):** cuando el
+  intake de Rama Verde incluye tags de **infancia** (mutismo selectivo, desregulación infantil,
+  psicoeducación, regresión del sueño), el caso se marca `requires_child_specialty` (calculado en el servidor
+  desde el catálogo, nueva columna `cases.requires_child_specialty`, migración `20260628000015`) y el motor de
+  asignación **prefiere un psicólogo con especialidad infantil** — no solo cuando el solicitante es menor de
+  edad. Así un adulto que reporta síntomas de un menor a su cargo también rutea a un especialista infantil.
 - **Módulo 2/3 — Presencia en tiempo real + filtro de asignación por presencia (RF-2.5 / RF-3.1, issue #18):**
   los psicólogos ahora tienen **presencia en vivo**. La PWA envía un **latido cada 30 s** (`POST
   /volunteers/me/presence`) y el servidor la mantiene `Online` con **TTL de 65 s**, que expira solo si cesan
