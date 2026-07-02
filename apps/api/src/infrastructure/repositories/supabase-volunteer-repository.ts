@@ -15,6 +15,7 @@ interface VolunteerRow {
   email: string | null;
   specialty: string | null;
   availability: string | null;
+  colegio: string | null;
   role: string;
   token_version: number;
   status: string;
@@ -30,6 +31,7 @@ function toDomain(row: VolunteerRow): Volunteer {
     email: row.email ?? undefined,
     specialty: row.specialty ?? undefined,
     availability: row.availability ?? undefined,
+    colegio: row.colegio ?? undefined,
     role: row.role as VolunteerRole,
     tokenVersion: row.token_version,
     status: row.status as VolunteerStatus,

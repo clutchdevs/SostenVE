@@ -20,6 +20,8 @@ export interface CaseRecord {
   status: CaseStatus;
   requesterType?: RequesterType;
   zone?: string;
+  /** Requester's state (green-branch location) — the regional cluster (RF-3.1). */
+  region?: string;
   preferredModality?: Modality;
   age?: number;
   /** Recent habit changes reported at intake (green-branch screen 5, RF-1.3). */
@@ -38,6 +40,7 @@ export interface NewCase {
   status?: CaseStatus;
   requesterType?: RequesterType;
   zone?: string;
+  region?: string;
   preferredModality?: Modality;
   age?: number;
   habitChanges?: string[];

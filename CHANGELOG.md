@@ -21,6 +21,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   aceptación queda auditada como `consent_accepted:v1.0.0-fpv`.
 
 ### Añadido
+- **Módulo 3 — Preferencia de asignación por clúster regional (issue #51, RF-3.1):** el intake de Rama Verde
+  persiste el `estado` del solicitante (`cases.region`, migración `20260628000016`) y el motor de asignación
+  ahora **prefiere psicólogos del mismo estado** — comparando el estado del caso contra el `colegio` del
+  voluntario (insensible a acentos/mayúsculas). Es una **preferencia, no un filtro duro**: si no hay nadie de
+  la región en línea, el caso se asigna igual a otro psicólogo `Online` (nunca se vara, alineado con
+  RF-3.1, que solo exige Activo + Online). El `colegio` del voluntario se expone ahora en el modelo de
+  dominio. La Rama Roja no captura ubicación, por lo que sus casos no llevan región. Follow-up: `colegio`
+  como estado estructurado (dropdown) para un match exacto.
 - **Módulo 1/3 — Ruteo por especialidad infantil disparado por tags (issue #50, RF-1.3 / RF-3.1):** cuando el
   intake de Rama Verde incluye tags de **infancia** (mutismo selectivo, desregulación infantil,
   psicoeducación, regresión del sueño), el caso se marca `requires_child_specialty` (calculado en el servidor

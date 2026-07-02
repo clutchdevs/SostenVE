@@ -140,9 +140,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### Módulo 3 — Asignación y SLA
 - ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + **especialidad infantil por edad y por tags de
-  infancia** (RF-1.3, issue #50) + **filtro de presencia**: solo se asigna a psicólogos `Online` (RF-2.5); si
-  ninguno está en línea, el caso queda en cola y lo rescata el barrido de SLA. (Pendiente: filtrado por
-  clúster regional, #51.)
+  infancia** (RF-1.3, issue #50) + **preferencia por clúster regional** (issue #51) + **filtro de presencia**:
+  solo se asigna a psicólogos `Online` (RF-2.5); si ninguno está en línea, el caso queda en cola y lo rescata
+  el barrido de SLA. El **clúster regional** prefiere psicólogos del `estado` del solicitante (match del
+  estado dentro del `colegio` del voluntario) **sin varar** el caso si no hay nadie de la región en línea.
 - ✅ Filtro de elegibilidad — estado `Activo` **y** presencia `Online` (RF-2.5).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
 - ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron.
@@ -213,7 +214,12 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       **infancia** (mutismo, desregulación, psicoeducación, regresión del sueño) se persiste
       `requires_child_specialty` y la asignación **prefiere un psicólogo con especialidad infantil** —
       además del caso por edad del solicitante. Pendiente: afinado final de pesos/umbrales por la FPV (#11).
-- [x] **Expediente clínico de cierre completo** (RF-4.2.2–4.2.8): contactabilidad Sí/No, demografía,
+- [x] **Filtro de asignación por clúster regional (issue #51, RF-3.1):** el caso persiste el `estado` del
+      solicitante (`cases.region`, de la pantalla de ubicación de Rama Verde) y la asignación **prefiere**
+      psicólogos del mismo estado (match del estado dentro del `colegio` del voluntario, insensible a
+      acentos), sin varar el caso si no hay nadie de la región en línea. La Rama Roja no captura ubicación, así
+      que sus casos no llevan región. Follow-up: hacer el `colegio` un estado estructurado (dropdown) para un
+      match exacto en vez de por substring.
       sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
 - [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,
       psicólogo asignado por caso (`asignado_a`) y sub-vistas Psicólogos/Reportes (sin PII del solicitante).

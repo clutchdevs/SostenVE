@@ -30,6 +30,7 @@ interface CaseRow {
   status: string;
   requester_type: string | null;
   zone: string | null;
+  region: string | null;
   preferred_modality: string | null;
   age: number | null;
   habit_changes: string[] | null;
@@ -48,6 +49,7 @@ function toDomain(row: CaseRow): CaseRecord {
     status: statusFromDb[row.status] ?? 'PENDING',
     requesterType: row.requester_type ? requesterFromDb[row.requester_type] : undefined,
     zone: row.zone ?? undefined,
+    region: row.region ?? undefined,
     preferredModality: row.preferred_modality
       ? modalityFromDb[row.preferred_modality]
       : undefined,
@@ -73,6 +75,7 @@ export class SupabaseCaseRepository implements CaseRepository {
         status: statusToDb[input.status ?? 'PENDING'],
         requester_type: input.requesterType ? requesterToDb[input.requesterType] : null,
         zone: input.zone ?? null,
+        region: input.region ?? null,
         preferred_modality: input.preferredModality
           ? modalityToDb[input.preferredModality]
           : null,

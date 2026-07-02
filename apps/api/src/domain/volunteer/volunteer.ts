@@ -37,6 +37,8 @@ export interface Volunteer {
   email?: string;
   specialty?: string;
   availability?: string;
+  /** Colegio de Psicólogos (Venezuelan state) — proxy for the regional cluster (RF-3.1). */
+  colegio?: string;
   role: VolunteerRole;
   tokenVersion: number;
   status: VolunteerStatus;
