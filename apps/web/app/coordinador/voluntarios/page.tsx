@@ -47,7 +47,7 @@ export default function CoordinatorVolunteersPage() {
       <header>
         <h1 className="font-serif text-3xl font-semibold text-ink">Voluntarios</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Aprueba, suspende y registra notas confidenciales sobre los psicólogos voluntarios (RF-2.3 / RF-2.4).
+          Aprueba, suspende y registra notas confidenciales sobre los psicólogos voluntarios.
         </p>
       </header>
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
 import { ConsentNotice } from '../../src/components/consent-notice';
+import { ui } from '../../src/lib/ui';
 
 interface PapGuide {
   id: string;
@@ -30,18 +31,18 @@ export default function PapGuidesPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-5 px-4 py-8">
-      <Link href="/" className="text-sm text-brand underline">
+      <Link href="/" className={ui.link}>
         ← Inicio
       </Link>
       <header>
-        <h1 className="text-2xl font-bold text-brand">Guías de autoayuda</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className={`text-2xl ${ui.heading}`}>Guías de autoayuda</h1>
+        <p className={`mt-2 ${ui.muted}`}>
           Primeros Auxilios Psicológicos para acompañarte mientras llega el apoyo. Léelas a tu
           ritmo, cuando lo necesites.
         </p>
       </header>
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
         Estas guías son de autoayuda y <strong>no reemplazan</strong> la atención profesional. Si
         hay riesgo para tu vida, usa las{' '}
         <Link href="/intake/roja" className="font-semibold text-risk-high underline">
@@ -50,17 +51,14 @@ export default function PapGuidesPage() {
         .
       </div>
 
-      {error && <p className="text-sm text-risk-high">{error}</p>}
+      {error && <p className={ui.error}>{error}</p>}
 
       <div className="space-y-3">
         {data?.guides.map((guide) => (
-          <details
-            key={guide.id}
-            className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-          >
+          <details key={guide.id} className={`group p-4 ${ui.card}`}>
             <summary className="cursor-pointer list-none">
               <span className="font-semibold text-brand">{guide.title}</span>
-              <p className="mt-1 text-sm text-slate-600">{guide.summary}</p>
+              <p className={`mt-1 ${ui.muted}`}>{guide.summary}</p>
             </summary>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700">
               {guide.steps.map((step, i) => (

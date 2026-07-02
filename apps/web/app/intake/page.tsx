@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
 import { ConsentNotice } from '../../src/components/consent-notice';
+import { ui } from '../../src/lib/ui';
 
 const OPTIONS = [
   { value: 1, label: 'Estoy en crisis / en peligro ahora' },
@@ -38,11 +39,11 @@ export default function IntakePage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-10">
-      <Link href="/" className="text-sm text-brand underline">
+      <Link href="/" className={ui.link}>
         ← Inicio
       </Link>
-      <h1 className="mt-4 text-2xl font-bold text-brand">¿Cómo te sientes en este momento?</h1>
-      <p className="mt-2 text-slate-600">Toca la opción que más se parezca a ti.</p>
+      <h1 className={`mt-4 text-2xl ${ui.heading}`}>¿Cómo te sientes en este momento?</h1>
+      <p className={`mt-2 ${ui.muted}`}>Toca la opción que más se parezca a ti.</p>
       <div className="mt-6 space-y-3">
         {OPTIONS.map((opt) => (
           <button
@@ -50,16 +51,16 @@ export default function IntakePage() {
             type="button"
             disabled={loading}
             onClick={() => choose(opt.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-left font-medium shadow-sm hover:border-brand disabled:opacity-50"
+            className={`w-full px-4 py-3.5 text-left font-medium text-ink transition-colors hover:border-brand disabled:opacity-50 ${ui.card}`}
           >
             {opt.label}
           </button>
         ))}
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className={`mt-6 text-center ${ui.muted}`}>
         Mientras tanto, puedes ver{' '}
-        <Link href="/guias" className="font-semibold text-brand underline">
+        <Link href="/guias" className={`font-semibold ${ui.link}`}>
           guías de autoayuda
         </Link>
         .

@@ -11,6 +11,7 @@ import {
 } from '../../../src/lib/crisis-lines';
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
+import { ui } from '../../../src/lib/ui';
 
 type SubChannel = 'recibir-llamada' | 'whatsapp-silencioso';
 
@@ -93,14 +94,14 @@ export default function RedBranchPage() {
       )}
 
       {!done ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-semibold">¿Prefieres que te contactemos?</h2>
+        <section className={`p-4 ${ui.card}`}>
+          <h2 className="font-serif text-lg font-semibold text-ink">¿Prefieres que te contactemos?</h2>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
               aria-pressed={sub === 'recibir-llamada'}
               onClick={() => setSub('recibir-llamada')}
-              className={`flex-1 rounded-md border px-3 py-2 text-sm ${sub === 'recibir-llamada' ? 'bg-brand text-white' : 'bg-white'}`}
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'recibir-llamada' ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white text-ink'}`}
             >
               Recibir una llamada
             </button>
@@ -108,7 +109,7 @@ export default function RedBranchPage() {
               type="button"
               aria-pressed={sub === 'whatsapp-silencioso'}
               onClick={() => setSub('whatsapp-silencioso')}
-              className={`flex-1 rounded-md border px-3 py-2 text-sm ${sub === 'whatsapp-silencioso' ? 'bg-brand text-white' : 'bg-white'}`}
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${sub === 'whatsapp-silencioso' ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white text-ink'}`}
             >
               WhatsApp silencioso
             </button>
@@ -117,19 +118,19 @@ export default function RedBranchPage() {
           {sub && (
             <div className="mt-4 space-y-3">
               <input
-                className="w-full rounded-md border px-3 py-2"
+                className={ui.field}
                 placeholder="Nombre (opcional)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <input
-                className="w-full rounded-md border px-3 py-2"
+                className={ui.field}
                 placeholder="Teléfono de contacto"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
               />
               <input
-                className="w-full rounded-md border px-3 py-2"
+                className={ui.field}
                 type="number"
                 inputMode="numeric"
                 min={0}
@@ -142,7 +143,7 @@ export default function RedBranchPage() {
                 type="button"
                 onClick={submit}
                 disabled={!contact}
-                className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
+                className={`w-full ${ui.primaryBtn}`}
               >
                 Enviar
               </button>
@@ -150,7 +151,7 @@ export default function RedBranchPage() {
           )}
         </section>
       ) : (
-        <p className="rounded-lg bg-emerald-50 p-4 text-emerald-800">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
           Registramos tu solicitud. Mientras tanto, las líneas de arriba siguen disponibles.
         </p>
       )}
