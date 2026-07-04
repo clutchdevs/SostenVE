@@ -34,6 +34,9 @@ La FPV revisó tres puntos que estaban como interpretación/provisional y los ce
   routing** (sin migración destructiva).
 - 🗑️ **RF-3.3 "clúster de coordinadores" — ELIMINADO.** La escalada por SLA notifica a **los coordinadores**
   (sin clúster geográfico), que es exactamente lo ya implementado — deja de ser una interpretación abierta.
+- ✅ **Consentimiento del solicitante — TEXTO OFICIAL entregado.** La FPV entregó el texto (emergencia/líneas
+  de crisis, servicio gratuito y voluntario, terceros, confidencialidad absoluta); cargado en config
+  (`consent.requester`, `v1.0.0-fpv`). El mecanismo no bloqueante sigue siendo nuestra decisión de diseño.
 
 ## A. El PDF es ambiguo o silencioso → interpretamos (decisiones de diseño)
 Vacíos del texto que resolvimos con un criterio; la FPV puede ratificar o cambiar cada uno.
@@ -42,7 +45,7 @@ Vacíos del texto que resolvimos con un criterio; la FPV puede ratificar o cambi
 |---|---|---|
 | **Licencia FPV no activa** (RF-2.2.1) | "cruce contra padrón FPV" — no dice qué hacer si la persona está en el padrón pero su licencia **no** está activa | Solo `data.status === 'active'` **auto-activa**; hallada pero suspendida/inactiva → **revisión manual** (nunca auto-activar una licencia no vigente). Mapeo: cédula→`national_id`, nº FPV→`fpv` (ADR-0013, #6) |
 | **Ruteo infantil** (RF-1.3, #50) | "priorice en la cola a profesionales… infantil" | **Preferencia por caso** al asignar, no reordenamiento global de la cola |
-| **Consentimiento del solicitante** (#1) | El issue apunta a "sección 8 ética"; el PDF no trae texto literal de consentimiento para el solicitante | Construimos el **mecanismo** (aviso no bloqueante en cada pantalla) con **texto provisional**; la FPV define el oficial |
+| **Consentimiento del solicitante** (#1) | El issue apunta a "sección 8 ética"; el PDF no traía texto literal para el solicitante | El **mecanismo** (aviso no bloqueante en cada pantalla) es nuestra decisión de diseño; el **texto ya es oficial de la FPV** (`v1.0.0-fpv`, 2026-07-03) |
 
 ## B. Sustituciones técnicas (misma intención, otra tecnología)
 
@@ -81,7 +84,6 @@ Funcionalidad construida que se apartaba de la letra del PRD. **La mayoría ya s
 - ✅ **Contrato de la API FPV — ENTREGADO** e implementado (#6). *Pendiente (no de código):* validar con
   **datos reales** del padrón y **provisionar/rotar el token** de producción (`FPV_API_TOKEN`).
 - **Guías PAP** (`v0.1.0-draft`, #22).
-- **Consentimiento del solicitante** (`v0.1.0-draft`, #1).
 - **Plan de Supabase y respaldos** (NFR 6.2 exige respaldo cada 6 h; el plan gratuito no lo cumple — ADR-0002).
 
 > ✅ **Pesos/umbrales de tags clínicos (RF-1.3 / RF-1.5) — VALIDADOS por la FPV el 2026-07-03** (ver arriba);

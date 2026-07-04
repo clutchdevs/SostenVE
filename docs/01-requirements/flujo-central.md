@@ -151,11 +151,11 @@ ponderado resultante define la prioridad.
       clínica propia; **en el PDF vigente RF-4.3 es el interruptor de disponibilidad**, no este bloqueo).
 - [x] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (issue #1):
       aviso **no bloqueante** (`ConsentNotice`, colapsable) en `/intake`, `/intake/roja`, `/intake/verde` y
-      `/guias`, con texto **provisional** servido desde config (`GET /consent/requester`, `v0.1.0-draft`)
-      pendiente de validación por la FPV. No añade fricción al camino de riesgo alto / líneas de crisis.
+      `/guias`, con el **texto oficial de la FPV** servido desde config (`GET /consent/requester`,
+      `v1.0.0-fpv`). No añade fricción al camino de riesgo alto / líneas de crisis.
 
 ## 7. Decisiones abiertas (Human-in-the-Loop)
 - ✅ Pesos/umbrales de los tags clínicos — **validados por la FPV el 2026-07-03** (decisión final, ADR-0010).
-- `<TODO — Human-in-the-Loop>` **Texto oficial** del consentimiento del solicitante (el del postulante ya es
-  oficial, `v1.0.0-fpv`). El mecanismo del solicitante ya existe con texto provisional (`v0.1.0-draft`, issue #1).
+- ✅ Consentimiento del solicitante — **texto oficial de la FPV** (`v1.0.0-fpv`, 2026-07-03, issue #1); el del
+  postulante también es oficial (`v1.0.0-fpv`).
 - `<TODO — Human-in-the-Loop>` Umbral de tiempo de espera aceptable por categoría.

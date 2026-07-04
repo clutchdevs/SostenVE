@@ -91,8 +91,8 @@ Estas decisiones corresponden a la Federación y **no se inventan** en este repo
 - ✅ **Acceso del coordinador a notas clínicas** (issue #25): el coordinador accede al contenido
   clínico de forma **auditada** (cada lectura registra `clinical_note_read` en `audit_log`); la PII de
   contacto sigue restringida al psicólogo asignado.
-- `<TODO — Human-in-the-Loop>` **Texto oficial** de consentimiento informado del solicitante (validado por
-  la FPV). El **mecanismo** de UI ya existe (issue #1): aviso no bloqueante en cada interfaz del solicitante
-  con texto **provisional** versionado en config (`consent.requester`, `v0.1.0-draft`, `GET /consent/requester`).
+- ✅ **Consentimiento del solicitante (decisión FPV, 2026-07-03):** la FPV entregó el **texto oficial**;
+  cargado en config (`consent.requester`, `v1.0.0-fpv`, `GET /consent/requester`) y mostrado como aviso no
+  bloqueante en cada interfaz del solicitante (issue #1).
 - ✅ **Nombre del proyecto (decisión FPV):** la Federación definió el nombre **PPV — Programa de Psicólogos
   Voluntarios** (antes se usaba "Sostén" como placeholder).

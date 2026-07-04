@@ -204,8 +204,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - [x] **Módulo 1 — Consentimiento en cada interfaz del solicitante (issue #1):** aviso **no bloqueante**
       (`ConsentNotice`, colapsable) en `/intake`, `/intake/roja`, `/intake/verde` y `/guias`; texto desde
       config (`consent.requester`, `GET /consent/requester`), no hardcodeado. Sin checkbox ni gate para no
-      añadir fricción al camino de riesgo alto. Texto **provisional** (`v0.1.0-draft`) pendiente del texto
-      oficial de la FPV (decisión Human-in-the-Loop, análogo a las guías PAP).
+      añadir fricción al camino de riesgo alto. Texto **oficial de la FPV** (`v1.0.0-fpv`, 2026-07-03).
 - [x] **Intake offline-first: guardado local + reintento (issue #1 constraint / Charter in-scope #1, issue #2):**
       lo capturado en el intake se **persiste en `localStorage`** (draft) y sobrevive a recargas; si el envío
       falla por red o error de servidor (5xx) se **encola y reintenta** en carga y al reconectar (evento

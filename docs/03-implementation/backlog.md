@@ -36,8 +36,8 @@
 #### A1 · Consentimiento informado en cada interfaz del solicitante ✅ (issue #1)
 - **RF / fuente:** sección 8 (ética) del PRD FPV; criterio de aceptación del [flujo central](../01-requirements/flujo-central.md#6-criterios-de-aceptación).
 - **Estado:** implementado — `ConsentNotice` no bloqueante en `/intake`, `/intake/roja`, `/intake/verde`
-  y `/guias`; el texto vive en config (`consent.requester`, `GET /consent/requester`). Texto provisional
-  `v0.1.0-draft` pendiente del oficial de la FPV ([B4](#b4--texto-de-consentimiento-informado)).
+  y `/guias`; el texto vive en config (`consent.requester`, `GET /consent/requester`). Texto **oficial de la
+  FPV** (`v1.0.0-fpv`, 2026-07-03).
 - **Criterios de aceptación:**
   - [x] El consentimiento aparece en **cada** pantalla del solicitante (intake roja y verde, no solo al inicio).
   - [x] No bloquea ni añade fricción al camino de riesgo alto / líneas de crisis.
@@ -139,10 +139,10 @@
   (`triage-catalog.ts`): RED=100/ORANGE=10/YELLOW=1, duelo=20, culpa=15, ideación=1000, hábito=1. Ya no son
   provisionales; siguen aislados por si la FPV los retunea. Ver ADR-0010.
 
-#### B4 · Texto de consentimiento informado (parcial)
-- **Decisión:** el texto del **psicólogo** ya es el oficial de la FPV (`v1.0.0-fpv`, issue #32). Falta el
-  texto del **solicitante**, que la app ya muestra en cada interfaz con un provisional (`v0.1.0-draft`)
-  a la espera del oficial — completa el contenido de [A1](#a1--consentimiento-informado-en-cada-interfaz-del-solicitante).
+#### B4 · Texto de consentimiento informado ✅ (resuelto 2026-07-03)
+- **Decisión:** ambos textos son ahora **oficiales de la FPV**: el del **psicólogo** (`v1.0.0-fpv`, issue #32)
+  y el del **solicitante** (`v1.0.0-fpv`, 2026-07-03, issue #1), cargados en config (`consent.psychologist` /
+  `consent.requester`). Desbloquea [A1](#a1--consentimiento-informado-en-cada-interfaz-del-solicitante).
 
 #### B5 · Plan de Supabase y respaldos (NFR 6.2)
 - **Decisión + deuda técnica:** el plan gratuito **no incluye respaldos automáticos** y la propia FPV exige

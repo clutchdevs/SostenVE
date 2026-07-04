@@ -124,9 +124,6 @@ equipo. Detalle en [`docs/01-requirements/flujo-central.md`](docs/01-requirement
 Las define la Federación; no se inventan en este repo:
 - Esquema de turnos de coordinación.
 - Política de retención de historias clínicas (y de la bitácora de auditoría, ADR-0012).
-- **Texto de consentimiento del solicitante:** el del psicólogo ya es el oficial de la FPV
-  (`v1.0.0-fpv`); el del **solicitante** sigue con texto provisional (`v0.1.0-draft`) a la espera del
-  oficial. Se muestra en **cada** interfaz del solicitante.
 - **Plan de Supabase (gratuito vs. pago):** el plan gratuito pausa el proyecto por inactividad y **no
   incluye respaldos automáticos**; el NFR 6.2 de la propia Federación exige **respaldo cada 6 h**,
   que el plan gratuito no cumple (ver ADR-0002).
@@ -138,4 +135,5 @@ Las define la Federación; no se inventan en este repo:
 > **contrato del verificador FPV** entregado e implementado (ADR-0013, issue #6); texto de
 > consentimiento del **psicólogo** oficial de la FPV (issue #32); **pesos/umbrales del triage validados**
 > por la FPV (2026-07-03, ADR-0010); **clúster regional (RF-3.1) y clúster de coordinadores (RF-3.3)
-> eliminados** por la FPV (preferencia regional removida del motor).
+> eliminados** por la FPV (preferencia regional removida del motor); **texto de consentimiento del
+> solicitante** oficial de la FPV (`v1.0.0-fpv`, issue #1).
