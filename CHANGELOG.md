@@ -16,8 +16,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   destructiva); se ajustaron `selection.ts`, `assign-cases.ts`, el dominio `Case` y sus tests.
 - **Clúster de coordinadores (RF-3.3) eliminado por la FPV:** la escalada por SLA notifica a los
   coordinadores sin clúster geográfico (comportamiento ya vigente); se actualizó la documentación.
+- **Consentimiento del solicitante — texto oficial de la FPV (issue #1):** se reemplazó el borrador
+  provisional por el **texto oficial** (emergencia/líneas de crisis, servicio gratuito y voluntario,
+  terceros, confidencialidad absoluta) y se subió la versión a **`v1.0.0-fpv`** en `config/app.config.yml`
+  (`consent.requester`). Sin cambios de código: la web lo toma de `GET /consent/requester`.
 - Consolidado en [`docs/01-requirements/decisiones-interpretacion.md`](docs/01-requirements/decisiones-interpretacion.md)
-  y reflejado en cobertura, backlog, README y ADR-0010.
+  y reflejado en cobertura, backlog, README, charter, flujo-central y ADR-0010.
 
 ### Añadido
 - **Módulo 2 — Validación real contra el padrón de la FPV (`HttpFpvVerifier`, issue #6):** se implementó
