@@ -30,4 +30,6 @@ El detalle completo del flujo vive en `docs/01-requirements/flujo-central.md`.
 - **Negativas / costos:**
   - El **modelo de datos de triage cambia** de "respuestas de formulario" a "tags seleccionados + score ponderado".
   - El analizador léxico-semántico (RF-1.4) queda documentado pero puede ir a **Fase 2** (ver alcance del MVP en `flujo-central.md`).
-- **Pendientes (Human-in-the-Loop):** `<TODO — Human-in-the-Loop>` validación final de pesos/umbrales de los tags por un psicólogo de la FPV.
+- **Validado (Human-in-the-Loop):** la FPV **ratificó** los pesos/umbrales de los tags el **2026-07-03**
+  (severidad RED=100/ORANGE=10/YELLOW=1, duelo traumático=20, culpa del superviviente=15, ideación=1000,
+  hábito=1). Son la **decisión final**; siguen aislados en constantes por si la FPV los retunea a futuro.

@@ -3,7 +3,7 @@ import type { CaseRepository } from '../../domain/case/case';
 import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
 import type { PresenceStore } from '../presence/ports';
 
-/** Notifies the assigned volunteer / the coordinator cluster (Adapter). */
+/** Notifies the assigned volunteer / the coordinators on escalation (Adapter). */
 export interface AssignmentNotifier {
   notifyAssigned(input: { volunteerId: string; caseId: string }): Promise<void>;
   notifyEscalated(input: { caseId: string }): Promise<void>;

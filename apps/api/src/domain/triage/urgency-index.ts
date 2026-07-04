@@ -12,13 +12,13 @@ import { hasSeverity, type SymptomTag } from './symptom-tag';
  *   other term so a single ideation signal pushes the case to the **top** of the
  *   assignment queue, regardless of how many other tags it carries (PRD RF-1.5).
  * - `Σ peso(tag)` is the weighted sum of the selected clinical tags (RED ≫ ORANGE
- *   ≫ YELLOW per the provisional catalog).
+ *   ≫ YELLOW per the FPV-validated catalog).
  * - `n_cambios_habito` is the number of recent habit changes the requester
  *   reported (green-branch screen 5): a mild adaptive-stress signal.
  *
- * Pure and deterministic. The final coefficients are pending FPV validation
- * (TODO — Human-in-the-Loop, ADR-0010); they are named and isolated here so a
- * psychologist can tune them without touching the engine.
+ * Pure and deterministic. The coefficients were validated by the FPV
+ * (2026-07-03, ADR-0010); they stay named and isolated so a psychologist can
+ * still retune them centrally without touching the engine.
  */
 export const URGENCY_WEIGHTS = Object.freeze({
   /** w_id — dominant: any RED tag tops the queue. */

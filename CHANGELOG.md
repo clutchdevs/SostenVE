@@ -6,6 +6,19 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Cambiado (decisiones de la FPV, 2026-07-03)
+- **Pesos del triage validados (RF-1.3 / RF-1.5, ADR-0010):** la FPV ratificó las cifras como **decisión
+  final** (RED=100/ORANGE=10/YELLOW=1, duelo=20, culpa=15, ideación=1000, hábito=1); dejan de ser
+  provisionales. Solo se actualizaron comentarios/documentación (los valores ya estaban en el código).
+- **Clúster regional (RF-3.1) eliminado por la FPV:** se **removió la preferencia regional del motor de
+  asignación** (antes issue #51); la asignación queda por **riesgo + especialidad + presencia**.
+  `cases.region` se conserva como ubicación capturada pero **deprecada para routing** (sin migración
+  destructiva); se ajustaron `selection.ts`, `assign-cases.ts`, el dominio `Case` y sus tests.
+- **Clúster de coordinadores (RF-3.3) eliminado por la FPV:** la escalada por SLA notifica a los
+  coordinadores sin clúster geográfico (comportamiento ya vigente); se actualizó la documentación.
+- Consolidado en [`docs/01-requirements/decisiones-interpretacion.md`](docs/01-requirements/decisiones-interpretacion.md)
+  y reflejado en cobertura, backlog, README y ADR-0010.
+
 ### Añadido
 - **Módulo 2 — Validación real contra el padrón de la FPV (`HttpFpvVerifier`, issue #6):** se implementó
   el verificador HTTP que sustituye al dummy. Llama a `GET /api/v1/public/validate?national_id=…&fpv=…`

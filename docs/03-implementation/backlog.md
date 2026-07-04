@@ -134,9 +134,10 @@
   Desbloqueó e implementó [A6](#a6--implementar-httpfpvverifier-real--issue-6). Queda validar con datos
   reales del padrón y provisionar el token de producción.
 
-#### B3 · Pesos y umbrales finales de los tags clínicos
-- **Decisión:** un psicólogo de la FPV valida pesos del índice de urgencia (RF-1.5) y el catálogo de tags
-  (hoy provisional en `triage-catalog.ts`). Ver ADR-0010.
+#### B3 · Pesos y umbrales de los tags clínicos ✅ (validados 2026-07-03)
+- **Decisión:** la FPV **ratificó** los pesos del índice de urgencia (RF-1.5) y del catálogo de tags
+  (`triage-catalog.ts`): RED=100/ORANGE=10/YELLOW=1, duelo=20, culpa=15, ideación=1000, hábito=1. Ya no son
+  provisionales; siguen aislados por si la FPV los retunea. Ver ADR-0010.
 
 #### B4 · Texto de consentimiento informado (parcial)
 - **Decisión:** el texto del **psicólogo** ya es el oficial de la FPV (`v1.0.0-fpv`, issue #32). Falta el

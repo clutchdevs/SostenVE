@@ -22,7 +22,11 @@ export interface CaseRecord {
   status: CaseStatus;
   requesterType?: RequesterType;
   zone?: string;
-  /** Requester's state (green-branch location) — the regional cluster (RF-3.1). */
+  /**
+   * Requester's state (green-branch location). Retained as captured location
+   * metadata; no longer used for assignment — the FPV eliminated the regional
+   * cluster (RF-3.1) on 2026-07-03, so `cases.region` is deprecated for routing.
+   */
   region?: string;
   preferredModality?: Modality;
   /** Requester's preferred contact channel (green-branch screen 2, RF-1.3). */
