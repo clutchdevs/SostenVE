@@ -155,7 +155,7 @@ ponderado resultante define la prioridad.
       pendiente de validación por la FPV. No añade fricción al camino de riesgo alto / líneas de crisis.
 
 ## 7. Decisiones abiertas (Human-in-the-Loop)
-- `<TODO — Human-in-the-Loop>` Pesos/umbrales finales de los tags clínicos (valida la FPV).
+- ✅ Pesos/umbrales de los tags clínicos — **validados por la FPV el 2026-07-03** (decisión final, ADR-0010).
 - `<TODO — Human-in-the-Loop>` **Texto oficial** del consentimiento del solicitante (el del postulante ya es
   oficial, `v1.0.0-fpv`). El mecanismo del solicitante ya existe con texto provisional (`v0.1.0-draft`, issue #1).
 - `<TODO — Human-in-the-Loop>` Umbral de tiempo de espera aceptable por categoría.

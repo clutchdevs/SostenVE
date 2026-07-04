@@ -3,6 +3,10 @@
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** vivo (actualizar conforme se cierren brechas)
 > **Fuente canónica:** `Documento de Requisitos de Producto (PRD).pdf` (FPV, "Sistema PPV 2026") · **Evaluado:** 2026-07-02
 > Trazabilidad de lo construido (Bloques 0–7 + issues #1–#55) contra el PRD. Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta.
+>
+> **Decisiones de criterio.** Las interpretaciones donde el PDF es ambiguo/silencioso, las sustituciones
+> técnicas y los desvíos conscientes están consolidados en
+> [`decisiones-interpretacion.md`](decisiones-interpretacion.md) (para validación de la FPV).
 
 > **Nota de alcance del PDF.** Esta versión del PRD describe **Módulos 1–4** (intake/triage,
 > registro/validación de psicólogos, asignación/SLA y panel/expediente del psicólogo). **No** incluye
@@ -88,14 +92,14 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ RF-1.3 Rama Verde con tags por severidad (motor) + **catálogo clínico real de la FPV** (issue #19):
   los **22 tags** del PRD RF-1.3 (rojo/naranja/amarillo, con duelo, infancia y disociación), **versionado**
   (`TAG_CATALOG_VERSION`), en el dominio y espejado en el web (mismos códigos). Pesos por severidad con
-  ajustes marcados por el PRD (duelo traumático, culpa del superviviente); afinado final pendiente FPV.
+  ajustes marcados por el PRD (duelo traumático, culpa del superviviente); pesos **validados por la FPV** (2026-07-03).
 - ✅ RF-1.3 Pantalla 2 (Contacto): teléfono **+ método de contacto preferido (WhatsApp / Llamada)**
   (issue #52); se persiste en el caso (`preferred_contact_method`) y se muestra al psicólogo asignado.
 - ✅ Regla de interrupción (1 rojo o 3+ naranja → riesgo alto).
 - ✅ RF-1.5 Índice de urgencia **ponderado completo** (issue #24): `U = w_id·I_ideacion + Σ peso(tag) +
   w_hab·n_cambios_habito`, con `I_ideacion` dominante (cualquier tag rojo lleva el caso a la cima). El
   motor de asignación **drena la cola por urgencia** (mayor primero, FIFO en empate). Pesos aislados y
-  pendientes de validación FPV.
+  **validados por la FPV** (2026-07-03, ADR-0010): RED=100/ORANGE=10/YELLOW=1, duelo=20, culpa=15, ideación=1000, hábito=1.
 - ❌ RF-1.4 Analizador léxico-semántico — Fase 2.
 - ✅ Rama Verde **flujo por pantallas** (issue #24): síntomas → **ubicación** (estado + ciudad, menús de
   selección rápida) → **cambio de hábitos** (pantalla 5) → contacto. Los hábitos alimentan el índice y
@@ -145,10 +149,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### Módulo 3 — Asignación y SLA
 - ✅ RF-3.1 Asignación por prioridad (riesgo alto primero) + **especialidad infantil por edad y por tags de
-  infancia** (RF-1.3, issue #50) + **preferencia por clúster regional** (issue #51) + **filtro de presencia**:
-  solo se asigna a psicólogos `Online` (RF-2.5); si ninguno está en línea, el caso queda en cola y lo rescata
-  el barrido de SLA. El **clúster regional** prefiere psicólogos del `estado` del solicitante (match del
-  estado dentro del `colegio` del voluntario) **sin varar** el caso si no hay nadie de la región en línea.
+  infancia** (RF-1.3, issue #50) + **filtro de presencia**: solo se asigna a psicólogos `Online` (RF-2.5); si
+  ninguno está en línea, el caso queda en cola y lo rescata el barrido de SLA.
+  > 🗑️ El **clúster regional** (antes issue #51) fue **eliminado por la FPV el 2026-07-03**; se removió del
+  > motor de asignación. `cases.region` se conserva como ubicación pero ya no rutea.
 - ✅ Filtro de elegibilidad — estado `Activo` **y** presencia `Online` (RF-2.5).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
 - ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron. La alerta
@@ -167,7 +171,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   técnicas SMAPS (RF-4.2.6), motivo de cierre + **derivación tipo+destino** (RF-4.2.7), horas y comentario
   (RF-4.2.8). Identidad del solicitante visible para el asignado (RF-4.2.1).
 - ✅ RF-4.2.4: la **ideación suicida** registra alerta de seguimiento (auditoría; el PRD pide bandera
-  preventiva a 5 días para el clúster de coordinadores — hoy queda como evento auditado, falta el plazo).
+  preventiva a 5 días para notificar a los coordinadores — hoy queda como evento auditado, falta el plazo).
 - ✅ **Crisis psicótica aguda** → derivación urgente bloqueada + sube riesgo (regla de seguridad nuestra,
   alineada con el chip `sintoma_crisis_psicotica_aguda` de RF-4.2.4).
 - ✅ **Bloqueo de diagnóstico de TEPT < 4 semanas** — adición clínica nuestra (no figura como RF en este
@@ -213,21 +217,18 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       puerto `PresenceStore` con adaptador **Upstash Redis** (REST, prod) y **memoria** (dev/tests), ADR-0014.
       La asignación **solo va a psicólogos `Online`**; toggle de disponibilidad en la PWA del psicólogo
       (RF-4.3.1) e indicador En línea/Desconectado en el panel del coordinador (RF-2.5.4). Activación en prod:
-      `presence.provider: upstash` + `UPSTASH_REDIS_REST_URL/TOKEN`. (Pendiente: clúster regional, y colapsar
-      la pausa manual en offline es una simplificación documentada.)
+      `presence.provider: upstash` + `UPSTASH_REDIS_REST_URL/TOKEN`. (Colapsar la pausa manual en offline es
+      una simplificación documentada.)
 - [x] **Catálogo clínico real de tags** (duelo, infancia, disociación, etc.) validado por la FPV
       (issue #19, RF-1.3): 22 tags versionados en dominio + espejo web; el motor de triage lo usa.
 - [x] **Ruteo por especialidad infantil disparado por tags (issue #50, RF-1.3):** si el caso trae tags de
       **infancia** (mutismo, desregulación, psicoeducación, regresión del sueño) se persiste
       `requires_child_specialty` y la asignación **prefiere un psicólogo con especialidad infantil** —
-      además del caso por edad del solicitante. Pendiente: afinado final de pesos/umbrales por la FPV (#11).
-- [x] **Filtro de asignación por clúster regional (issue #51, RF-3.1):** el caso persiste el `estado` del
-      solicitante (`cases.region`, de la pantalla de ubicación de Rama Verde) y la asignación **prefiere**
-      psicólogos del mismo estado (match del estado dentro del `colegio` del voluntario, insensible a
-      acentos), sin varar el caso si no hay nadie de la región en línea. La Rama Roja no captura ubicación, así
-      que sus casos no llevan región. Follow-up: hacer el `colegio` un estado estructurado (dropdown) para un
-      match exacto en vez de por substring.
-      sintomatología-chips, técnicas SMAPS, derivación (tipo/destino), métricas de horas. ✅ (versión online)
+      además del caso por edad del solicitante. Pesos/umbrales **validados por la FPV** (2026-07-03).
+- 🗑️ **Filtro de asignación por clúster regional (issue #51, RF-3.1) — ELIMINADO por la FPV (2026-07-03):**
+      se **removió la preferencia regional del motor de asignación**; la asignación queda por riesgo +
+      especialidad + presencia. `cases.region` (estado de la Rama Verde) se conserva como ubicación capturada
+      pero **deprecada para routing**. (La Rama Roja tampoco capturaba ubicación.)
 - [x] **Coordinador — centro de operaciones en vivo:** cola priorizada, KPIs, badge de SLA vencido,
       psicólogo asignado por caso (`asignado_a`) y sub-vistas Psicólogos/Reportes (sin PII del solicitante).
 - [x] **Acciones del coordinador (issue #20):** reasignar (`/cases/:id/reassign`) y cierre administrativo
@@ -259,7 +260,7 @@ Funcionalidad construida que se aparta de la letra del PRD; cada uno es un cambi
 - [x] **Destrucción de sesiones duplicadas en caliente (RF-2.7, issue #54):** login bumpea `token_version` y
       el middleware valida la versión del token contra la BD en cada request → el login nuevo invalida los previos.
 - [ ] **Hashing:** el PRD sugiere `bcrypt` (factor 12); usamos **argon2id** por decisión documentada (ADR-0005). Mantener argon2id; queda anotado como desvío consciente.
-- [ ] **Bandera de seguimiento a 5 días por ideación suicida (RF-4.2.4):** hoy se audita el evento; falta el plazo programado para el clúster de coordinadores.
+- [ ] **Bandera de seguimiento a 5 días por ideación suicida (RF-4.2.4):** hoy se audita el evento; falta el plazo programado para notificar a los coordinadores.
 
 ## Cómo mantener este documento
 Marcar las casillas conforme se implementen; cada brecha cerrada debería referenciar su bloque/ADR y

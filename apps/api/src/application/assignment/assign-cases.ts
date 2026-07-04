@@ -37,7 +37,6 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
     const volunteer = selectVolunteerForCase(available, {
       age: caseRecord.age,
       requiresChildSpecialty: caseRecord.requiresChildSpecialty,
-      region: caseRecord.region,
     });
     if (!volunteer) {
       continue; // no volunteer available -> remains in queue

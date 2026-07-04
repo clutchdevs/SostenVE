@@ -7,9 +7,8 @@ import { createSymptomTag, type SymptomTag } from './symptom-tag';
  * classification engine and the weighted urgency index operate on severity and
  * weight, so the concrete codes here can evolve without changing the engine.
  *
- * Versioned: bump `TAG_CATALOG_VERSION` whenever the set changes. The final
- * per-tag weights/thresholds remain subject to FPV tuning (TODO — Human-in-the-Loop,
- * ADR-0010), but the tag set itself is now the FPV's own (validated) list.
+ * Versioned: bump `TAG_CATALOG_VERSION` whenever the set changes. The tag set and
+ * its per-tag weights/thresholds were validated by the FPV (2026-07-03, ADR-0010).
  */
 export const TAG_CATALOG_VERSION = 'v1.0.0-fpv-prd-rf-1.3';
 

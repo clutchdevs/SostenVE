@@ -80,7 +80,7 @@ export async function recordCaseClosure(
   });
 
   if ((input.symptoms ?? []).includes(SUICIDAL_SYMPTOM)) {
-    // Preventive follow-up alert for the coordinator cluster (RF-4.2.4).
+    // Preventive follow-up alert for the coordinators (RF-4.2.4).
     await deps.audit.append({
       userId: volunteerId,
       role: 'psychologist',

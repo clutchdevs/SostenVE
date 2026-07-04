@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { selectVolunteerForCase } from '../../../src/domain/assignment/selection';
 import type { Volunteer } from '../../../src/domain/volunteer/volunteer';
 
-function volunteer(id: string, specialty?: string, colegio?: string): Volunteer {
+function volunteer(id: string, specialty?: string): Volunteer {
   return {
     id,
     fullName: id,
     professionalId: `prof-${id}`,
     specialty,
-    colegio,
     role: 'psychologist',
     tokenVersion: 1,
     status: 'active',
@@ -53,34 +52,5 @@ describe('selectVolunteerForCase', () => {
     expect(
       selectVolunteerForCase(candidates, { requiresChildSpecialty: true })?.id,
     ).toBe('a');
-  });
-
-  it('prefers a same-region volunteer (RF-3.1), matching the state within the Colegio', () => {
-    const candidates = [
-      volunteer('a', undefined, 'Colegio de Psicólogos de Lara'),
-      volunteer('b', undefined, 'Colegio de Psicólogos de Miranda'),
-    ];
-    // Accent-insensitive: case region "Miranda" matches volunteer b's colegio.
-    expect(selectVolunteerForCase(candidates, { region: 'Miranda' })?.id).toBe('b');
-  });
-
-  it('does not strand a case when no volunteer is in the region', () => {
-    const candidates = [
-      volunteer('a', undefined, 'Colegio de Psicólogos de Lara'),
-      volunteer('b', undefined, 'Colegio de Psicólogos de Zulia'),
-    ];
-    expect(selectVolunteerForCase(candidates, { region: 'Falcón' })?.id).toBe('a');
-  });
-
-  it('combines clinical fit and region: a child specialist in-region wins', () => {
-    const candidates = [
-      volunteer('a', 'psicología infantil', 'Colegio de Lara'),
-      volunteer('b', 'psicología infantil', 'Colegio de Miranda'),
-      volunteer('c', 'adultos', 'Colegio de Miranda'),
-    ];
-    // Needs a child specialist AND prefers Miranda → b (child specialist in Miranda).
-    expect(
-      selectVolunteerForCase(candidates, { requiresChildSpecialty: true, region: 'Miranda' })?.id,
-    ).toBe('b');
   });
 });

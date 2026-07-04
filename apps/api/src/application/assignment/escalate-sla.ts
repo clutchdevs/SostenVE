@@ -5,9 +5,10 @@ import type { AssignmentDeps } from './ports';
 /**
  * Escalates high-risk cases that were assigned but not accepted within the SLA
  * (RF-3.3): revoke the assignment, return the case to the top of the queue
- * (`pendiente`) and notify the coordinator cluster. The next assignment pass can
- * then reassign it. This is the life-safety net: it does not depend on a human
- * reviewing the platform in time.
+ * (`pendiente`) and notify the coordinators. The next assignment pass can then
+ * reassign it. This is the life-safety net: it does not depend on a human
+ * reviewing the platform in time. (The FPV eliminated the geographic "coordinator
+ * cluster" on 2026-07-03: escalation notifies all coordinators.)
  *
  * Observability (fase 06): if a high-risk case escalates and there is **no
  * coordinator online** to catch it, raise a critical alert. "Available" now means
