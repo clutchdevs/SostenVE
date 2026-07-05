@@ -6,6 +6,16 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Cambiado
+- **Identidad de marca FPV — tipografía Poppins + paleta de 4 colores:** toda la app usa ahora únicamente
+  los colores de marca (azul oscuro `#191a36`, azul claro `#5582c2`, blanco, negro) y sus tintes para
+  jerarquía. Se cambió la tipografía a **Poppins** (una sola familia, UI y títulos; se retiraron Inter y
+  Fraunces). Implementado sobre los tokens de Tailwind: `brand`/`ppv` = azul claro, `navy`/`ink` = azul
+  oscuro, `surface` blanco/tinte; y se **re-mapearon las escalas por defecto** (`slate`/`gray` → azul-gris,
+  `emerald`/`green`/`teal` → azul claro, `amber` → azul-gris) para que los usos hardcodeados queden en
+  marca sin editar cada archivo. **Excepción de seguridad:** el **rojo** se conserva solo para líneas de
+  crisis / riesgo alto y errores. `theme_color`/`themeColor` del PWA → `#191a36`.
+
 ### Cambiado (decisiones de la FPV, 2026-07-03)
 - **Pesos del triage validados (RF-1.3 / RF-1.5, ADR-0010):** la FPV ratificó las cifras como **decisión
   final** (RED=100/ORANGE=10/YELLOW=1, duelo=20, culpa=15, ideación=1000, hábito=1); dejan de ser

@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
-import { Inter, Fraunces } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 
-// Clean modern sans for the UI; elegant serif reserved for editorial titles.
-const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
-const serif = Fraunces({
+// Single brand typeface (FPV guidelines): Poppins for UI and headings.
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-serif',
+  variable: '--font-sans',
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata = {
@@ -17,14 +16,14 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#0f766e',
+  themeColor: '#191a36',
   width: 'device-width',
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es-VE" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="es-VE" className={poppins.variable}>
       <body className="min-h-screen font-sans">{children}</body>
     </html>
   );

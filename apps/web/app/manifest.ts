@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Apoyo psicológico tras el terremoto · Venezuela',
     start_url: '/',
     display: 'standalone',
-    background_color: '#f8fafc',
-    theme_color: '#0f766e',
+    background_color: '#f2f5fb',
+    theme_color: '#191a36',
     lang: 'es-VE',
     icons: [],
   };
