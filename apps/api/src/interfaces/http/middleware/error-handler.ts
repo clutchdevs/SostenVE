@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import { ZodError } from 'zod';
 import { ApiError, ValidationError } from '../../../shared/errors/api-error';
 import { DomainError } from '../../../domain/shared/domain-error';
+import { logger } from '../../../shared/logger';
 
 interface ErrorBody {
   error: { code: string; message: string; details?: unknown };
@@ -32,6 +33,13 @@ export function errorHandler(err: Error, c: Context): Response {
     return c.json({ error: { code: 'DOMAIN_RULE_VIOLATION', message: err.message } }, 422);
   }
 
-  // Unknown/unexpected error: do not leak internals.
+  // Unknown/unexpected error: log it for observability (never leaked to the client).
+  logger.error('unhandled error', {
+    name: err.name,
+    errorMessage: err.message,
+    stack: err.stack,
+    path: c.req.path,
+    method: c.req.method,
+  });
   return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
 }

@@ -96,6 +96,7 @@ const input = {
   fullName: 'Ana',
   professionalId: 'FPV-123',
   email: 'ana@example.com',
+  phone: '04140000000',
   application: {
     documentType: 'V' as const,
     documentNumber: '12345678',
@@ -262,5 +263,42 @@ describe('registerVolunteer', () => {
       audit: auditSpy,
     });
     expect(auditSpy.entries.map((e) => e.actionType)).toContain('consent_accepted:v0.1.0-draft');
+  });
+
+  it('persists the contact phone (RF-2.1.2)', async () => {
+    const repo = fakeVolunteers();
+    await registerVolunteer(input, {
+      volunteers: repo,
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier,
+      audit,
+    });
+    expect(repo.lastCreated?.phone).toBe('04140000000');
+  });
+
+  it('keeps the registration even if the notification email fails', async () => {
+    const throwingNotifier: Notifier = {
+      async notifyRegistrationApproved() {
+        throw new Error('SMTP down');
+      },
+      async notifyRegistrationPending() {
+        throw new Error('SMTP down');
+      },
+      async notifyCoordinatorInvitation() {},
+      async notifyPasswordReset() {},
+    };
+    const result = await registerVolunteer(input, {
+      volunteers: fakeVolunteers(),
+      fpvVerifier: { async verify() {
+        return { valid: true };
+      } },
+      notifier: throwingNotifier,
+      audit,
+    });
+    // The volunteer is still created and the registration succeeds.
+    expect(result.status).toBe('active');
+    expect(result.volunteerId).toBeTruthy();
   });
 });

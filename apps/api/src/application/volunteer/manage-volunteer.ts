@@ -1,5 +1,6 @@
 import { ApiError } from '../../shared/errors/api-error';
 import { generatePassword, hashPassword } from '../../shared/security/password';
+import { logger } from '../../shared/logger';
 import type { AuditLogRepository } from '../../domain/audit/audit';
 import type { Volunteer, VolunteerRepository } from '../../domain/volunteer/volunteer';
 import type { Notifier } from './ports';
@@ -43,11 +44,21 @@ export async function approveVolunteer(
   const temporaryPassword = generatePassword();
   await deps.volunteers.updatePasswordHash(volunteer.id, await hashPassword(temporaryPassword));
   await deps.volunteers.setStatus(volunteer.id, 'active');
-  await deps.notifier.notifyRegistrationApproved({
-    email: volunteer.email,
-    fullName: volunteer.fullName,
-    temporaryPassword,
-  });
+  // The account is already activated with fresh credentials; a failed welcome
+  // email must NOT fail the approval (that would leave the volunteer active with
+  // a confusing 500). Log it so it is known the credentials weren't delivered —
+  // the volunteer can recover them via "forgot password".
+  try {
+    await deps.notifier.notifyRegistrationApproved({
+      email: volunteer.email,
+      fullName: volunteer.fullName,
+      temporaryPassword,
+    });
+  } catch {
+    logger.warn('approval welcome email failed (volunteer activated; use password reset)', {
+      volunteerId: volunteer.id,
+    });
+  }
   await deps.audit.append({
     userId: actor.id,
     role: actor.role,
