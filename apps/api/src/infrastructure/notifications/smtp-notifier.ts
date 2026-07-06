@@ -51,29 +51,29 @@ export class SmtpNotifier implements Notifier {
 
   async notifyRegistrationApproved(notification: RegistrationNotification): Promise<void> {
     if (!notification.email) return;
-    const { subject, body } = buildWelcomeEmail(notification, this.loginUrl);
-    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    const { subject, text, html } = buildWelcomeEmail(notification, this.loginUrl);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text, html });
     // Log the event WITHOUT the password (logger also redacts email).
     logger.info('volunteer welcome email sent', { email: notification.email, withCredentials: true });
   }
 
   async notifyRegistrationPending(notification: RegistrationNotification): Promise<void> {
     if (!notification.email) return;
-    const { subject, body } = buildPendingEmail(notification);
-    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    const { subject, text, html } = buildPendingEmail(notification);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text, html });
     logger.info('volunteer pending email sent', { email: notification.email });
   }
 
   async notifyCoordinatorInvitation(notification: InvitationNotification): Promise<void> {
-    const { subject, body } = buildInvitationEmail(notification);
-    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    const { subject, text, html } = buildInvitationEmail(notification);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text, html });
     // Log WITHOUT the acceptUrl (it carries the raw token); logger redacts email.
     logger.info('coordinator invitation email sent', { email: notification.email });
   }
 
   async notifyPasswordReset(notification: PasswordResetNotification): Promise<void> {
-    const { subject, body } = buildPasswordResetEmail(notification);
-    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text: body });
+    const { subject, text, html } = buildPasswordResetEmail(notification);
+    await this.transporter.sendMail({ from: this.from, to: notification.email, subject, text, html });
     // Log WITHOUT the resetUrl (it carries the raw token); logger redacts email.
     logger.info('password reset email sent', { email: notification.email });
   }
