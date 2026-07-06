@@ -3,10 +3,19 @@ import type {
   PasswordResetNotification,
   RegistrationNotification,
 } from '../../application/volunteer/ports';
+import { renderHtml, renderText, type EmailContent } from './email-template';
 
 export interface WelcomeEmail {
   subject: string;
-  body: string;
+  /** Plain-text version (fallback + accessibility). */
+  text: string;
+  /** Branded HTML version. */
+  html: string;
+}
+
+/** Assembles a {@link WelcomeEmail} (subject + text + html) from a content model. */
+function build(subject: string, content: EmailContent): WelcomeEmail {
+  return { subject, text: renderText(content), html: renderHtml(content) };
 }
 
 /**
@@ -18,37 +27,34 @@ export function buildWelcomeEmail(
   notification: RegistrationNotification,
   loginUrl: string,
 ): WelcomeEmail {
-  return {
-    subject: 'Bienvenido/a a PPV — credenciales de acceso',
-    body: [
-      `Hola ${notification.fullName},`,
-      '',
-      'Tu registro como psicólogo voluntario fue validado. Ya puedes iniciar sesión:',
-      '',
-      `  Acceso: ${loginUrl}`,
-      `  Usuario: ${notification.email ?? '(tu correo)'}`,
-      `  Contraseña temporal: ${notification.temporaryPassword ?? ''}`,
-      '',
+  return build('Bienvenido/a a PPV — credenciales de acceso', {
+    preheader: 'Tu registro fue validado. Aquí están tus credenciales de acceso.',
+    title: 'Tu acceso está listo',
+    greeting: `Hola ${notification.fullName},`,
+    paragraphs: [
+      'Tu registro como psicólogo voluntario fue validado. Ya puedes iniciar sesión con estas credenciales:',
+    ],
+    infoRows: [
+      { label: 'Usuario', value: notification.email ?? '(tu correo)' },
+      { label: 'Contraseña temporal', value: notification.temporaryPassword ?? '', mono: true },
+    ],
+    button: { label: 'Iniciar sesión', url: loginUrl },
+    afterParagraphs: [
       'Por seguridad, te recomendamos cambiarla en cuanto esté disponible esa opción.',
-      '',
-      'Federación de Psicólogos de Venezuela · PPV',
-    ].join('\n'),
-  };
+    ],
+  });
 }
 
 /** Pending-review email (no credentials yet). */
 export function buildPendingEmail(notification: RegistrationNotification): WelcomeEmail {
-  return {
-    subject: 'PPV — tu registro está en revisión',
-    body: [
-      `Hola ${notification.fullName},`,
-      '',
-      'Recibimos tu registro como psicólogo voluntario. Está en revisión por la FPV;',
-      'te enviaremos tus credenciales de acceso en cuanto sea aprobado.',
-      '',
-      'Federación de Psicólogos de Venezuela · PPV',
-    ].join('\n'),
-  };
+  return build('PPV — tu registro está en revisión', {
+    preheader: 'Recibimos tu registro; está en revisión por la FPV.',
+    title: 'Tu registro está en revisión',
+    greeting: `Hola ${notification.fullName},`,
+    paragraphs: [
+      'Recibimos tu registro como psicólogo voluntario. Está en revisión por la FPV; te enviaremos tus credenciales de acceso en cuanto sea aprobado.',
+    ],
+  });
 }
 
 /**
@@ -57,23 +63,17 @@ export function buildPendingEmail(notification: RegistrationNotification): Welco
  * raw token; it is never logged.
  */
 export function buildInvitationEmail(notification: InvitationNotification): WelcomeEmail {
-  return {
-    subject: 'PPV — invitación para coordinar',
-    body: [
-      `Hola ${notification.fullName},`,
-      '',
-      'Has sido invitado/a a unirte a PPV como coordinador/a de la FPV.',
-      'Abre el siguiente enlace para definir tu contraseña y activar tu cuenta:',
-      '',
-      `  ${notification.acceptUrl}`,
-      '',
-      `La invitación vence el ${notification.expiresAt.toLocaleString('es-VE')}.`,
-      '',
-      'Si no esperabas esta invitación, puedes ignorar este mensaje.',
-      '',
-      'Federación de Psicólogos de Venezuela · PPV',
-    ].join('\n'),
-  };
+  return build('PPV — invitación para coordinar', {
+    preheader: 'Has sido invitado/a a coordinar en PPV. Activa tu cuenta.',
+    title: 'Invitación para coordinar',
+    greeting: `Hola ${notification.fullName},`,
+    paragraphs: [
+      'Has sido invitado/a a unirte a PPV como coordinador/a de la FPV. Abre el botón para definir tu contraseña y activar tu cuenta:',
+    ],
+    button: { label: 'Activar mi cuenta', url: notification.acceptUrl },
+    afterParagraphs: [`La invitación vence el ${notification.expiresAt.toLocaleString('es-VE')}.`],
+    note: 'Si no esperabas esta invitación, puedes ignorar este mensaje.',
+  });
 }
 
 /**
@@ -81,22 +81,15 @@ export function buildInvitationEmail(notification: InvitationNotification): Welc
  * password, with the expiry. The link carries the raw token; it is never logged.
  */
 export function buildPasswordResetEmail(notification: PasswordResetNotification): WelcomeEmail {
-  return {
-    subject: 'PPV — recuperación de contraseña',
-    body: [
-      `Hola ${notification.fullName},`,
-      '',
-      'Recibimos una solicitud para restablecer tu contraseña de PPV.',
-      'Abre el siguiente enlace para definir una nueva:',
-      '',
-      `  ${notification.resetUrl}`,
-      '',
-      `El enlace vence el ${notification.expiresAt.toLocaleString('es-VE')}.`,
-      '',
-      'Si no solicitaste este cambio, puedes ignorar este mensaje: tu contraseña',
-      'actual seguirá siendo válida.',
-      '',
-      'Federación de Psicólogos de Venezuela · PPV',
-    ].join('\n'),
-  };
+  return build('PPV — recuperación de contraseña', {
+    preheader: 'Solicitaste restablecer tu contraseña de PPV.',
+    title: 'Recuperación de contraseña',
+    greeting: `Hola ${notification.fullName},`,
+    paragraphs: [
+      'Recibimos una solicitud para restablecer tu contraseña de PPV. Abre el botón para definir una nueva:',
+    ],
+    button: { label: 'Restablecer contraseña', url: notification.resetUrl },
+    afterParagraphs: [`El enlace vence el ${notification.expiresAt.toLocaleString('es-VE')}.`],
+    note: 'Si no solicitaste este cambio, puedes ignorar este mensaje: tu contraseña actual seguirá siendo válida.',
+  });
 }

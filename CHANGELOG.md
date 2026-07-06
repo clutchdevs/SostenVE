@@ -23,6 +23,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   mensaje, stack, ruta, método) en vez de tragárselos en silencio; nunca se filtran detalles al cliente.
 
 ### Añadido
+- **Plantillas de correo con identidad de marca (Poppins + azules PPV):** los correos (bienvenida +
+  credenciales, invitación de coordinador, recuperación de contraseña, registro en revisión) pasan de
+  texto plano a **HTML de marca** — encabezado azul oscuro `#191a36` con wordmark PPV, botón de acción
+  azul claro `#5582c2`, caja de credenciales, pie institucional; tipografía Poppins con fallback seguro
+  para clientes que no cargan web-fonts. Un mismo modelo de contenido (`email-template.ts`) genera la
+  versión **texto** (fallback/accesibilidad) y la **HTML**; los valores del usuario se escapan (anti-inyección).
+  El `SmtpNotifier` envía ambas partes (`text` + `html`).
 - **Envío de correo real por SMTP configurable por entorno (RF-2.2.4):** el `SmtpNotifier` (nodemailer, ya
   existente) ahora se puede activar y apuntar a un proveedor SMTP real **sin editar la config commiteada**:
   nuevos overrides de entorno `EMAIL_PROVIDER` y `SMTP_HOST/PORT/USERNAME/FROM/PASSWORD` (con fallback a
