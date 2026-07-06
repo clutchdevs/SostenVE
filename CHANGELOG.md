@@ -7,6 +7,22 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Teléfono de contacto en el registro de psicólogos (RF-2.1.2):** el formulario `/registro` ahora exige
+  un **teléfono** (para que un coordinador pueda contactar al voluntario de un caso). Se valida como
+  obligatorio en la API (`telefono`), se persiste en `volunteers.phone` y se refleja en el use case y sus
+  tests.
+
+### Cambiado
+- **El registro y la aprobación de voluntario ya no fallan si el correo de notificación falla:** tanto el
+  alta como la validación/aprobación (que reemite credenciales) crean/activan la cuenta y luego el envío
+  del correo pasó a ser **no-fatal** — si el SMTP falla, se registra un `warn` y la acción **igual se
+  completa** (antes un fallo de correo devolvía 500 y confundía al usuario, aunque la cuenta ya existía o
+  ya había quedado activada). Tras un fallo del correo de aprobación, el voluntario puede recuperar sus
+  credenciales con "olvidé mi contraseña".
+- **Observabilidad:** el manejador central de errores ahora **loguea los 500 inesperados** (nombre,
+  mensaje, stack, ruta, método) en vez de tragárselos en silencio; nunca se filtran detalles al cliente.
+
+### Añadido
 - **Plantillas de correo con identidad de marca (Poppins + azules PPV):** los correos (bienvenida +
   credenciales, invitación de coordinador, recuperación de contraseña, registro en revisión) pasan de
   texto plano a **HTML de marca** — encabezado azul oscuro `#191a36` con wordmark PPV, botón de acción

@@ -71,6 +71,7 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
       numero_documento: `${randomUUID().slice(0, 8)}`,
       numero_fpv: `FPV-${randomUUID().slice(0, 8)}`,
       email,
+      telefono: '04140000000',
       universidad: 'UCV',
       anio_egreso: 2015,
       colegio: 'Colegio de Psicólogos de Miranda',

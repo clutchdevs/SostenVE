@@ -87,4 +87,24 @@ describe('approveVolunteer', () => {
     expect(emailed).toBeTruthy();
     expect(await verifyPassword(emailed as string, repo.passwordHash as string)).toBe(true);
   });
+
+  it('still activates the volunteer if the welcome email fails', async () => {
+    const repo = fakeRepo();
+    const throwingNotifier: Notifier = {
+      async notifyRegistrationApproved() {
+        throw new Error('SMTP down');
+      },
+      async notifyRegistrationPending() {},
+      async notifyCoordinatorInvitation() {},
+      async notifyPasswordReset() {},
+    };
+    await approveVolunteer(
+      'vol-1',
+      { id: 'coord-1', role: 'coordinator' },
+      { volunteers: repo, audit, notifier: throwingNotifier },
+    );
+    // Approval succeeds and the account is active despite the email failure.
+    expect(repo.status).toBe('active');
+    expect(repo.passwordHash).toMatch(/^\$argon2id\$/);
+  });
 });

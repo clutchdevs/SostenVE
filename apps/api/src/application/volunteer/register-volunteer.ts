@@ -1,4 +1,5 @@
 import { generatePassword, hashPassword } from '../../shared/security/password';
+import { logger } from '../../shared/logger';
 import type { AuditLogRepository } from '../../domain/audit/audit';
 import type {
   PendingReason,
@@ -13,6 +14,8 @@ export interface RegisterVolunteerInput {
   fullName: string;
   professionalId: string;
   email: string;
+  /** Contact phone (RF-2.1.2) — required so the coordinator can reach the volunteer. */
+  phone: string;
   specialty?: string;
   /** Full applicant profile collected by the complete form (RF-2.1.2). */
   application: VolunteerApplication;
@@ -85,6 +88,7 @@ export async function registerVolunteer(
     fullName: input.fullName,
     professionalId: input.professionalId,
     email: input.email,
+    phone: input.phone,
     specialty: input.specialty,
     role: 'psychologist',
     passwordHash,
@@ -95,14 +99,24 @@ export async function registerVolunteer(
     consentAcceptedAt,
   });
 
-  if (status === 'active') {
-    await deps.notifier.notifyRegistrationApproved({
-      email: input.email,
-      fullName: input.fullName,
-      temporaryPassword,
+  // The account is already created; a failed notification email must NOT fail the
+  // registration (the volunteer would otherwise see an error for a successful
+  // sign-up). Log and continue — an admin can re-send credentials on approval.
+  try {
+    if (status === 'active') {
+      await deps.notifier.notifyRegistrationApproved({
+        email: input.email,
+        fullName: input.fullName,
+        temporaryPassword,
+      });
+    } else {
+      await deps.notifier.notifyRegistrationPending({ email: input.email, fullName: input.fullName });
+    }
+  } catch {
+    logger.warn('registration notification email failed (registration kept)', {
+      volunteerId: volunteer.id,
+      status,
     });
-  } else {
-    await deps.notifier.notifyRegistrationPending({ email: input.email, fullName: input.fullName });
   }
 
   await deps.audit.append({

@@ -50,6 +50,7 @@ export default function RegistroPage() {
   const [numeroDocumento, setNumeroDocumento] = useState('');
   const [numeroFpv, setNumeroFpv] = useState('');
   const [email, setEmail] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [universidad, setUniversidad] = useState('');
   const [anioEgreso, setAnioEgreso] = useState('');
   const [colegio, setColegio] = useState('');
@@ -105,6 +106,7 @@ export default function RegistroPage() {
           numero_documento: numeroDocumento,
           numero_fpv: numeroFpv,
           email,
+          telefono,
           universidad,
           anio_egreso: Number(anioEgreso),
           colegio,
@@ -205,6 +207,14 @@ export default function RegistroPage() {
           placeholder="Correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          className={inputClass}
+          type="tel"
+          placeholder="Teléfono de contacto"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
           required
         />
         <p className="text-xs text-slate-500">

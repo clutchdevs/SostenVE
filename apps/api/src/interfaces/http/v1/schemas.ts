@@ -79,6 +79,8 @@ export const registerVolunteerSchema = z
     // FPV professional registration number (persisted as professional_id).
     numero_fpv: z.string().min(1),
     email: z.string().email(),
+    // Contact phone (RF-2.1.2) — required so a coordinator can reach the volunteer.
+    telefono: z.string().min(1),
     universidad: z.string().min(1),
     anio_egreso: z
       .number()
