@@ -6,6 +6,15 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Añadido
+- **Envío de correo real por SMTP configurable por entorno (RF-2.2.4):** el `SmtpNotifier` (nodemailer, ya
+  existente) ahora se puede activar y apuntar a un proveedor SMTP real **sin editar la config commiteada**:
+  nuevos overrides de entorno `EMAIL_PROVIDER` y `SMTP_HOST/PORT/USERNAME/FROM/PASSWORD` (con fallback a
+  `email.*` de `app.config.yml`). El default sigue en `log` (tests/dev offline). Se deriva `secure` del
+  puerto (465 = SSL, 587/2525 = STARTTLS) para funcionar con cualquier proveedor (Gmail, Brevo, SendGrid,
+  Mailtrap…). `docker-compose.yml` pasa esas variables al contenedor de la API; `.env.example` documenta el
+  set con un ejemplo de Gmail listo para pegar.
+
 ### Cambiado
 - **Identidad de marca FPV — tipografía Poppins + paleta de 4 colores:** toda la app usa ahora únicamente
   los colores de marca (azul oscuro `#191a36`, azul claro `#5582c2`, blanco, negro) y sus tintes para

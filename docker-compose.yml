@@ -21,6 +21,15 @@ x-node-env: &node-env
   # MUST decode to exactly 32 bytes (AES-256). base64 of "local-dev-32-byte-encryption-key".
   ENCRYPTION_KEY: ${ENCRYPTION_KEY:-bG9jYWwtZGV2LTMyLWJ5dGUtZW5jcnlwdGlvbi1rZXk=}
   CRON_SECRET: ${CRON_SECRET:-local-dev-cron-secret}
+  # Email (SMTP) — pass through from the host env / root .env so a real provider
+  # (e.g. Gmail) can be enabled for local testing. Empty by default → the app
+  # keeps the offline "log" notifier. See .env.example.
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_FROM: ${SMTP_FROM:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
 
 services:
   installer:

@@ -29,17 +29,23 @@ export class SmtpNotifier implements Notifier {
   private readonly loginUrl: string;
 
   constructor(config: AppConfig['email']) {
-    this.from = config.from;
     this.loginUrl = config.login_url;
+    // SMTP account settings may be overridden by env so real credentials (and the
+    // sender identity, which some providers like Gmail must match the account)
+    // never live in the repo. Falls back to config (`email.smtp` / `email.from`).
+    this.from = process.env.SMTP_FROM || config.from;
+    const host = process.env.SMTP_HOST || config.smtp.host;
+    const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : config.smtp.port;
+    const username = process.env.SMTP_USERNAME || config.smtp.username;
     const password = process.env.SMTP_PASSWORD;
     this.transporter = createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: false,
-      auth:
-        config.smtp.username && password
-          ? { user: config.smtp.username, pass: password }
-          : undefined,
+      host,
+      port,
+      // Port 465 uses implicit TLS (SSL); 587/2525 use STARTTLS (secure: false).
+      // Works with any provider (Gmail, Brevo, SendGrid, Mailtrap, Resend…) by
+      // just changing host/port/credentials.
+      secure: port === 465,
+      auth: username && password ? { user: username, pass: password } : undefined,
     });
   }
 
