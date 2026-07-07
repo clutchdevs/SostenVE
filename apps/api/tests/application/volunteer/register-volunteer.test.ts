@@ -139,9 +139,21 @@ describe('registerVolunteer', () => {
     expect(result.status).toBe('pending_approval');
   });
 
-  it('marks pending_approval when the verifier rejects', async () => {
+  it('rejects the registration (no account) when the applicant is not in the FPV registry', async () => {
     const verifier: FpvVerifier = { async verify() {
-      return { valid: false };
+      return { valid: false, reason: 'fpv_not_found' };
+    } };
+    const repo = fakeVolunteers();
+    await expect(
+      registerVolunteer(input, { volunteers: repo, fpvVerifier: verifier, notifier, audit }),
+    ).rejects.toMatchObject({ status: 422 });
+    // The account is NOT created.
+    expect(repo.lastCreated).toBeUndefined();
+  });
+
+  it('routes a found-but-inactive licence to manual review (not rejected)', async () => {
+    const verifier: FpvVerifier = { async verify() {
+      return { valid: false, reason: 'fpv_status_suspended' };
     } };
     const result = await registerVolunteer(input, {
       volunteers: fakeVolunteers(),
@@ -178,7 +190,7 @@ describe('registerVolunteer', () => {
       return repo.lastCreated?.pendingReason;
     }
 
-    expect(await reasonFor({ async verify() { return { valid: false }; } })).toBe('fpv_not_found');
+    expect(await reasonFor({ async verify() { return { valid: false, reason: 'fpv_status_suspended' }; } })).toBe('fpv_not_found');
     expect(await reasonFor({ async verify() { throw new Error('down'); } })).toBe('fpv_unreachable');
     expect(await reasonFor({ async verify() { return { valid: true }; } }, false)).toBe('pap_not_declared');
     // Activated registrations carry no pending reason.

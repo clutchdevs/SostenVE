@@ -30,6 +30,10 @@ x-node-env: &node-env
   SMTP_USERNAME: ${SMTP_USERNAME:-}
   SMTP_FROM: ${SMTP_FROM:-}
   SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  # FPV padrón API token (X-API-TOKEN) used by HttpFpvVerifier for validate +
+  # psicologo. Empty by default; set FPV_API_TOKEN in the root .env to enable the
+  # real padrón validation (and volunteer auto-approval). See .env.example.
+  FPV_API_TOKEN: ${FPV_API_TOKEN:-}
 
 services:
   installer:

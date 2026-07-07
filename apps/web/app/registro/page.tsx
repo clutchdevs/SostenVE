@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { apiFetch } from '../../src/lib/api-client';
+import { apiFetch, ApiError } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 
 interface ConsentText {
@@ -120,8 +120,14 @@ export default function RegistroPage() {
         },
       });
       setResult(res);
-    } catch {
-      setError('No se pudo completar el registro. Revisa los datos e inténtalo de nuevo.');
+    } catch (err) {
+      // Show the API's message for actionable rejections (e.g. not in the FPV
+      // registry → 422, or a stale consent version → 409); generic otherwise.
+      setError(
+        err instanceof ApiError && (err.status === 422 || err.status === 409)
+          ? err.message
+          : 'No se pudo completar el registro. Revisa los datos e inténtalo de nuevo.',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -134,8 +140,8 @@ export default function RegistroPage() {
         <h1 className="text-xl font-serif font-semibold text-ink">Registro recibido</h1>
         <p className="mt-3 text-sm text-slate-600">
           {pendiente
-            ? 'Tu cuenta quedó pendiente de validación por la FPV. Te avisaremos por correo cuando esté aprobada.'
-            : 'Tu cuenta fue validada. Ya puedes iniciar sesión.'}
+            ? 'Tu cuenta quedó pendiente de validación por la FPV. Cuando sea aprobada, te enviaremos por correo tu usuario y una contraseña temporal de acceso.'
+            : 'Tu cuenta fue validada. Te enviamos a tu correo tu usuario y una contraseña temporal para iniciar sesión (revisa también la carpeta de spam).'}
         </p>
         <Link href="/login" className={`mt-6 block text-center ${ui.primaryBtn}`}>
           Ir a iniciar sesión

@@ -6,6 +6,15 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Cambiado
+- **Registro rechazado si el postulante no está en el padrón FPV (RF-2.2):** cuando el padrón responde
+  **definitivamente "no encontrado"** (`fpv_not_found`), el registro ahora se **rechaza** (HTTP 422
+  `FPV_NOT_REGISTERED`, sin crear cuenta) con un mensaje claro ("No figuras en el padrón de la FPV…") que
+  la web muestra en `/registro`. Se conserva el **fallback a `pending_approval`** solo para fallos
+  **transitorios** (padrón caído / timeout / token inválido → `fpv_unreachable`) para no bloquear a alguien
+  legítimo por una caída; y una **licencia hallada pero no activa** también va a revisión manual (la persona
+  sí existe). Antes, cualquier "no aprobado" quedaba como pendiente.
+
 ### Añadido
 - **Detalle del voluntario para revisión del coordinador (RF-2.3):** en `/coordinador/voluntarios` cada
   tarjeta ahora tiene **"Ver detalle"** que carga toda la información del postulante (correo, teléfono,
