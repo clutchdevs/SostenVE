@@ -217,6 +217,22 @@ export default function GreenBranchPage() {
             value={form.name}
             onChange={(e) => update({ name: e.target.value })}
           />
+          <label className="block text-sm font-medium text-slate-700">
+            Edad de quien necesita apoyo (opcional)
+            <input
+              className={`mt-1 ${ui.field}`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={120}
+              placeholder="Ej. 8 si es un niño/a, 34 si es un adulto"
+              value={form.age}
+              onChange={(e) => update({ age: e.target.value })}
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              Nos ayuda a asignar el especialista adecuado (atención infantil para menores de edad).
+            </span>
+          </label>
           <input
             className={ui.field}
             placeholder="Teléfono de contacto"
