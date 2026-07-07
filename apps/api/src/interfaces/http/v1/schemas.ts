@@ -14,6 +14,30 @@ export const strongPasswordSchema = z
   .regex(/[0-9]/, 'Debe incluir un número')
   .regex(/[^A-Za-z0-9]/, 'Debe incluir un carácter especial');
 
+/**
+ * Venezuelan MOBILE number: a carrier prefix (0412/0414/0416/0424/0426) followed
+ * by exactly 7 digits, optionally written with the +58 country code instead of
+ * the leading 0. Tolerant of spaces, dashes, dots and parentheses. Landlines are
+ * rejected (the app reaches people by call/WhatsApp). Source of truth mirrored by
+ * the web `isValidVePhone`. NOT used for crisis-line numbers (short/service codes).
+ */
+const VE_PHONE_RE = /^(\+?58|0)?(412|414|416|424|426)\d{7}$/;
+export const venezuelanPhoneSchema = z
+  .string()
+  .trim()
+  .refine((v) => VE_PHONE_RE.test(v.replace(/[\s().-]/g, '')), {
+    message: 'Teléfono venezolano inválido (ej. 0414-1234567)',
+  });
+
+/**
+ * Identity document number: a V/E cédula is up to 8 digits; a passport (P) is
+ * alphanumeric (5–20). Used via a refine so the rule can see `tipo_documento`.
+ */
+export function isValidDocumentNumber(tipo: 'V' | 'E' | 'P', numero: string): boolean {
+  const value = numero.trim();
+  return tipo === 'P' ? /^[A-Za-z0-9]{5,20}$/.test(value) : /^\d{1,8}$/.test(value);
+}
+
 /** Request validation schemas for the intake endpoints (Block 3). */
 
 export const triageInitialSchema = z.object({
@@ -23,7 +47,7 @@ export const triageInitialSchema = z.object({
 export const redBranchSchema = z.object({
   sub_canal: z.enum(['llamar', 'recibir-llamada', 'whatsapp-silencioso']),
   nombre: z.string().min(1).optional(),
-  contacto: z.string().min(1).optional(),
+  contacto: venezuelanPhoneSchema.optional(),
   edad: z.number().int().min(0).max(120).optional(),
 });
 
@@ -38,7 +62,7 @@ export const habitChangeEnum = z.enum([
 
 export const greenBranchSchema = z.object({
   nombre: z.string().min(1).optional(),
-  contacto: z.string().min(1),
+  contacto: venezuelanPhoneSchema,
   tipo_solicitante: z.enum(['victima', 'familiar', 'voluntario']).optional(),
   // Free-form zone kept for compatibility; location screen sends estado + ciudad.
   zona: z.string().min(1).optional(),
@@ -80,7 +104,7 @@ export const registerVolunteerSchema = z
     numero_fpv: z.string().min(1),
     email: z.string().email(),
     // Contact phone (RF-2.1.2) — required so a coordinator can reach the volunteer.
-    telefono: z.string().min(1),
+    telefono: venezuelanPhoneSchema,
     universidad: z.string().min(1),
     anio_egreso: z
       .number()
@@ -103,6 +127,10 @@ export const registerVolunteerSchema = z
   .refine((v) => !v.pap || (v.pap_detalle !== undefined && v.pap_detalle.length > 0), {
     message: 'pap_detalle es obligatorio cuando pap es true',
     path: ['pap_detalle'],
+  })
+  .refine((v) => isValidDocumentNumber(v.tipo_documento, v.numero_documento), {
+    message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
+    path: ['numero_documento'],
   });
 
 export const loginSchema = z.object({
@@ -181,17 +209,22 @@ export const coordinatorInviteSchema = z.object({
 });
 
 // Coordinator sign-up (RF-2.6.2): structured identity + robust password + token.
-export const acceptInvitationSchema = z.object({
-  token: z.string().min(1),
-  nombres: z.string().min(1),
-  apellidos: z.string().min(1),
-  tipo_documento: z.enum(['V', 'E', 'P']),
-  numero_documento: z.string().min(1),
-  // FPV is optional for support/logistics coordinators.
-  numero_fpv: z.string().min(1).optional(),
-  telefono: z.string().min(1),
-  contrasena: strongPasswordSchema,
-});
+export const acceptInvitationSchema = z
+  .object({
+    token: z.string().min(1),
+    nombres: z.string().min(1),
+    apellidos: z.string().min(1),
+    tipo_documento: z.enum(['V', 'E', 'P']),
+    numero_documento: z.string().min(1),
+    // FPV is optional for support/logistics coordinators.
+    numero_fpv: z.string().min(1).optional(),
+    telefono: venezuelanPhoneSchema,
+    contrasena: strongPasswordSchema,
+  })
+  .refine((v) => isValidDocumentNumber(v.tipo_documento, v.numero_documento), {
+    message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
+    path: ['numero_documento'],
+  });
 
 export const auditQuerySchema = z.object({
   accion: z.string().min(1).optional(),

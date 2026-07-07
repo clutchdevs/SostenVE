@@ -15,6 +15,11 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ??
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
 
+/** A unique, format-valid Venezuelan mobile (+58 414 + 7 digits) for each case. */
+function uniqueVePhone(): string {
+  return `+58414${randomUUID().replace(/\D/g, '').slice(0, 7).padEnd(7, '0')}`;
+}
+
 async function canConnect(): Promise<boolean> {
   const probe = new Client({ connectionString: DB_URL, connectionTimeoutMillis: 1500 });
   try {
@@ -94,7 +99,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     const res = await post('/api/v1/intake/red-branch', {
       sub_canal: 'recibir-llamada',
       nombre: 'Ana',
-      contacto: `+5841${randomUUID().slice(0, 7)}`,
+      contacto: uniqueVePhone(),
       edad: 30,
     });
     expect(res.status).toBe(201);
@@ -107,7 +112,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
 
   it('persists the reported habit changes on the green case (screen 5, RF-1.3)', async () => {
     const res = await post('/api/v1/intake/green-branch', {
-      contacto: `+5847${randomUUID().slice(0, 7)}`,
+      contacto: uniqueVePhone(),
       tags: ['material_loss'],
       cambio_habitos: ['sueno', 'alimentacion'],
     });
@@ -123,7 +128,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
 
   it('classifies a green submission with only yellow tags as follow-up', async () => {
     const res = await post('/api/v1/intake/green-branch', {
-      contacto: `+5842${randomUUID().slice(0, 7)}`,
+      contacto: uniqueVePhone(),
       tipo_solicitante: 'familiar',
       tags: ['material_loss'],
     });
@@ -136,7 +141,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
 
   it('escalates a green submission with a red tag to high risk with crisis lines', async () => {
     const res = await post('/api/v1/intake/green-branch', {
-      contacto: `+5843${randomUUID().slice(0, 7)}`,
+      contacto: uniqueVePhone(),
       tags: ['suicidal_ideation'],
     });
     expect(res.status).toBe(201);
@@ -152,7 +157,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     const payload = {
       sub_canal: 'recibir-llamada',
       nombre: 'Luis',
-      contacto: `+5844${randomUUID().slice(0, 7)}`,
+      contacto: uniqueVePhone(),
       edad: 40,
     };
     const first = (await (await post('/api/v1/intake/red-branch', payload, {
