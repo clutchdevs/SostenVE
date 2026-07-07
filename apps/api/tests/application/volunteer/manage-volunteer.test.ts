@@ -27,6 +27,9 @@ function fakeRepo(): VolunteerRepository & { status?: string; passwordHash?: str
     async create() {
       throw new Error('not used');
     },
+    async getDetailById() {
+      return null;
+    },
     async findByProfessionalId() {
       return null;
     },

@@ -49,6 +49,20 @@ export interface Volunteer {
   createdAt: Date;
 }
 
+/**
+ * Full volunteer record for the coordinator/admin review view (RF-2.3): the core
+ * volunteer plus the identity document and the applicant profile (RF-2.1.2) and
+ * the accepted consent (RF-2.1.1), so a reviewer can decide who to admit and tell
+ * apart two applicants with the same name.
+ */
+export interface VolunteerDetail extends Volunteer {
+  documentType?: DocumentType;
+  documentNumber?: string;
+  application?: VolunteerApplication;
+  consentVersion?: string;
+  consentAcceptedAt?: Date;
+}
+
 export interface NewVolunteer {
   fullName: string;
   professionalId: string;
@@ -78,6 +92,8 @@ export interface NewVolunteer {
 export interface VolunteerRepository {
   create(input: NewVolunteer): Promise<Volunteer>;
   findById(id: string): Promise<Volunteer | null>;
+  /** Full record (application + document + consent) for the review view (RF-2.3). */
+  getDetailById(id: string): Promise<VolunteerDetail | null>;
   findByProfessionalId(professionalId: string): Promise<Volunteer | null>;
   findByEmail(email: string): Promise<Volunteer | null>;
   listByStatus(status: VolunteerStatus): Promise<Volunteer[]>;

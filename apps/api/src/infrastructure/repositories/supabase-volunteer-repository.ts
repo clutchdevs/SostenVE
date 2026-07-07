@@ -1,8 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  AvailabilitySlot,
+  DocumentType,
+  Modalidad,
   NewVolunteer,
   PendingReason,
   Volunteer,
+  VolunteerDetail,
   VolunteerRepository,
   VolunteerRole,
   VolunteerStatus,
@@ -24,6 +28,20 @@ interface VolunteerRow {
   created_at: string;
 }
 
+/** Extra columns loaded for the coordinator/admin review view (RF-2.3). */
+interface VolunteerDetailRow extends VolunteerRow {
+  document_type: string | null;
+  document_number: string | null;
+  university: string | null;
+  graduation_year: number | null;
+  modalities: string[] | null;
+  availability_schedule: AvailabilitySlot[] | null;
+  pap_trained: boolean | null;
+  pap_detail: string | null;
+  consent_version: string | null;
+  consent_accepted_at: string | null;
+}
+
 function toDomain(row: VolunteerRow): Volunteer {
   return {
     id: row.id,
@@ -39,6 +57,31 @@ function toDomain(row: VolunteerRow): Volunteer {
     status: row.status as VolunteerStatus,
     pendingReason: (row.pending_reason as PendingReason | null) ?? undefined,
     createdAt: new Date(row.created_at),
+  };
+}
+
+function toDetail(row: VolunteerDetailRow): VolunteerDetail {
+  const hasApplication =
+    row.university !== null || row.graduation_year !== null || row.pap_trained !== null;
+  return {
+    ...toDomain(row),
+    documentType: (row.document_type as DocumentType | null) ?? undefined,
+    documentNumber: row.document_number ?? undefined,
+    consentVersion: row.consent_version ?? undefined,
+    consentAcceptedAt: row.consent_accepted_at ? new Date(row.consent_accepted_at) : undefined,
+    application: hasApplication
+      ? {
+          documentType: (row.document_type as DocumentType | null) ?? 'V',
+          documentNumber: row.document_number ?? '',
+          university: row.university ?? '',
+          graduationYear: row.graduation_year ?? 0,
+          colegio: row.colegio ?? '',
+          modalities: (row.modalities as Modalidad[] | null) ?? [],
+          availabilitySchedule: row.availability_schedule ?? [],
+          papTrained: row.pap_trained ?? false,
+          papDetail: row.pap_detail ?? undefined,
+        }
+      : undefined,
   };
 }
 
@@ -85,6 +128,16 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
       .maybeSingle();
     if (error) throw new Error(`Failed to load volunteer: ${error.message}`);
     return data ? toDomain(data as VolunteerRow) : null;
+  }
+
+  async getDetailById(id: string): Promise<VolunteerDetail | null> {
+    const { data, error } = await this.client
+      .from('volunteers')
+      .select()
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(`Failed to load volunteer detail: ${error.message}`);
+    return data ? toDetail(data as VolunteerDetailRow) : null;
   }
 
   async findByProfessionalId(professionalId: string): Promise<Volunteer | null> {

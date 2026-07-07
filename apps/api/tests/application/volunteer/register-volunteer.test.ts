@@ -31,6 +31,9 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
     async findById() {
       return null;
     },
+    async getDetailById() {
+      return null;
+    },
     async findByProfessionalId() {
       return null;
     },

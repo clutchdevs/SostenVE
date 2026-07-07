@@ -35,6 +35,9 @@ function deps(state: FakeState): { volunteers: VolunteerRepository; audit: Audit
     async findById() {
       return v;
     },
+    async getDetailById() {
+      return null;
+    },
     async findByProfessionalId() {
       return v;
     },

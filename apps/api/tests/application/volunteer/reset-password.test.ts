@@ -36,6 +36,9 @@ function volunteerRepo(v: Volunteer | null, sink: { updated: string | null; bump
     async findById() {
       return v;
     },
+    async getDetailById() {
+      return null;
+    },
     async findByProfessionalId() {
       return v;
     },

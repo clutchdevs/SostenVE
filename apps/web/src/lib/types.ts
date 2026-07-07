@@ -105,6 +105,21 @@ export interface VolunteerView {
   creado_en: string;
 }
 
+/** Full applicant record for the review view (RF-2.3), from GET /volunteers/:id. */
+export interface VolunteerDetailView extends VolunteerView {
+  telefono?: string | null;
+  documento?: string | null;
+  universidad?: string | null;
+  anio_egreso?: number | null;
+  colegio?: string | null;
+  modalidad?: string[];
+  disponibilidad_horaria?: { dia: string; bloque: string }[];
+  pap?: boolean | null;
+  pap_detalle?: string | null;
+  consentimiento_version?: string | null;
+  consentimiento_aceptado_en?: string | null;
+}
+
 /** Confidential coordinator note about a volunteer (RF-2.4). */
 export interface VolunteerNoteView {
   id: string;
