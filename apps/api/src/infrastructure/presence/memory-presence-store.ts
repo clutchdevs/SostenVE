@@ -9,8 +9,12 @@ import type { PresenceStore } from '../../application/presence/ports';
 export class MemoryPresenceStore implements PresenceStore {
   private readonly expiries = new Map<string, number>();
 
-  async markOnline(volunteerId: string, ttlSeconds: number): Promise<void> {
-    this.expiries.set(volunteerId, Date.now() + ttlSeconds * 1000);
+  async markOnline(volunteerId: string, ttlSeconds: number): Promise<boolean> {
+    const now = Date.now();
+    const previous = this.expiries.get(volunteerId);
+    const wasOnline = previous !== undefined && previous > now;
+    this.expiries.set(volunteerId, now + ttlSeconds * 1000);
+    return !wasOnline; // fresh online transition
   }
 
   async markOffline(volunteerId: string): Promise<void> {

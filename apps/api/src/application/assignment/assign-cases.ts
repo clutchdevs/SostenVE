@@ -1,4 +1,5 @@
 import { selectVolunteerForCase } from '../../domain/assignment/selection';
+import { logger } from '../../shared/logger';
 import type { Volunteer } from '../../domain/volunteer/volunteer';
 import type { AssignmentDeps } from './ports';
 
@@ -7,6 +8,12 @@ import type { AssignmentDeps } from './ports';
  * volunteer stays in the queue (`pendiente`) honestly. Within a single run each
  * volunteer is given at most one new case (basic distribution); richer load
  * balancing is future work.
+ *
+ * Runs from several triggers (intake submit, a psychologist coming online, the
+ * cron sweep), so each case is taken through an atomic `claimForAssignment` guard
+ * that flips `pendiente → asignado` only if still pending. Losing the claim means
+ * a concurrent trigger already took the case, so it is skipped — never assigned
+ * twice.
  */
 export async function assignPendingCases(deps: AssignmentDeps): Promise<number> {
   const pending = await deps.cases.listByStatus('PENDING');
@@ -41,9 +48,37 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
     if (!volunteer) {
       continue; // no volunteer available -> remains in queue
     }
-    await deps.assignments.create({ caseId: caseRecord.id, volunteerId: volunteer.id });
-    await deps.cases.updateStatus(caseRecord.id, 'ASSIGNED');
-    await deps.notifier.notifyAssigned({ volunteerId: volunteer.id, caseId: caseRecord.id });
+
+    // Atomically claim the case before doing anything else. If another trigger
+    // already took it, skip — the volunteer stays free for the next case.
+    const claimed = await deps.cases.claimForAssignment(caseRecord.id);
+    if (!claimed) {
+      continue;
+    }
+
+    try {
+      await deps.assignments.create({ caseId: caseRecord.id, volunteerId: volunteer.id });
+    } catch (error) {
+      // Return the case to the queue so it is retried instead of being stranded
+      // as `asignado` with no assignment row.
+      await deps.cases.updateStatus(caseRecord.id, 'PENDING');
+      logger.warn('assignment write failed after claim; returned case to queue', {
+        caseId: caseRecord.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      continue;
+    }
+
+    // Best-effort notification: the case is already assigned, so a failed notice
+    // must not undo it (the SLA sweep / portal still surface the case).
+    try {
+      await deps.notifier.notifyAssigned({ volunteerId: volunteer.id, caseId: caseRecord.id });
+    } catch (error) {
+      logger.warn('assignment notification failed (assignment kept)', {
+        caseId: caseRecord.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     available.splice(available.indexOf(volunteer), 1);
     assigned += 1;

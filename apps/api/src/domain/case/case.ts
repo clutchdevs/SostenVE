@@ -64,6 +64,15 @@ export interface CaseRepository {
   listAll(): Promise<CaseRecord[]>;
   /** High-risk cases still `assigned` (not accepted) whose SLA has expired. */
   listOverdueHighRiskAssigned(now: Date): Promise<CaseRecord[]>;
+  /**
+   * Atomically claims a `PENDING` case for assignment: flips it to `ASSIGNED`
+   * only if it is still `PENDING`, returning whether this caller won the claim.
+   * This is the concurrency guard that prevents the same case being assigned
+   * twice when assignment fires from several triggers at once (intake submit,
+   * a psychologist coming online, the cron sweep). A `false` means another
+   * trigger already took the case, so the caller must skip it.
+   */
+  claimForAssignment(id: string): Promise<boolean>;
   updateStatus(id: string, status: CaseStatus): Promise<void>;
   updateRiskLevel(id: string, riskLevel: RiskLevel): Promise<void>;
   /** Resets (or clears) the acceptance SLA, e.g. on manual reassignment. */

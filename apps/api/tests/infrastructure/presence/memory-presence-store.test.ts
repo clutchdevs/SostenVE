@@ -25,4 +25,19 @@ describe('MemoryPresenceStore (RF-2.5)', () => {
     const store = new MemoryPresenceStore();
     expect(await store.filterOnline([])).toEqual(new Set());
   });
+
+  it('reports a fresh online transition only on the first heartbeat', async () => {
+    const store = new MemoryPresenceStore();
+    expect(await store.markOnline('v1', 65)).toBe(true); // was offline → transition
+    expect(await store.markOnline('v1', 65)).toBe(false); // still online → refresh only
+  });
+
+  it('reports a transition again after expiry or an explicit pause', async () => {
+    const store = new MemoryPresenceStore();
+    expect(await store.markOnline('v1', 0)).toBe(true); // immediately expired
+    expect(await store.markOnline('v1', 65)).toBe(true); // expired → new transition
+
+    await store.markOffline('v1');
+    expect(await store.markOnline('v1', 65)).toBe(true); // paused → new transition
+  });
 });

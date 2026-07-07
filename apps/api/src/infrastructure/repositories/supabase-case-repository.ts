@@ -142,6 +142,20 @@ export class SupabaseCaseRepository implements CaseRepository {
     return (data as CaseRow[]).map(toDomain);
   }
 
+  async claimForAssignment(id: string): Promise<boolean> {
+    // Conditional update (`WHERE id = ? AND status = 'pendiente'`) is atomic at
+    // the row level in Postgres: of two concurrent claims only one matches the
+    // still-PENDING row; the other updates zero rows and returns false.
+    const { data, error } = await this.client
+      .from('cases')
+      .update({ status: statusToDb.ASSIGNED })
+      .eq('id', id)
+      .eq('status', statusToDb.PENDING)
+      .select('id');
+    if (error) throw new Error(`Failed to claim case for assignment: ${error.message}`);
+    return Array.isArray(data) && data.length > 0;
+  }
+
   async updateStatus(id: string, status: CaseStatus): Promise<void> {
     const { error } = await this.client
       .from('cases')

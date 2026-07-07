@@ -6,7 +6,20 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Cambiado
+- **Asignación de casos orientada a eventos + anti-duplicados (RF-2.5):** la asignación ya no espera al
+  barrido del cron. Ahora se dispara **al crear un caso** (intake) y **cuando un psicólogo se pone online**
+  (solo en la transición offline→online, no en cada heartbeat), de forma *best-effort* (un fallo nunca
+  rompe el intake ni el heartbeat). El cron queda como **red de seguridad** (SLA + reintentos). Para evitar
+  asignaciones duplicadas cuando varios disparadores corren a la vez, cada caso pasa por un **claim
+  atómico** (`claimForAssignment`: `UPDATE … WHERE id=? AND status='pendiente'`, atómico a nivel de fila);
+  quien pierde el claim **salta el caso** en lugar de reasignarlo. `PresenceStore.markOnline` ahora informa
+  si fue una transición (memoria + Upstash `SET … GET`).
+
 ### Añadido
+- **Segundo psicólogo de prueba sin especialidad infantil** (`psicologo.adultos@ppv.test`) en el seed, para
+  probar la asignación de casos de adultos frente a la priorización infantil; `docs/04-testing/seed-data.md`
+  documenta además **cómo funciona la asignación automática** (disparadores, gate de presencia, prioridad).
 - **Detalle del voluntario para revisión del coordinador (RF-2.3):** en `/coordinador/voluntarios` cada
   tarjeta ahora tiene **"Ver detalle"** que carga toda la información del postulante (correo, teléfono,
   documento/cédula, nº FPV, universidad, año de egreso, colegio, especialidad, modalidad, disponibilidad

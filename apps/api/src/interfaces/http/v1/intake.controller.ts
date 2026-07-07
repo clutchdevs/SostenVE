@@ -4,6 +4,8 @@ import { classifyInitialBranch } from '../../../application/intake/triage-initia
 import { submitRedBranch } from '../../../application/intake/submit-red-branch';
 import { submitGreenBranch } from '../../../application/intake/submit-green-branch';
 import { withIdempotency } from '../../../application/intake/idempotency';
+import { assignPendingCases } from '../../../application/assignment/assign-cases';
+import { logger } from '../../../shared/logger';
 import type { IntakeCaseResult } from '../../../application/intake/types';
 import {
   branchToDb,
@@ -13,7 +15,7 @@ import {
 } from '../../../infrastructure/repositories/enum-maps';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
-import { getIntakeContainer } from './dependencies';
+import { getAssignmentDeps, getIntakeContainer } from './dependencies';
 import { presentIntakeResult } from './presenters';
 import {
   greenBranchSchema,
@@ -69,6 +71,7 @@ export function createIntakeRouter(): Hono {
         ),
     );
 
+    await tryAssignImmediately(result);
     return c.json(presentIntakeResult(result), 201);
   });
 
@@ -98,10 +101,30 @@ export function createIntakeRouter(): Hono {
       intakeDeps,
     );
 
+    await tryAssignImmediately(result);
     return c.json(presentIntakeResult(result), 201);
   });
 
   return router;
+}
+
+/**
+ * Event-driven assignment (RF-2.5): as soon as a case is created, try to place it
+ * with an online psychologist instead of waiting for the next cron sweep. It is
+ * best-effort — the requester already has their response (and crisis lines), so a
+ * failure here must never fail intake; the cron remains the safety net. Skipped
+ * for the 'llamar' red sub-channel, which creates no case (`caseId` is null).
+ */
+async function tryAssignImmediately(result: IntakeCaseResult): Promise<void> {
+  if (!result.caseId) return;
+  try {
+    await assignPendingCases(getAssignmentDeps());
+  } catch (error) {
+    logger.warn('event-driven assignment after intake failed (cron will retry)', {
+      caseId: result.caseId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 /** Joins "Ciudad, Estado" for the case zone, tolerating either part missing. */
