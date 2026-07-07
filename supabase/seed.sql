@@ -151,6 +151,35 @@ values (
 )
 on conflict (id) do nothing;
 
+-- Caso de un ADULTO asignado al psicólogo de adultos (paridad con el caso infantil
+-- de arriba): puebla su portal y ejercita la asignación NO infantil. Edad 34 → el
+-- motor no prioriza especialidad infantil (contraste con los casos de menores).
+insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone, age)
+values (
+  'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5',
+  'seed-pseudo-adulto',
+  'verde',
+  'riesgo_moderado',
+  10,
+  'asignado',
+  'victima',
+  'Carabobo',
+  34
+)
+on conflict (id) do nothing;
+
+insert into case_contacts (pseudonym_id, name, contact)
+values ('seed-pseudo-adulto', 'Luis de Prueba', '+584120000001')
+on conflict (pseudonym_id) do nothing;
+
+insert into assignments (id, case_id, volunteer_id)
+values (
+  'a6a6a6a6-a6a6-a6a6-a6a6-a6a6a6a6a6a6',
+  'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5',
+  'dddddddd-dddd-dddd-dddd-dddddddddddd'
+)
+on conflict (id) do nothing;
+
 -- Líneas de crisis (espejo de config/app.config.yml) para el ruteo DB-driven y el
 -- CRUD admin. Las que tienen ventana horaria enrutan por hora; las demás son respaldo.
 insert into crisis_lines (id, name, phone, coverage, start_hour, end_hour, priority, active)

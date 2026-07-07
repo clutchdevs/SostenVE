@@ -39,7 +39,8 @@ Además del coordinador sembrado, se puede dar de alta uno nuevo por **token de 
 | Caso | Estado | Riesgo | Edad | Notas |
 |---|---|---|---|---|
 | `seed-pseudo-pendiente` | `pendiente` | `riesgo_alto` | 9 | En cola; se resalta como "riesgo alto sin atender" en el panel del coordinador (SLA 10 min). Menor → al asignarlo por el cron, prioriza al psicólogo con especialidad infantil. |
-| `seed-pseudo-asignado` | `asignado` | `riesgo_moderado` | 12 | Asignado al psicólogo de prueba; contacto "Ana de Prueba". Menor → la tarjeta muestra "12 años" y el cierre deriva destinatario `indirecta_nino`. |
+| `seed-pseudo-asignado` | `asignado` | `riesgo_moderado` | 12 | Asignado al **psicólogo infantil** (`psicologo@ppv.test`); contacto "Ana de Prueba". Menor → la tarjeta muestra "12 años" y el cierre deriva destinatario `indirecta_nino`. |
+| `seed-pseudo-adulto` | `asignado` | `riesgo_moderado` | 34 | Asignado al **psicólogo de adultos** (`psicologo.adultos@ppv.test`); contacto "Luis de Prueba". Adulto (≥18) → **no** requiere especialidad infantil; ejercita la ruta de asignación no infantil. |
 
 ## Líneas de crisis
 Espejo de `config/app.config.yml`, para el **ruteo desde BD** (`GET /crisis-lines/active`) y el **CRUD admin**:
@@ -53,10 +54,11 @@ Espejo de `config/app.config.yml`, para el **ruteo desde BD** (`GET /crisis-line
 > Si la tabla está vacía o la BD no responde, el endpoint hace **fallback** a las líneas del `config` (fail-safe).
 
 Así, al iniciar sesión:
-- **Coordinador** → ve ambos casos (con el de riesgo alto priorizado) y la tarjeta de capacidad.
-- **Psicólogo** → ve el caso asignado con la **identidad del solicitante** (Ana de Prueba + teléfono);
-  puede **aceptar** (una vez), registrar **notas** y completar el **expediente de cierre** (Módulo 4).
-  Tras cerrar, la vista queda en **solo lectura** y no se puede re-tomar.
+- **Coordinador** → ve los casos (con el de riesgo alto priorizado) y la tarjeta de capacidad.
+- **Psicólogo infantil** (`psicologo@ppv.test`) → ve su caso de menor asignado (Ana de Prueba, 12 años).
+- **Psicólogo de adultos** (`psicologo.adultos@ppv.test`) → ve su caso de adulto asignado (Luis de Prueba, 34).
+- En el portal, el psicólogo puede **aceptar** (una vez), registrar **notas** y completar el **expediente
+  de cierre** (Módulo 4). Tras cerrar, la vista queda en **solo lectura** y no se puede re-tomar.
 
 ## Cómo funciona la asignación automática
 La asignación **no** ocurre al crear el caso; corre en un **cron** (`processQueue`) que se puede disparar en
