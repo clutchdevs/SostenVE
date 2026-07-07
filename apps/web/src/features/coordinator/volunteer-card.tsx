@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Lock, Ban } from 'lucide-react';
+import { Check, Lock, Ban, IdCard } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 import { initialsOf, STATUS_STYLE } from '../admin/volunteers';
-import type { VolunteerNoteView, VolunteerView } from '../../lib/types';
+import type { VolunteerDetailView, VolunteerNoteView, VolunteerView } from '../../lib/types';
 
 interface Props {
   volunteer: VolunteerView;
@@ -24,7 +24,23 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
   const [notes, setNotes] = useState<VolunteerNoteView[] | null>(null);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detail, setDetail] = useState<VolunteerDetailView | null>(null);
   const style = STATUS_STYLE[volunteer.estado];
+
+  async function loadDetail() {
+    try {
+      setDetail(await apiFetch<VolunteerDetailView>(`/volunteers/${volunteer.id}`));
+    } catch {
+      setError('No se pudo cargar el detalle del voluntario.');
+    }
+  }
+
+  function toggleDetail() {
+    const next = !detailOpen;
+    setDetailOpen(next);
+    if (next && detail === null) void loadDetail();
+  }
 
   async function act(action: 'approve' | 'reject') {
     setBusy(true);
@@ -127,14 +143,71 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={toggleNotes}
-        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-navy"
-      >
-        <Lock className="h-3.5 w-3.5" aria-hidden />
-        Notas confidenciales{notesOpen ? '' : ' ▸'}
-      </button>
+      <div className="mt-3 flex flex-wrap items-center gap-4">
+        <button
+          type="button"
+          onClick={toggleDetail}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-navy"
+        >
+          <IdCard className="h-3.5 w-3.5" aria-hidden />
+          Ver detalle{detailOpen ? '' : ' ▸'}
+        </button>
+        <button
+          type="button"
+          onClick={toggleNotes}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-navy"
+        >
+          <Lock className="h-3.5 w-3.5" aria-hidden />
+          Notas confidenciales{notesOpen ? '' : ' ▸'}
+        </button>
+      </div>
+
+      {detailOpen && (
+        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-sm sm:grid-cols-2">
+          {detail === null ? (
+            <p className="col-span-full text-slate-500">Cargando…</p>
+          ) : (
+            <>
+              <Field label="Correo" value={detail.email} />
+              <Field label="Teléfono" value={detail.telefono} />
+              <Field label="Documento" value={detail.documento} />
+              <Field label="Nº FPV" value={detail.cedula_profesional} />
+              <Field label="Universidad" value={detail.universidad} />
+              <Field label="Año de egreso" value={detail.anio_egreso?.toString()} />
+              <Field label="Colegio" value={detail.colegio} />
+              <Field label="Especialidad" value={detail.especialidad} />
+              <Field label="Modalidad" value={detail.modalidad?.join(', ')} />
+              <Field
+                label="PAP"
+                value={
+                  detail.pap == null
+                    ? undefined
+                    : detail.pap
+                      ? `Sí${detail.pap_detalle ? ` — ${detail.pap_detalle}` : ''}`
+                      : 'No'
+                }
+              />
+              <Field
+                label="Disponibilidad"
+                value={detail.disponibilidad_horaria?.map((s) => `${s.dia} ${s.bloque}`).join(', ')}
+              />
+              <Field
+                label="Consentimiento"
+                value={
+                  detail.consentimiento_version
+                    ? `${detail.consentimiento_version}${
+                        detail.consentimiento_aceptado_en
+                          ? ` · ${new Date(detail.consentimiento_aceptado_en).toLocaleDateString('es-VE')}`
+                          : ''
+                      }`
+                    : undefined
+                }
+              />
+              <Field label="Registrado" value={new Date(detail.creado_en).toLocaleString('es-VE')} />
+            </>
+          )}
+        </dl>
+      )}
 
       {notesOpen && (
         <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
@@ -176,5 +249,16 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
 
       {error && <p className="mt-2 text-sm text-risk-high">{error}</p>}
     </article>
+  );
+}
+
+/** One label/value row of the volunteer detail; hidden when the value is empty. */
+function Field({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
+      <dd className="text-slate-700">{value}</dd>
+    </div>
   );
 }

@@ -7,6 +7,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
 ### Añadido
+- **Detalle del voluntario para revisión del coordinador (RF-2.3):** en `/coordinador/voluntarios` cada
+  tarjeta ahora tiene **"Ver detalle"** que carga toda la información del postulante (correo, teléfono,
+  documento/cédula, nº FPV, universidad, año de egreso, colegio, especialidad, modalidad, disponibilidad
+  horaria, PAP + detalle, consentimiento aceptado y motivo de excepción) — para poder **validar quién se
+  admite** y **distinguir dos postulantes con el mismo nombre**. Nuevo endpoint `GET /volunteers/:id`
+  (coordinador/admin) que devuelve el registro completo (`getDetailById` en el repo + `VolunteerDetail`).
 - **Teléfono de contacto en el registro de psicólogos (RF-2.1.2):** el formulario `/registro` ahora exige
   un **teléfono** (para que un coordinador pueda contactar al voluntario de un caso). Se valida como
   obligatorio en la API (`telefono`), se persiste en `volunteers.phone` y se refleja en el use case y sus

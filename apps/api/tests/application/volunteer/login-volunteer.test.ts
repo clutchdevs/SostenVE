@@ -25,6 +25,9 @@ function repoWith(status: VolunteerStatus): VolunteerRepository {
     async findById() {
       return volunteer;
     },
+    async getDetailById() {
+      return null;
+    },
     async findByProfessionalId() {
       return volunteer;
     },

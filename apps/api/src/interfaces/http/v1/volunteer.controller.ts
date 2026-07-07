@@ -6,7 +6,7 @@ import {
   addVolunteerNote,
   listVolunteerNotes,
 } from '../../../application/volunteer/manage-volunteer-notes';
-import type { Volunteer, VolunteerStatus } from '../../../domain/volunteer/volunteer';
+import type { Volunteer, VolunteerDetail, VolunteerStatus } from '../../../domain/volunteer/volunteer';
 import type { VolunteerNote } from '../../../domain/volunteer/volunteer-note';
 import { ApiError } from '../../../shared/errors/api-error';
 import { requireAuth, getAuthUser } from '../middleware/auth';
@@ -41,6 +41,25 @@ function presentVolunteer(volunteer: Volunteer, online = false) {
     // Real-time presence for the coordinator console (RF-2.5.4).
     en_linea: online,
     creado_en: volunteer.createdAt.toISOString(),
+  };
+}
+
+/** Full record for the coordinator/admin review view (RF-2.3): all applicant data. */
+function presentVolunteerDetail(v: VolunteerDetail, online = false) {
+  return {
+    ...presentVolunteer(v, online),
+    telefono: v.phone ?? null,
+    documento:
+      v.documentType && v.documentNumber ? `${v.documentType}-${v.documentNumber}` : null,
+    universidad: v.application?.university ?? null,
+    anio_egreso: v.application?.graduationYear ?? null,
+    colegio: v.colegio ?? v.application?.colegio ?? null,
+    modalidad: v.application?.modalities ?? [],
+    disponibilidad_horaria: v.application?.availabilitySchedule ?? [],
+    pap: v.application?.papTrained ?? null,
+    pap_detalle: v.application?.papDetail ?? null,
+    consentimiento_version: v.consentVersion ?? null,
+    consentimiento_aceptado_en: v.consentAcceptedAt?.toISOString() ?? null,
   };
 }
 
@@ -114,6 +133,16 @@ export function createVolunteerRouter(): Hono {
     // is actually online right now.
     const online = await getPresenceStore().filterOnline(list.map((v) => v.id));
     return c.json(list.map((v) => presentVolunteer(v, online.has(v.id))));
+  });
+
+  // Full detail of one volunteer for the review view (RF-2.3): the complete
+  // applicant data so a coordinator can decide who to admit and tell apart two
+  // applicants with the same name. Coordinator/admin only.
+  router.get('/:id', requireAuth({ roles: ['coordinator', 'admin'] }), async (c) => {
+    const detail = await getVolunteerContainer().volunteers.getDetailById(c.req.param('id'));
+    if (!detail) throw new ApiError(404, 'NOT_FOUND', 'Voluntario no encontrado');
+    const online = await getPresenceStore().filterOnline([detail.id]);
+    return c.json(presentVolunteerDetail(detail, online.has(detail.id)));
   });
 
   // Presence heartbeat / availability toggle (RF-2.5, RF-4.3.1). The PWA calls
