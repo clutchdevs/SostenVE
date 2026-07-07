@@ -1,5 +1,6 @@
 import { generatePassword, hashPassword } from '../../shared/security/password';
 import { logger } from '../../shared/logger';
+import { ApiError } from '../../shared/errors/api-error';
 import type { AuditLogRepository } from '../../domain/audit/audit';
 import type {
   PendingReason,
@@ -57,19 +58,37 @@ async function resolveStatus(
   input: RegisterVolunteerInput,
   deps: RegisterVolunteerDeps,
 ): Promise<ResolvedStatus> {
+  let result;
   try {
-    const result = await deps.fpvVerifier.verify({
+    result = await deps.fpvVerifier.verify({
       professionalId: input.professionalId,
       nationalId: input.application.documentNumber,
       fullName: input.fullName,
     });
-    if (!result.valid) return { status: 'pending_approval', reason: 'fpv_not_found' };
-    if (!input.application.papTrained) return { status: 'pending_approval', reason: 'pap_not_declared' };
-    return { status: 'active' };
   } catch {
-    // External verifier down / circuit breaker open: never block sign-up.
+    // External verifier down / circuit breaker open / token missing: a transient
+    // failure must never block a legitimate sign-up → manual review (RF-2.2).
     return { status: 'pending_approval', reason: 'fpv_unreachable' };
   }
+
+  if (!result.valid) {
+    // The padrón gave a definitive answer. "Not found" means the applicant is not
+    // an FPV member, so the request is rejected outright (no account is created).
+    // A found-but-inactive licence (`fpv_status_*`) does exist, so it is routed to
+    // manual review instead of being rejected.
+    const notInRegistry = result.reason === undefined || result.reason === 'fpv_not_found';
+    if (notInRegistry) {
+      throw new ApiError(
+        422,
+        'FPV_NOT_REGISTERED',
+        'No figuras en el padrón de la Federación de Psicólogos de Venezuela. Verifica tu número de cédula y de inscripción FPV.',
+      );
+    }
+    return { status: 'pending_approval', reason: 'fpv_not_found' };
+  }
+
+  if (!input.application.papTrained) return { status: 'pending_approval', reason: 'pap_not_declared' };
+  return { status: 'active' };
 }
 
 export async function registerVolunteer(
