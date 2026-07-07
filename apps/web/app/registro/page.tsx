@@ -4,6 +4,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
+import {
+  CEDULA_ERROR,
+  isValidDocumentNumber,
+  isValidVePhone,
+  PHONE_ERROR,
+  PHONE_MAX_LENGTH,
+} from '../../src/lib/validation';
 
 interface ConsentText {
   version: string;
@@ -91,6 +98,28 @@ export default function RegistroPage() {
   async function submit() {
     if (!consent) return;
     setError('');
+    // Required-field guard (enforced regardless of native `required`).
+    if (
+      !nombre.trim() ||
+      !numeroFpv.trim() ||
+      !email.trim() ||
+      !universidad.trim() ||
+      !anioEgreso.trim() ||
+      !colegio.trim()
+    ) {
+      setError('Completa todos los campos obligatorios.');
+      return;
+    }
+    // Format checks mirror the server (schemas.ts); the input filters below keep
+    // letters out of the number fields, this catches wrong length/format.
+    if (!isValidDocumentNumber(numeroDocumento, tipoDocumento)) {
+      setError(CEDULA_ERROR);
+      return;
+    }
+    if (!isValidVePhone(telefono)) {
+      setError(PHONE_ERROR);
+      return;
+    }
     setSubmitting(true);
     try {
       const disponibilidad_horaria = [...slots].map((key) => {
@@ -186,9 +215,18 @@ export default function RegistroPage() {
           <input
             className={inputClass}
             type="text"
-            placeholder="Número de documento (cédula)"
+            inputMode={tipoDocumento === 'P' ? 'text' : 'numeric'}
+            maxLength={tipoDocumento === 'P' ? 20 : 8}
+            placeholder={tipoDocumento === 'P' ? 'Número de pasaporte' : 'Cédula (hasta 8 dígitos)'}
             value={numeroDocumento}
-            onChange={(e) => setNumeroDocumento(e.target.value)}
+            onChange={(e) =>
+              setNumeroDocumento(
+                // V/E cédulas are numeric (≤8): strip anything else as you type.
+                tipoDocumento === 'P'
+                  ? e.target.value
+                  : e.target.value.replace(/\D/g, '').slice(0, 8),
+              )
+            }
             required
           />
         </div>
@@ -212,9 +250,12 @@ export default function RegistroPage() {
         <input
           className={inputClass}
           type="tel"
-          placeholder="Teléfono de contacto"
+          inputMode="tel"
+          maxLength={PHONE_MAX_LENGTH}
+          placeholder="Teléfono (ej. 0414-1234567)"
           value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
+          // Allow only phone characters so letters can't be entered.
+          onChange={(e) => setTelefono(e.target.value.replace(/[^\d+\s().-]/g, ''))}
           required
         />
         <p className="text-xs text-slate-500">

@@ -15,6 +15,7 @@ import {
 } from '../../../src/features/intake/green-form';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import { ui } from '../../../src/lib/ui';
+import { isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
 import { FALLBACK_CRISIS_LINES, getCrisisLines } from '../../../src/lib/crisis-lines';
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
@@ -69,6 +70,10 @@ export default function GreenBranchPage() {
 
   async function submit() {
     if (!form.contact.trim()) return;
+    if (!isValidVePhone(form.contact)) {
+      setError(PHONE_ERROR);
+      return;
+    }
     setBusy(true);
     setError('');
     const payload = buildGreenPayload(form);
@@ -235,9 +240,12 @@ export default function GreenBranchPage() {
           </label>
           <input
             className={ui.field}
-            placeholder="Teléfono de contacto"
+            type="tel"
+            inputMode="tel"
+            maxLength={PHONE_MAX_LENGTH}
+            placeholder="Teléfono de contacto (ej. 0414-1234567)"
             value={form.contact}
-            onChange={(e) => update({ contact: e.target.value })}
+            onChange={(e) => update({ contact: e.target.value.replace(/[^\d+\s().-]/g, '') })}
           />
           <div>
             <p className="mb-2 text-sm text-slate-600">¿Cómo prefieres que te contactemos?</p>

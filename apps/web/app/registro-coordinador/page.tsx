@@ -5,6 +5,13 @@ import { useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
+import {
+  CEDULA_ERROR,
+  isValidDocumentNumber,
+  isValidVePhone,
+  PHONE_ERROR,
+  PHONE_MAX_LENGTH,
+} from '../../src/lib/validation';
 
 /**
  * Coordinator self-activation page (RF-2.6). Opened from the invitation email
@@ -43,6 +50,14 @@ export default function CoordinatorOnboardingPage() {
     setError('');
     if (!nombres.trim() || !apellidos.trim() || !numeroDocumento.trim() || !telefono.trim()) {
       setError('Completa nombres, apellidos, cédula y teléfono.');
+      return;
+    }
+    if (!isValidDocumentNumber(numeroDocumento, tipoDocumento)) {
+      setError(CEDULA_ERROR);
+      return;
+    }
+    if (!isValidVePhone(telefono)) {
+      setError(PHONE_ERROR);
       return;
     }
     if (!isStrongPassword(password)) {
@@ -138,9 +153,17 @@ export default function CoordinatorOnboardingPage() {
           </select>
           <input
             className={inputClass}
-            placeholder="Cédula de identidad"
+            inputMode={tipoDocumento === 'P' ? 'text' : 'numeric'}
+            maxLength={tipoDocumento === 'P' ? 20 : 8}
+            placeholder={tipoDocumento === 'P' ? 'Número de pasaporte' : 'Cédula (hasta 8 dígitos)'}
             value={numeroDocumento}
-            onChange={(e) => setNumeroDocumento(e.target.value)}
+            onChange={(e) =>
+              setNumeroDocumento(
+                tipoDocumento === 'P'
+                  ? e.target.value
+                  : e.target.value.replace(/\D/g, '').slice(0, 8),
+              )
+            }
           />
         </div>
         <input
@@ -151,9 +174,12 @@ export default function CoordinatorOnboardingPage() {
         />
         <input
           className={inputClass}
-          placeholder="Teléfono"
+          type="tel"
+          inputMode="tel"
+          maxLength={PHONE_MAX_LENGTH}
+          placeholder="Teléfono (ej. 0414-1234567)"
           value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
+          onChange={(e) => setTelefono(e.target.value.replace(/[^\d+\s().-]/g, ''))}
         />
         <input
           className={inputClass}
