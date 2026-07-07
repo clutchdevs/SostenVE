@@ -43,6 +43,21 @@ values
     'active',
     'v0.1.0-draft',
     now()
+  ),
+  -- Segundo psicólogo activo SIN especialidad infantil (adultos), para probar la
+  -- asignación de casos de adultos y contrastar con la priorización infantil.
+  -- Misma contraseña que el psicólogo de prueba (Psicologo123!).
+  (
+    'dddddddd-dddd-dddd-dddd-dddddddddddd',
+    'Psicóloga Clínica de Adultos',
+    'FPV-PSICO-002',
+    'psicologo.adultos@ppv.test',
+    'psicología clínica de adultos',
+    'psychologist',
+    '$argon2id$v=19$m=19456,t=2,p=1$Ky7np0LE4J7g8zGA3HdtmA$lbA4d36yXbTibL6C+qdki9ZxeeuH+gNMWoQEO1AUIlU',
+    'active',
+    'v0.1.0-draft',
+    now()
   )
 on conflict (id) do nothing;
 
@@ -133,6 +148,35 @@ values (
   '55555555-5555-5555-5555-555555555555',
   '44444444-4444-4444-4444-444444444444',
   '22222222-2222-2222-2222-222222222222'
+)
+on conflict (id) do nothing;
+
+-- Caso de un ADULTO asignado al psicólogo de adultos (paridad con el caso infantil
+-- de arriba): puebla su portal y ejercita la asignación NO infantil. Edad 34 → el
+-- motor no prioriza especialidad infantil (contraste con los casos de menores).
+insert into cases (id, pseudonym_id, branch, risk_level, urgency_score, status, requester_type, zone, age)
+values (
+  'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5',
+  'seed-pseudo-adulto',
+  'verde',
+  'riesgo_moderado',
+  10,
+  'asignado',
+  'victima',
+  'Carabobo',
+  34
+)
+on conflict (id) do nothing;
+
+insert into case_contacts (pseudonym_id, name, contact)
+values ('seed-pseudo-adulto', 'Luis de Prueba', '+584120000001')
+on conflict (pseudonym_id) do nothing;
+
+insert into assignments (id, case_id, volunteer_id)
+values (
+  'a6a6a6a6-a6a6-a6a6-a6a6-a6a6a6a6a6a6',
+  'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5',
+  'dddddddd-dddd-dddd-dddd-dddddddddddd'
 )
 on conflict (id) do nothing;
 

@@ -33,6 +33,7 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
   let signToken: typeof import('../../src/shared/security/jwt').signToken;
   let escalateOverdueCases: typeof import('../../src/application/assignment/escalate-sla').escalateOverdueCases;
   let getAssignmentDeps: typeof import('../../src/interfaces/http/v1/dependencies').getAssignmentDeps;
+  let getPresenceStore: typeof import('../../src/interfaces/http/v1/dependencies').getPresenceStore;
   const caseIds: string[] = [];
   const volunteerIds: string[] = [];
 
@@ -47,6 +48,7 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
     escalateOverdueCases = (await import('../../src/application/assignment/escalate-sla'))
       .escalateOverdueCases;
     getAssignmentDeps = (await import('../../src/interfaces/http/v1/dependencies')).getAssignmentDeps;
+    getPresenceStore = (await import('../../src/interfaces/http/v1/dependencies')).getPresenceStore;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });
@@ -94,7 +96,10 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
   });
 
   it('assigns a pending high-risk case to an active volunteer', async () => {
-    await seedVolunteer();
+    const volunteerId = await seedVolunteer();
+    // The assignment pool is gated on real-time presence (RF-2.5): mark the
+    // volunteer online through the same store the app uses, or the case stays queued.
+    await getPresenceStore().markOnline(volunteerId, 300);
     const caseId = await seedCase({ status: 'pendiente' });
 
     const res = await cron('test-cron-secret');

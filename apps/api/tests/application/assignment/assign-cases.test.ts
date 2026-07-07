@@ -29,15 +29,28 @@ function makeVolunteer(id: string): Volunteer {
   };
 }
 
-function deps(pending: CaseRecord[], volunteers: Volunteer[], online?: Set<string>) {
+function deps(
+  pending: CaseRecord[],
+  volunteers: Volunteer[],
+  online?: Set<string>,
+  claimable?: Set<string>,
+) {
   // Default: every listed volunteer is online (presence not under test here).
   const onlineIds = online ?? new Set(volunteers.map((v) => v.id));
+  // Default: every case can be claimed (the atomic guard succeeds). Pass a subset
+  // to simulate a concurrent trigger having already taken the others.
+  const claimableIds = claimable ?? new Set(pending.map((c) => c.id));
   const assignedOrder: string[] = [];
   const statusUpdates: string[] = [];
+  const claimAttempts: string[] = [];
   const d = {
     cases: {
       async listByStatus() {
         return pending;
+      },
+      async claimForAssignment(id: string) {
+        claimAttempts.push(id);
+        return claimableIds.has(id);
       },
       async updateStatus(id: string) {
         statusUpdates.push(id);
@@ -64,7 +77,7 @@ function deps(pending: CaseRecord[], volunteers: Volunteer[], online?: Set<strin
       async notifyEscalated() {},
     },
   } as unknown as AssignmentDeps;
-  return { d, assignedOrder, statusUpdates };
+  return { d, assignedOrder, statusUpdates, claimAttempts };
 }
 
 describe('assignPendingCases — urgency ordering (RF-1.5)', () => {
@@ -124,5 +137,43 @@ describe('assignPendingCases — presence gate (RF-2.5 / RF-3.1)', () => {
     expect(assigned).toBe(0);
     expect(assignedOrder).toEqual([]);
     expect(statusUpdates).toEqual([]); // stays PENDING for the SLA sweep
+  });
+});
+
+describe('assignPendingCases — atomic claim guard (no double assignment)', () => {
+  it('skips a case already claimed by a concurrent trigger and frees the volunteer', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    // Two pending cases, one volunteer. The higher-urgency case was already taken
+    // by a concurrent trigger (not claimable), so the volunteer must fall through
+    // to the still-claimable one instead of being consumed by the lost claim.
+    const pending = [makeCase('taken', 100, now), makeCase('free', 50, now)];
+    const { d, assignedOrder, claimAttempts } = deps(
+      pending,
+      [makeVolunteer('v1')],
+      undefined,
+      new Set(['free']), // 'taken' loses the claim
+    );
+
+    const assigned = await assignPendingCases(d);
+
+    expect(claimAttempts).toEqual(['taken', 'free']); // tried highest-urgency first
+    expect(assigned).toBe(1);
+    expect(assignedOrder).toEqual(['free']); // no assignment row for the lost claim
+  });
+
+  it('does not create an assignment when the claim is lost', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    const pending = [makeCase('c1', 50, now)];
+    const { d, assignedOrder } = deps(
+      pending,
+      [makeVolunteer('v1')],
+      undefined,
+      new Set(), // nothing claimable — every claim lost
+    );
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(0);
+    expect(assignedOrder).toEqual([]);
   });
 });

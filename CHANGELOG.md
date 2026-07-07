@@ -14,8 +14,28 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   **transitorios** (padrón caído / timeout / token inválido → `fpv_unreachable`) para no bloquear a alguien
   legítimo por una caída; y una **licencia hallada pero no activa** también va a revisión manual (la persona
   sí existe). Antes, cualquier "no aprobado" quedaba como pendiente.
+- **Asignación de casos orientada a eventos + anti-duplicados (RF-2.5):** la asignación ya no espera al
+  barrido del cron. Ahora se dispara **al crear un caso** (intake) y **cuando un psicólogo se pone online**
+  (solo en la transición offline→online, no en cada heartbeat), de forma *best-effort* (un fallo nunca
+  rompe el intake ni el heartbeat). El cron queda como **red de seguridad** (SLA + reintentos). Para evitar
+  asignaciones duplicadas cuando varios disparadores corren a la vez, cada caso pasa por un **claim
+  atómico** (`claimForAssignment`: `UPDATE … WHERE id=? AND status='pendiente'`, atómico a nivel de fila);
+  quien pierde el claim **salta el caso** en lugar de reasignarlo. `PresenceStore.markOnline` ahora informa
+  si fue una transición (memoria + Upstash `SET … GET`).
+- **Validación de teléfono venezolano y cédula en formularios e intake:** los teléfonos (registro, intake
+  verde/roja, invitación de coordinador) exigen un **móvil venezolano** (prefijo `0412/0414/0416/0424/0426`
+  + 7 dígitos, tolera `+58` y separadores) en vez de cualquier texto; la **cédula (V/E) se limita a 8
+  dígitos** (el pasaporte P es alfanumérico). Validado en el servidor (Zod) y reflejado en el cliente
+  (filtra letras al escribir, `maxLength`, mensajes claros y bloqueo de envío). Las líneas de crisis
+  conservan la regla laxa (son códigos de servicio).
 
 ### Añadido
+- **Control de edad en el intake verde (RF-1.3):** el formulario pregunta la **edad de quien necesita
+  apoyo** y la envía como `edad`; un menor (`< 18`) se rutea a un psicólogo con especialidad infantil aunque
+  el síntoma elegido no sea un tag de infancia. La rama roja ya capturaba la edad.
+- **Segundo psicólogo de prueba sin especialidad infantil** (`psicologo.adultos@ppv.test`) en el seed, para
+  probar la asignación de casos de adultos frente a la priorización infantil; `docs/04-testing/seed-data.md`
+  documenta además **cómo funciona la asignación automática** (disparadores, gate de presencia, prioridad).
 - **Detalle del voluntario para revisión del coordinador (RF-2.3):** en `/coordinador/voluntarios` cada
   tarjeta ahora tiene **"Ver detalle"** que carga toda la información del postulante (correo, teléfono,
   documento/cédula, nº FPV, universidad, año de egreso, colegio, especialidad, modalidad, disponibilidad

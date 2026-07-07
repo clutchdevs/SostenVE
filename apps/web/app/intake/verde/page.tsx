@@ -15,6 +15,7 @@ import {
 } from '../../../src/features/intake/green-form';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import { ui } from '../../../src/lib/ui';
+import { isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
 import { FALLBACK_CRISIS_LINES, getCrisisLines } from '../../../src/lib/crisis-lines';
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
@@ -69,6 +70,10 @@ export default function GreenBranchPage() {
 
   async function submit() {
     if (!form.contact.trim()) return;
+    if (!isValidVePhone(form.contact)) {
+      setError(PHONE_ERROR);
+      return;
+    }
     setBusy(true);
     setError('');
     const payload = buildGreenPayload(form);
@@ -217,11 +222,30 @@ export default function GreenBranchPage() {
             value={form.name}
             onChange={(e) => update({ name: e.target.value })}
           />
+          <label className="block text-sm font-medium text-slate-700">
+            Edad de quien necesita apoyo (opcional)
+            <input
+              className={`mt-1 ${ui.field}`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={120}
+              placeholder="Ej. 8 si es un niño/a, 34 si es un adulto"
+              value={form.age}
+              onChange={(e) => update({ age: e.target.value })}
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              Nos ayuda a asignar el especialista adecuado (atención infantil para menores de edad).
+            </span>
+          </label>
           <input
             className={ui.field}
-            placeholder="Teléfono de contacto"
+            type="tel"
+            inputMode="tel"
+            maxLength={PHONE_MAX_LENGTH}
+            placeholder="Teléfono de contacto (ej. 0414-1234567)"
             value={form.contact}
-            onChange={(e) => update({ contact: e.target.value })}
+            onChange={(e) => update({ contact: e.target.value.replace(/[^\d+\s().-]/g, '') })}
           />
           <div>
             <p className="mb-2 text-sm text-slate-600">¿Cómo prefieres que te contactemos?</p>

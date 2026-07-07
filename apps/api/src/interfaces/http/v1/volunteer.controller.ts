@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { getConfig } from '../../../config';
 import { registerVolunteer } from '../../../application/volunteer/register-volunteer';
 import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer';
+import { assignPendingCases } from '../../../application/assignment/assign-cases';
+import { logger } from '../../../shared/logger';
 import {
   addVolunteerNote,
   listVolunteerNotes,
@@ -12,7 +14,7 @@ import { ApiError } from '../../../shared/errors/api-error';
 import { requireAuth, getAuthUser } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limit';
 import { getValidated, validateBody } from '../middleware/validate';
-import { getPresenceStore, getVolunteerContainer } from './dependencies';
+import { getAssignmentDeps, getPresenceStore, getVolunteerContainer } from './dependencies';
 import {
   presenceSchema,
   registerVolunteerSchema,
@@ -153,7 +155,19 @@ export function createVolunteerRouter(): Hono {
     const body = getValidated<PresenceBody>(c, 'body');
     const presence = getPresenceStore();
     if (body.disponible) {
-      await presence.markOnline(user.sub, getConfig().presence.heartbeat_ttl_seconds);
+      const cameOnline = await presence.markOnline(user.sub, getConfig().presence.heartbeat_ttl_seconds);
+      // Event-driven assignment (RF-2.5): only on the offline→online transition
+      // (not every heartbeat), drain any queued cases to the newly available
+      // psychologist. Best-effort — a failure must not fail the heartbeat.
+      if (cameOnline) {
+        try {
+          await assignPendingCases(getAssignmentDeps());
+        } catch (error) {
+          logger.warn('event-driven assignment on presence failed (cron will retry)', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
     } else {
       await presence.markOffline(user.sub);
     }

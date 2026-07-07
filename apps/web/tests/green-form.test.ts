@@ -47,6 +47,19 @@ describe('buildGreenPayload', () => {
     });
     expect(body.metodo_contacto).toBe('whatsapp');
   });
+
+  it('sends the beneficiary age so a minor routes to a child specialist (RF-1.3)', () => {
+    expect(buildGreenPayload({ ...EMPTY_GREEN_FORM, contact: '0212', age: '8' }).edad).toBe(8);
+    expect(buildGreenPayload({ ...EMPTY_GREEN_FORM, contact: '0212', age: '34' }).edad).toBe(34);
+    // 0 is a valid minor age (newborn) and must still be sent.
+    expect(buildGreenPayload({ ...EMPTY_GREEN_FORM, contact: '0212', age: '0' }).edad).toBe(0);
+  });
+
+  it('omits a blank, out-of-range or non-numeric age instead of sending garbage', () => {
+    for (const age of ['', '200', '-1', 'abc']) {
+      expect('edad' in buildGreenPayload({ ...EMPTY_GREEN_FORM, contact: '0212', age })).toBe(false);
+    }
+  });
 });
 
 describe('catalog constants', () => {

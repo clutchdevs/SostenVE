@@ -36,8 +36,12 @@ export class UpstashPresenceStore implements PresenceStore {
     return data.result;
   }
 
-  async markOnline(volunteerId: string, ttlSeconds: number): Promise<void> {
-    await this.command(['SET', this.key(volunteerId), '1', 'EX', ttlSeconds]);
+  async markOnline(volunteerId: string, ttlSeconds: number): Promise<boolean> {
+    // `SET ... GET` refreshes the key + TTL and returns the previous value in one
+    // round-trip: `null` means the key did not exist, i.e. a fresh online
+    // transition (was offline/expired). `1` means they were already online.
+    const previous = await this.command(['SET', this.key(volunteerId), '1', 'EX', ttlSeconds, 'GET']);
+    return previous === null || previous === undefined;
   }
 
   async markOffline(volunteerId: string): Promise<void> {

@@ -12,6 +12,7 @@ import {
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 import { ui } from '../../../src/lib/ui';
+import { isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
 
 type SubChannel = 'recibir-llamada' | 'whatsapp-silencioso';
 
@@ -31,6 +32,7 @@ export default function RedBranchPage() {
   const [contact, setContact] = useState('');
   const [age, setAge] = useState('');
   const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -55,6 +57,11 @@ export default function RedBranchPage() {
 
   async function submit() {
     if (!sub || !contact) return;
+    if (!isValidVePhone(contact)) {
+      setError(PHONE_ERROR);
+      return;
+    }
+    setError('');
     // Age is a critical clinical parameter (minor vs geriatric priority) per
     // RF-1.2.2 / RF-1.2.3; sent when provided.
     const parsedAge = age.trim() === '' ? undefined : Number(age);
@@ -125,9 +132,12 @@ export default function RedBranchPage() {
               />
               <input
                 className={ui.field}
-                placeholder="Teléfono de contacto"
+                type="tel"
+                inputMode="tel"
+                maxLength={PHONE_MAX_LENGTH}
+                placeholder="Teléfono de contacto (ej. 0414-1234567)"
                 value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                onChange={(e) => setContact(e.target.value.replace(/[^\d+\s().-]/g, ''))}
               />
               <input
                 className={ui.field}
@@ -139,6 +149,7 @@ export default function RedBranchPage() {
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
               />
+              {error && <p className={ui.error}>{error}</p>}
               <button
                 type="button"
                 onClick={submit}

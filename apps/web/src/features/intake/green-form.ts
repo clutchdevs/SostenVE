@@ -46,6 +46,12 @@ export interface GreenFormState {
   contact: string;
   /** Preferred contact channel (RF-1.3 screen 2); empty until chosen. */
   contactMethod: ContactMethod | '';
+  /**
+   * Age of the person who needs the support (RF-1.3). Kept as a string for the
+   * input; a value under 18 routes the case to a child specialist (RF-2.5). Empty
+   * when not provided.
+   */
+  age: string;
 }
 
 export const EMPTY_GREEN_FORM: GreenFormState = {
@@ -56,6 +62,7 @@ export const EMPTY_GREEN_FORM: GreenFormState = {
   name: '',
   contact: '',
   contactMethod: '',
+  age: '',
 };
 
 /** Request body for POST /intake/green-branch (omits empty optionals). */
@@ -69,5 +76,10 @@ export function buildGreenPayload(form: GreenFormState): Record<string, unknown>
   if (form.estado) body.estado = form.estado;
   if (form.ciudad.trim()) body.ciudad = form.ciudad.trim();
   if (form.contactMethod) body.metodo_contacto = form.contactMethod;
+  // Only send a valid age; the API routes age < 18 to a child specialist.
+  const age = Number.parseInt(form.age, 10);
+  if (form.age.trim() !== '' && Number.isFinite(age) && age >= 0 && age <= 120) {
+    body.edad = age;
+  }
   return body;
 }

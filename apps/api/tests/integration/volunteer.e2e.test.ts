@@ -68,7 +68,8 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
     return post('/api/v1/volunteers/register', {
       nombre: 'Ana Test',
       tipo_documento: 'V',
-      numero_documento: `${randomUUID().slice(0, 8)}`,
+      // Cédula must be up to 8 digits (numeric) for a V document.
+      numero_documento: `${randomUUID().replace(/\D/g, '').slice(0, 8).padEnd(8, '0')}`,
       numero_fpv: `FPV-${randomUUID().slice(0, 8)}`,
       email,
       telefono: '04140000000',

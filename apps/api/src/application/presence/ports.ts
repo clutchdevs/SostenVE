@@ -7,8 +7,14 @@
  * share the same view — see the adapters in infrastructure/presence.
  */
 export interface PresenceStore {
-  /** Marks a volunteer online for `ttlSeconds`, refreshed on every heartbeat. */
-  markOnline(volunteerId: string, ttlSeconds: number): Promise<void>;
+  /**
+   * Marks a volunteer online for `ttlSeconds`, refreshed on every heartbeat.
+   * Returns `true` only when this call is a fresh online **transition** (the
+   * volunteer was previously offline/expired), so callers can drain the queue to
+   * a psychologist the moment they become available without reacting to every
+   * repeated heartbeat.
+   */
+  markOnline(volunteerId: string, ttlSeconds: number): Promise<boolean>;
   /** Immediately marks a volunteer offline (manual pause or logout, RF-4.3.1). */
   markOffline(volunteerId: string): Promise<void>;
   /** Returns the subset of the given ids that are currently online. */
