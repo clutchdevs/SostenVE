@@ -15,11 +15,18 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 | Rol | Correo | Contraseña | Redirige a |
 |---|---|---|---|
 | Coordinador | `coordinador@ppv.test` | `Coordinador123!` | `/coordinador` |
-| Psicólogo | `psicologo@ppv.test` | `Psicologo123!` | `/psicologo` |
+| Psicólogo (infantil) | `psicologo@ppv.test` | `Psicologo123!` | `/psicologo` |
+| Psicólogo (adultos) | `psicologo.adultos@ppv.test` | `Psicologo123!` | `/psicologo` |
 | Administrador | `admin@ppv.test` | `Admin123!` | `/admin` |
 
-- El psicólogo tiene especialidad **"psicología infantil"** (útil para probar la priorización por edad).
-- Ambos quedan en estado **`active`** (pueden iniciar sesión de inmediato).
+- Hay **dos psicólogos activos** para probar la asignación: uno con especialidad **"psicología infantil"**
+  (útil para la priorización por edad, RF-1.3) y otro **"psicología clínica de adultos"** (sin preferencia
+  infantil). Un caso de menor prefiere al infantil; un caso de adulto va al primer psicólogo online.
+- Todos quedan en estado **`active`** (pueden iniciar sesión de inmediato).
+
+> ℹ️ La asignación automática solo considera psicólogos **online** (presencia RF-2.5, heartbeat del PWA) y
+> corre en el **cron** (`GET/POST /cron/check-sla`), no al crear el caso. Ver ["Cómo funciona la
+> asignación"](#cómo-funciona-la-asignación-automática).
 
 ### Alta de coordinador por invitación (RF-2.6, issue #23)
 Además del coordinador sembrado, se puede dar de alta uno nuevo por **token de invitación**:
@@ -50,6 +57,39 @@ Así, al iniciar sesión:
 - **Psicólogo** → ve el caso asignado con la **identidad del solicitante** (Ana de Prueba + teléfono);
   puede **aceptar** (una vez), registrar **notas** y completar el **expediente de cierre** (Módulo 4).
   Tras cerrar, la vista queda en **solo lectura** y no se puede re-tomar.
+
+## Cómo funciona la asignación automática
+La asignación **no** ocurre al crear el caso; corre en un **cron** (`processQueue`) que se puede disparar en
+local con `GET`/`POST` a `/cron/check-sla` (protegido con `CRON_SECRET`). Cada corrida:
+
+1. **Escala** los casos de riesgo alto vencidos (SLA) de vuelta a la cola.
+2. **Ordena** los casos `pendiente` por **índice de urgencia** (RF-1.5) desc, y desempata por llegada (FIFO).
+   La ideación suicida domina, así que va siempre primero.
+3. Arma el **pool elegible**: solo voluntarios `role=psychologist`, en estado **`active`** y **online**
+   (presencia RF-2.5 — el PWA envía _heartbeat_ a `POST /volunteers/me/presence`; en local la presencia vive
+   en memoria del proceso de la API). Si nadie está online, los casos quedan en cola honestamente.
+4. Por cada caso elige voluntario (`selectVolunteerForCase`): si el caso **requiere especialidad infantil**
+   (tags de "Infancia", RF-1.3) o el solicitante es **menor de 18**, prefiere a un **psicólogo infantil**
+   disponible; si no hay, cae al primero. Para casos de adultos, toma al **primer psicólogo online**.
+   Es una preferencia _suave_: un caso nunca se queda sin asignar por falta de especialista.
+5. Dentro de una corrida, **un caso por psicólogo** (distribución básica del MVP).
+
+> Regionalidad (clúster por zona, RF-3.1) fue **eliminada** por la FPV (2026-07-03): la asignación es por
+> **riesgo + especialidad + presencia**, no por zona.
+
+**Para probarlo en local:**
+1. Inicia sesión como el psicólogo que quieras que reciba (p. ej. `psicologo.adultos@ppv.test`) en
+   `http://localhost:3000` → entra al portal `/psicologo`; el PWA lo marca **online** (heartbeat).
+2. Dispara el cron:
+   ```bash
+   curl -s -X POST http://localhost:3001/api/v1/cron/check-sla \
+     -H "X-Cron-Secret: $CRON_SECRET"    # en local: local-dev-cron-secret
+   ```
+   Responde `{ "escalated": N, "assigned": M }`. Los casos `pendiente` compatibles pasan a `asignado`.
+3. Recarga `/psicologo` para ver el caso asignado (o `/coordinador` para la cola priorizada).
+
+> ⚠️ Si el psicólogo **no está online**, `assigned` será 0 y el caso sigue en cola: la asignación exige
+> presencia en tiempo real para no derivar a alguien ausente.
 
 ## Probar rápido
 1. `npm run dev:up` (Supabase + API + Web) y `npm run dev:reset` la primera vez.

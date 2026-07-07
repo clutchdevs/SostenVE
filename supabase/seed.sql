@@ -43,6 +43,21 @@ values
     'active',
     'v0.1.0-draft',
     now()
+  ),
+  -- Segundo psicólogo activo SIN especialidad infantil (adultos), para probar la
+  -- asignación de casos de adultos y contrastar con la priorización infantil.
+  -- Misma contraseña que el psicólogo de prueba (Psicologo123!).
+  (
+    'dddddddd-dddd-dddd-dddd-dddddddddddd',
+    'Psicóloga Clínica de Adultos',
+    'FPV-PSICO-002',
+    'psicologo.adultos@ppv.test',
+    'psicología clínica de adultos',
+    'psychologist',
+    '$argon2id$v=19$m=19456,t=2,p=1$Ky7np0LE4J7g8zGA3HdtmA$lbA4d36yXbTibL6C+qdki9ZxeeuH+gNMWoQEO1AUIlU',
+    'active',
+    'v0.1.0-draft',
+    now()
   )
 on conflict (id) do nothing;
 
