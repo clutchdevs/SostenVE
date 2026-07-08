@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler';
-import { rateLimit } from '../../../src/interfaces/http/middleware/rate-limit';
+import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler.js';
+import { rateLimit } from '../../../src/interfaces/http/middleware/rate-limit.js';
 
 function buildApp() {
   const app = new Hono();

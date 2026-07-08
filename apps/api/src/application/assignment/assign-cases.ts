@@ -1,8 +1,8 @@
-import { selectVolunteerForCase } from '../../domain/assignment/selection';
-import { RiskLevel } from '../../domain/triage';
-import { logger } from '../../shared/logger';
-import type { Volunteer } from '../../domain/volunteer/volunteer';
-import type { AssignmentDeps } from './ports';
+import { selectVolunteerForCase } from '../../domain/assignment/selection.js';
+import { RiskLevel } from '../../domain/triage/index.js';
+import { logger } from '../../shared/logger.js';
+import type { Volunteer } from '../../domain/volunteer/volunteer.js';
+import type { AssignmentDeps } from './ports.js';
 
 /**
  * Assigns pending cases to compatible active volunteers. A case with no available

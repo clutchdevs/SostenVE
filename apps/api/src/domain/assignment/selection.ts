@@ -1,4 +1,4 @@
-import type { Volunteer } from '../volunteer/volunteer';
+import type { Volunteer } from '../volunteer/volunteer.js';
 
 /**
  * Pure volunteer selection for a case. Two concerns, in order:

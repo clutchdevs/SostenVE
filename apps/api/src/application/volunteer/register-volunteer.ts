@@ -1,15 +1,15 @@
-import { generatePassword, hashPassword } from '../../shared/security/password';
-import { logger } from '../../shared/logger';
-import { ApiError } from '../../shared/errors/api-error';
-import type { AuditLogRepository } from '../../domain/audit/audit';
+import { generatePassword, hashPassword } from '../../shared/security/password.js';
+import { logger } from '../../shared/logger.js';
+import { ApiError } from '../../shared/errors/api-error.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
 import type {
   PendingReason,
   Volunteer,
   VolunteerApplication,
   VolunteerRepository,
   VolunteerStatus,
-} from '../../domain/volunteer/volunteer';
-import type { FpvVerifier, Notifier } from './ports';
+} from '../../domain/volunteer/volunteer.js';
+import type { FpvVerifier, Notifier } from './ports.js';
 
 export interface RegisterVolunteerInput {
   fullName: string;

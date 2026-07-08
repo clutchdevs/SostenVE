@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RiskLevel, isHighRisk, mostSevere, riskRank } from '../../../src/domain/triage/risk-level';
+import { RiskLevel, isHighRisk, mostSevere, riskRank } from '../../../src/domain/triage/risk-level.js';
 
 describe('RiskLevel', () => {
   it('ranks HIGH > MODERATE > FOLLOW_UP', () => {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import { buildCors } from '../../../src/interfaces/http/middleware/cors';
+import { buildCors } from '../../../src/interfaces/http/middleware/cors.js';
 
 function buildApp() {
   const app = new Hono();

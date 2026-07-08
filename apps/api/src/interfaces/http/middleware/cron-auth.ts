@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
-import { UnauthorizedError } from '../../../shared/errors/api-error';
+import { UnauthorizedError } from '../../../shared/errors/api-error.js';
 
 /**
  * Protects cron endpoints with a shared secret (CRON_SECRET). Accepts the secret

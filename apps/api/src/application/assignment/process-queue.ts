@@ -1,6 +1,6 @@
-import { assignPendingCases } from './assign-cases';
-import { escalateOverdueCases } from './escalate-sla';
-import type { AssignmentDeps } from './ports';
+import { assignPendingCases } from './assign-cases.js';
+import { escalateOverdueCases } from './escalate-sla.js';
+import type { AssignmentDeps } from './ports.js';
 
 export interface ProcessQueueResult {
   escalated: number;

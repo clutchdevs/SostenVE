@@ -3,7 +3,7 @@ import {
   DEFAULT_MAX_ACTIVE_CASELOAD,
   type AssignmentSettings,
   type AssignmentSettingsRepository,
-} from '../../domain/assignment/assignment-settings';
+} from '../../domain/assignment/assignment-settings.js';
 
 const SETTINGS_ID = 1;
 

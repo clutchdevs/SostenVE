@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { IdempotencyStore } from '../../application/intake/idempotency';
+import type { IdempotencyStore } from '../../application/intake/idempotency.js';
 
 /**
  * Idempotency store backed by the `idempotency_keys` table. Written with the

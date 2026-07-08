@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeSla } from '../../../src/application/monitoring/sla-metrics';
-import { RiskLevel } from '../../../src/domain/triage';
-import type { Assignment } from '../../../src/domain/assignment/assignment';
-import type { CaseRecord } from '../../../src/domain/case/case';
+import { summarizeSla } from '../../../src/application/monitoring/sla-metrics.js';
+import { RiskLevel } from '../../../src/domain/triage/index.js';
+import type { Assignment } from '../../../src/domain/assignment/assignment.js';
+import type { CaseRecord } from '../../../src/domain/case/case.js';
 
 const T0 = new Date('2026-06-30T12:00:00Z');
 const NOW = new Date('2026-06-30T12:30:00Z');

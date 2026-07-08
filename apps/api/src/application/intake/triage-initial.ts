@@ -1,4 +1,4 @@
-import type { CaseBranch } from '../../domain/case/case';
+import type { CaseBranch } from '../../domain/case/case.js';
 
 /**
  * Initial Likert triage: routes to the red branch when the answer is at or below

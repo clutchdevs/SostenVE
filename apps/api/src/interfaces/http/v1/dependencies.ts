@@ -1,41 +1,41 @@
-import { getConfig } from '../../../config';
-import { forService } from '../../../infrastructure/supabase/client-factory';
-import { SupabaseCaseContactRepository, SupabaseCaseRepository } from '../../../infrastructure/repositories/supabase-case-repository';
-import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/supabase-idempotency-store';
-import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository';
-import { SupabaseVolunteerNoteRepository } from '../../../infrastructure/repositories/supabase-volunteer-note-repository';
-import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
-import { SupabaseAssignmentSettingsRepository } from '../../../infrastructure/repositories/supabase-assignment-settings-repository';
-import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
-import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
-import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
-import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository';
-import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure/repositories/supabase-coordinator-invitation-repository';
-import { SupabasePasswordResetTokenRepository } from '../../../infrastructure/repositories/supabase-password-reset-token-repository';
-import { createFpvVerifier } from '../../../infrastructure/fpv';
-import { createNotifier } from '../../../infrastructure/notifications';
-import { createPresenceStore } from '../../../infrastructure/presence';
-import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier';
-import type { AssignmentDeps } from '../../../application/assignment/ports';
-import type { PresenceStore } from '../../../application/presence/ports';
-import type { CaseDeps } from '../../../application/cases/ports';
-import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines';
-import type { InvitationDeps } from '../../../application/coordinator/manage-invitations';
-import type { AcceptInvitationDeps } from '../../../application/coordinator/accept-invitation';
-import type { ChangePasswordDeps } from '../../../application/volunteer/change-password';
+import { getConfig } from '../../../config/index.js';
+import { forService } from '../../../infrastructure/supabase/client-factory.js';
+import { SupabaseCaseContactRepository, SupabaseCaseRepository } from '../../../infrastructure/repositories/supabase-case-repository.js';
+import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/supabase-idempotency-store.js';
+import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository.js';
+import { SupabaseVolunteerNoteRepository } from '../../../infrastructure/repositories/supabase-volunteer-note-repository.js';
+import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository.js';
+import { SupabaseAssignmentSettingsRepository } from '../../../infrastructure/repositories/supabase-assignment-settings-repository.js';
+import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository.js';
+import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository.js';
+import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository.js';
+import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository.js';
+import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure/repositories/supabase-coordinator-invitation-repository.js';
+import { SupabasePasswordResetTokenRepository } from '../../../infrastructure/repositories/supabase-password-reset-token-repository.js';
+import { createFpvVerifier } from '../../../infrastructure/fpv/index.js';
+import { createNotifier } from '../../../infrastructure/notifications/index.js';
+import { createPresenceStore } from '../../../infrastructure/presence/index.js';
+import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log-assignment-notifier.js';
+import type { AssignmentDeps } from '../../../application/assignment/ports.js';
+import type { PresenceStore } from '../../../application/presence/ports.js';
+import type { CaseDeps } from '../../../application/cases/ports.js';
+import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines.js';
+import type { InvitationDeps } from '../../../application/coordinator/manage-invitations.js';
+import type { AcceptInvitationDeps } from '../../../application/coordinator/accept-invitation.js';
+import type { ChangePasswordDeps } from '../../../application/volunteer/change-password.js';
 import type {
   RequestPasswordResetDeps,
   ResetPasswordDeps,
-} from '../../../application/volunteer/reset-password';
-import type { QueryAuditLogDeps } from '../../../application/audit/query-audit-log';
-import type { CrisisLineRepository } from '../../../domain/crisis-line/crisis-line';
-import type { IdempotencyStore } from '../../../application/intake/idempotency';
-import type { IntakeDeps } from '../../../application/intake/types';
-import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer';
-import type { LoginDeps } from '../../../application/volunteer/login-volunteer';
-import type { ManageVolunteerDeps } from '../../../application/volunteer/manage-volunteer';
-import type { VolunteerNotesDeps } from '../../../application/volunteer/manage-volunteer-notes';
-import type { VolunteerRepository } from '../../../domain/volunteer/volunteer';
+} from '../../../application/volunteer/reset-password.js';
+import type { QueryAuditLogDeps } from '../../../application/audit/query-audit-log.js';
+import type { CrisisLineRepository } from '../../../domain/crisis-line/crisis-line.js';
+import type { IdempotencyStore } from '../../../application/intake/idempotency.js';
+import type { IntakeDeps } from '../../../application/intake/types.js';
+import type { RegisterVolunteerDeps } from '../../../application/volunteer/register-volunteer.js';
+import type { LoginDeps } from '../../../application/volunteer/login-volunteer.js';
+import type { ManageVolunteerDeps } from '../../../application/volunteer/manage-volunteer.js';
+import type { VolunteerNotesDeps } from '../../../application/volunteer/manage-volunteer-notes.js';
+import type { VolunteerRepository } from '../../../domain/volunteer/volunteer.js';
 
 /**
  * Composition root for the intake feature. Builds use-case dependencies over the

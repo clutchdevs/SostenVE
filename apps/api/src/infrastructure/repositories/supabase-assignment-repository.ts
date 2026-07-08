@@ -3,7 +3,7 @@ import type {
   Assignment,
   AssignmentRepository,
   NewAssignment,
-} from '../../domain/assignment/assignment';
+} from '../../domain/assignment/assignment.js';
 
 interface AssignmentRow {
   id: string;

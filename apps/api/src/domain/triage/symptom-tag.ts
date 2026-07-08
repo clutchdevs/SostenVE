@@ -1,5 +1,5 @@
-import { DomainError } from '../shared/domain-error';
-import { Severity, isSeverity } from './severity';
+import { DomainError } from '../shared/domain-error.js';
+import { Severity, isSeverity } from './severity.js';
 
 /**
  * A clinical tag selected during the green-branch conversational form

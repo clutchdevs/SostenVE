@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ReferralType,
   resolveReferral,
-} from '../../../src/domain/clinical/acute-psychotic-crisis';
+} from '../../../src/domain/clinical/acute-psychotic-crisis.js';
 
 describe('Acute Psychotic Crisis rule (RF-4.2.9)', () => {
   it('forces URGENT and locks it when a crisis is present', () => {

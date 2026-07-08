@@ -1,5 +1,5 @@
-import type { RiskLevel } from './risk-level';
-import type { SymptomTag } from './symptom-tag';
+import type { RiskLevel } from './risk-level.js';
+import type { SymptomTag } from './symptom-tag.js';
 
 /** Options injected by the application layer (from the config singleton). */
 export interface ClassificationOptions {

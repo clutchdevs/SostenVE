@@ -1,18 +1,18 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { acceptCase } from '../../../application/assignment/accept-case';
-import { addClinicalNote } from '../../../application/cases/add-note';
+import { getConfig } from '../../../config/index.js';
+import { acceptCase } from '../../../application/assignment/accept-case.js';
+import { addClinicalNote } from '../../../application/cases/add-note.js';
 import {
   coordinatorCloseCase,
   reassignCase,
-} from '../../../application/cases/coordinator-actions';
-import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator';
-import { getCaseForVolunteer } from '../../../application/cases/get-case';
-import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases';
-import { recordCaseClosure } from '../../../application/cases/record-case-closure';
-import { getAuthUser, requireAuth } from '../middleware/auth';
-import { getValidated, validateBody } from '../middleware/validate';
-import { getAssignmentDeps, getCaseDeps } from './dependencies';
+} from '../../../application/cases/coordinator-actions.js';
+import { getCaseForCoordinator } from '../../../application/cases/get-case-for-coordinator.js';
+import { getCaseForVolunteer } from '../../../application/cases/get-case.js';
+import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases.js';
+import { recordCaseClosure } from '../../../application/cases/record-case-closure.js';
+import { getAuthUser, requireAuth } from '../middleware/auth.js';
+import { getValidated, validateBody } from '../middleware/validate.js';
+import { getAssignmentDeps, getCaseDeps } from './dependencies.js';
 import {
   presentAssignedCaseSummary,
   presentCaseClosure,
@@ -20,7 +20,7 @@ import {
   presentCaseSummary,
   presentCoordinatorCaseSummary,
   presentNote,
-} from './presenters';
+} from './presenters.js';
 import {
   addNoteSchema,
   caseClosureSchema,
@@ -30,7 +30,7 @@ import {
   type CaseClosureBody,
   type CoordinatorCloseBody,
   type ReassignCaseBody,
-} from './schemas';
+} from './schemas.js';
 
 const STAFF_ROLES = ['psychologist', 'coordinator', 'admin'];
 const COORDINATOR_ROLES = ['coordinator', 'admin'];

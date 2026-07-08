@@ -1,6 +1,6 @@
-export { buildCors } from './cors';
-export { buildSecurityHeaders } from './security-headers';
-export { rateLimit, type RateLimitMiddlewareOptions } from './rate-limit';
-export { validateBody, validateQuery, getValidated } from './validate';
-export { requireAuth, getAuthUser, type RequireAuthOptions } from './auth';
-export { errorHandler } from './error-handler';
+export { buildCors } from './cors.js';
+export { buildSecurityHeaders } from './security-headers.js';
+export { rateLimit, type RateLimitMiddlewareOptions } from './rate-limit.js';
+export { validateBody, validateQuery, getValidated } from './validate.js';
+export { requireAuth, getAuthUser, type RequireAuthOptions } from './auth.js';
+export { errorHandler } from './error-handler.js';

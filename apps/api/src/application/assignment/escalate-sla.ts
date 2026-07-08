@@ -1,6 +1,6 @@
-import { logger } from '../../shared/logger';
-import { raiseAlert } from '../../shared/alerts';
-import type { AssignmentDeps } from './ports';
+import { logger } from '../../shared/logger.js';
+import { raiseAlert } from '../../shared/alerts.js';
+import type { AssignmentDeps } from './ports.js';
 
 /**
  * Escalates high-risk cases that were assigned but not accepted within the SLA

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { Severity } from '../../../src/domain/triage/severity';
-import { createSymptomTag } from '../../../src/domain/triage/symptom-tag';
-import { DEFAULT_SEVERITY_WEIGHT } from '../../../src/domain/triage/triage-catalog';
+import { Severity } from '../../../src/domain/triage/severity.js';
+import { createSymptomTag } from '../../../src/domain/triage/symptom-tag.js';
+import { DEFAULT_SEVERITY_WEIGHT } from '../../../src/domain/triage/triage-catalog.js';
 import {
   computeUrgencyIndex,
   RED_BRANCH_URGENCY,
   URGENCY_WEIGHTS,
   weightedUrgencyIndex,
-} from '../../../src/domain/triage/urgency-index';
+} from '../../../src/domain/triage/urgency-index.js';
 
 function tag(severity: Severity) {
   return createSymptomTag({

@@ -1,6 +1,6 @@
-import { RiskLevel } from '../../domain/triage';
-import type { Assignment } from '../../domain/assignment/assignment';
-import type { CaseRecord } from '../../domain/case/case';
+import { RiskLevel } from '../../domain/triage/index.js';
+import type { Assignment } from '../../domain/assignment/assignment.js';
+import type { CaseRecord } from '../../domain/case/case.js';
 
 /**
  * SLA / queue metrics for the monitoring phase (fase 06). Pure and deterministic

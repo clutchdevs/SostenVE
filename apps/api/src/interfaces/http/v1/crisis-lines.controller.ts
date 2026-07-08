@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { getActiveCrisisLineFromDb } from '../../../application/intake/get-active-crisis-line';
-import { getCrisisLineDeps } from './dependencies';
-import { presentCrisisLines } from './presenters';
+import { getConfig } from '../../../config/index.js';
+import { getActiveCrisisLineFromDb } from '../../../application/intake/get-active-crisis-line.js';
+import { getCrisisLineDeps } from './dependencies.js';
+import { presentCrisisLines } from './presenters.js';
 
 /**
  * Crisis lines endpoint. Reads the admin-managed lines from the database, but

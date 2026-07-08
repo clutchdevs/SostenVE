@@ -5,15 +5,15 @@ import {
   requesterToDb,
   riskToDb,
   statusToDb,
-} from '../../../infrastructure/repositories/enum-maps';
-import type { ActiveCrisisLine } from '../../../application/intake/crisis-line-routing';
-import type { IntakeCaseResult } from '../../../application/intake/types';
-import type { AuditEntryRecord } from '../../../domain/audit/audit';
-import type { CaseContact, CaseRecord } from '../../../domain/case/case';
-import type { ClinicalNote } from '../../../domain/clinical/clinical-note';
-import type { CaseClosure } from '../../../domain/clinical/case-closure';
-import type { CrisisLine } from '../../../domain/crisis-line/crisis-line';
-import type { CoordinatorInvitation } from '../../../domain/coordinator/invitation';
+} from '../../../infrastructure/repositories/enum-maps.js';
+import type { ActiveCrisisLine } from '../../../application/intake/crisis-line-routing.js';
+import type { IntakeCaseResult } from '../../../application/intake/types.js';
+import type { AuditEntryRecord } from '../../../domain/audit/audit.js';
+import type { CaseContact, CaseRecord } from '../../../domain/case/case.js';
+import type { ClinicalNote } from '../../../domain/clinical/clinical-note.js';
+import type { CaseClosure } from '../../../domain/clinical/case-closure.js';
+import type { CrisisLine } from '../../../domain/crisis-line/crisis-line.js';
+import type { CoordinatorInvitation } from '../../../domain/coordinator/invitation.js';
 
 /** Maps domain results to the Spanish contract values (see openapi.yaml). */
 

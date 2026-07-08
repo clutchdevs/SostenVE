@@ -1,8 +1,8 @@
-import { riskRank, type RiskLevel } from '../../domain/triage';
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { CaseContact, CaseRecord } from '../../domain/case/case';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
-import type { CaseDeps } from './ports';
+import { riskRank, type RiskLevel } from '../../domain/triage/index.js';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { CaseContact, CaseRecord } from '../../domain/case/case.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { CaseDeps } from './ports.js';
 
 /** Cases assigned to a given volunteer (psychologist portal). */
 export async function listAssignedCases(

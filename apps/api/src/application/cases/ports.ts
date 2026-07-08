@@ -1,9 +1,9 @@
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { CaseContactRepository, CaseRepository } from '../../domain/case/case';
-import type { ClinicalNoteRepository } from '../../domain/clinical/clinical-note';
-import type { CaseClosureRepository } from '../../domain/clinical/case-closure';
-import type { AppConfig } from '../../config';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { CaseContactRepository, CaseRepository } from '../../domain/case/case.js';
+import type { ClinicalNoteRepository } from '../../domain/clinical/clinical-note.js';
+import type { CaseClosureRepository } from '../../domain/clinical/case-closure.js';
+import type { AppConfig } from '../../config/index.js';
 
 /** Dependencies shared by the case-management use cases. */
 export interface CaseDeps {

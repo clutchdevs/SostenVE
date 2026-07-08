@@ -19,7 +19,7 @@ import {
   registerVolunteerSchema,
   triageInitialSchema,
   volunteerNoteSchema,
-} from './v1/schemas';
+} from './v1/schemas.js';
 
 /**
  * OpenAPI 3.1 document for the live API. Built in code and reusing the Zod

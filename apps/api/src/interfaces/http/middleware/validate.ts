@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import type { ZodType } from 'zod';
-import { ValidationError } from '../../../shared/errors/api-error';
+import { ValidationError } from '../../../shared/errors/api-error.js';
 
 /**
  * Input validation at the API edge with Zod. Runs in the controller BEFORE the

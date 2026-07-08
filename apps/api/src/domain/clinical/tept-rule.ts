@@ -1,4 +1,4 @@
-import { DomainError } from '../shared/domain-error';
+import { DomainError } from '../shared/domain-error.js';
 
 /**
  * RF-4.3 — PTSD (TEPT) diagnosis time block.

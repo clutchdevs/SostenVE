@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { approveVolunteer } from '../../../src/application/volunteer/manage-volunteer';
-import { verifyPassword } from '../../../src/shared/security/password';
+import { approveVolunteer } from '../../../src/application/volunteer/manage-volunteer.js';
+import { verifyPassword } from '../../../src/shared/security/password.js';
 import type {
   Notifier,
   RegistrationNotification,
-} from '../../../src/application/volunteer/ports';
-import type { Volunteer, VolunteerRepository } from '../../../src/domain/volunteer/volunteer';
-import type { AuditLogRepository } from '../../../src/domain/audit/audit';
+} from '../../../src/application/volunteer/ports.js';
+import type { Volunteer, VolunteerRepository } from '../../../src/domain/volunteer/volunteer.js';
+import type { AuditLogRepository } from '../../../src/domain/audit/audit.js';
 
 const volunteer: Volunteer = {
   id: 'vol-1',

@@ -30,10 +30,10 @@ const dbAvailable = await canConnect();
 describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
   let app: Hono;
   let pg: Client;
-  let signToken: typeof import('../../src/shared/security/jwt').signToken;
-  let escalateOverdueCases: typeof import('../../src/application/assignment/escalate-sla').escalateOverdueCases;
-  let getAssignmentDeps: typeof import('../../src/interfaces/http/v1/dependencies').getAssignmentDeps;
-  let getPresenceStore: typeof import('../../src/interfaces/http/v1/dependencies').getPresenceStore;
+  let signToken: typeof import('../../src/shared/security/jwt.js').signToken;
+  let escalateOverdueCases: typeof import('../../src/application/assignment/escalate-sla.js').escalateOverdueCases;
+  let getAssignmentDeps: typeof import('../../src/interfaces/http/v1/dependencies.js').getAssignmentDeps;
+  let getPresenceStore: typeof import('../../src/interfaces/http/v1/dependencies.js').getPresenceStore;
   const caseIds: string[] = [];
   const volunteerIds: string[] = [];
 
@@ -43,12 +43,12 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
     process.env.PSEUDONYMIZATION_SALT ??= 'e2e-test-salt';
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
     process.env.CRON_SECRET ??= 'test-cron-secret';
-    app = (await import('../../api/index')).app;
-    signToken = (await import('../../src/shared/security/jwt')).signToken;
-    escalateOverdueCases = (await import('../../src/application/assignment/escalate-sla'))
+    app = (await import('../../api/index.js')).app;
+    signToken = (await import('../../src/shared/security/jwt.js')).signToken;
+    escalateOverdueCases = (await import('../../src/application/assignment/escalate-sla.js'))
       .escalateOverdueCases;
-    getAssignmentDeps = (await import('../../src/interfaces/http/v1/dependencies')).getAssignmentDeps;
-    getPresenceStore = (await import('../../src/interfaces/http/v1/dependencies')).getPresenceStore;
+    getAssignmentDeps = (await import('../../src/interfaces/http/v1/dependencies.js')).getAssignmentDeps;
+    getPresenceStore = (await import('../../src/interfaces/http/v1/dependencies.js')).getPresenceStore;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });

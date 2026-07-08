@@ -1,8 +1,8 @@
-import { ApiError, ForbiddenError } from '../../shared/errors/api-error';
-import type { CaseContact, CaseRecord } from '../../domain/case/case';
-import type { ClinicalNote } from '../../domain/clinical/clinical-note';
-import type { CaseClosure } from '../../domain/clinical/case-closure';
-import type { CaseDeps } from './ports';
+import { ApiError, ForbiddenError } from '../../shared/errors/api-error.js';
+import type { CaseContact, CaseRecord } from '../../domain/case/case.js';
+import type { ClinicalNote } from '../../domain/clinical/clinical-note.js';
+import type { CaseClosure } from '../../domain/clinical/case-closure.js';
+import type { CaseDeps } from './ports.js';
 
 export interface CaseDetail {
   case: CaseRecord;

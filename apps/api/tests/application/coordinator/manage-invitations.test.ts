@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { getConfig } from '../../../src/config';
+import { getConfig } from '../../../src/config/index.js';
 import {
   inviteCoordinator,
   revokeInvitation,
-} from '../../../src/application/coordinator/manage-invitations';
-import { hashToken } from '../../../src/shared/security/invitation-token';
-import type { InvitationNotification, Notifier } from '../../../src/application/volunteer/ports';
-import type { AuditLogRepository } from '../../../src/domain/audit/audit';
+} from '../../../src/application/coordinator/manage-invitations.js';
+import { hashToken } from '../../../src/shared/security/invitation-token.js';
+import type { InvitationNotification, Notifier } from '../../../src/application/volunteer/ports.js';
+import type { AuditLogRepository } from '../../../src/domain/audit/audit.js';
 import type {
   CoordinatorInvitation,
   CoordinatorInvitationRepository,
   NewCoordinatorInvitation,
-} from '../../../src/domain/coordinator/invitation';
+} from '../../../src/domain/coordinator/invitation.js';
 
 function fixture(overrides: Partial<CoordinatorInvitation> = {}): CoordinatorInvitation {
   return {

@@ -1,11 +1,11 @@
-import { ApiError } from '../../shared/errors/api-error';
-import type { AuditLogRepository } from '../../domain/audit/audit';
+import { ApiError } from '../../shared/errors/api-error.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
 import type {
   CrisisLine,
   CrisisLineRepository,
   CrisisLineUpdate,
   NewCrisisLine,
-} from '../../domain/crisis-line/crisis-line';
+} from '../../domain/crisis-line/crisis-line.js';
 
 /** Dependencies for the admin crisis-line management use cases. */
 export interface CrisisLineDeps {

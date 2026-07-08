@@ -1,10 +1,10 @@
-import { ValidationError } from '../../shared/errors/api-error';
-import { generatePseudonymId } from '../../domain/identity/pseudonym';
-import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage';
-import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog';
-import type { ContactMethod, Modality, RequesterType } from '../../domain/case/case';
-import { getActiveCrisisLine } from './get-active-crisis-line';
-import type { IntakeCaseResult, IntakeDeps } from './types';
+import { ValidationError } from '../../shared/errors/api-error.js';
+import { generatePseudonymId } from '../../domain/identity/pseudonym.js';
+import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage/index.js';
+import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog.js';
+import type { ContactMethod, Modality, RequesterType } from '../../domain/case/case.js';
+import { getActiveCrisisLine } from './get-active-crisis-line.js';
+import type { IntakeCaseResult, IntakeDeps } from './types.js';
 
 export interface GreenBranchInput {
   name?: string;

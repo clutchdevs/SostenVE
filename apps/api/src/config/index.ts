@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { load } from 'js-yaml';
-import { appConfigSchema, type AppConfig } from './schema';
+import { appConfigSchema, type AppConfig } from './schema.js';
 
 /**
  * Configuration singleton.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MemoryPresenceStore } from '../../../src/infrastructure/presence/memory-presence-store';
+import { MemoryPresenceStore } from '../../../src/infrastructure/presence/memory-presence-store.js';
 
 describe('MemoryPresenceStore (RF-2.5)', () => {
   it('reports a volunteer online within the TTL', async () => {

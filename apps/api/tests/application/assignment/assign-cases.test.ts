@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { assignPendingCases } from '../../../src/application/assignment/assign-cases';
-import { RiskLevel } from '../../../src/domain/triage';
-import type { CaseRecord } from '../../../src/domain/case/case';
-import type { Volunteer } from '../../../src/domain/volunteer/volunteer';
-import type { AssignmentDeps } from '../../../src/application/assignment/ports';
+import { assignPendingCases } from '../../../src/application/assignment/assign-cases.js';
+import { RiskLevel } from '../../../src/domain/triage/index.js';
+import type { CaseRecord } from '../../../src/domain/case/case.js';
+import type { Volunteer } from '../../../src/domain/volunteer/volunteer.js';
+import type { AssignmentDeps } from '../../../src/application/assignment/ports.js';
 
 function makeCase(id: string, urgencyScore: number, createdAt: Date): CaseRecord {
   return {

@@ -1,7 +1,7 @@
-import type { CaseBranch, CaseContactRepository, CaseRepository } from '../../domain/case/case';
-import type { RiskLevel } from '../../domain/triage';
-import type { AppConfig } from '../../config';
-import type { ActiveCrisisLine } from './crisis-line-routing';
+import type { CaseBranch, CaseContactRepository, CaseRepository } from '../../domain/case/case.js';
+import type { RiskLevel } from '../../domain/triage/index.js';
+import type { AppConfig } from '../../config/index.js';
+import type { ActiveCrisisLine } from './crisis-line-routing.js';
 
 /** Dependencies shared by the intake use cases (injected by the composition root). */
 export interface IntakeDeps {

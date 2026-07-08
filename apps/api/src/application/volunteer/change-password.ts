@@ -1,7 +1,7 @@
-import { ApiError, UnauthorizedError } from '../../shared/errors/api-error';
-import { hashPassword, verifyPassword } from '../../shared/security/password';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
+import { ApiError, UnauthorizedError } from '../../shared/errors/api-error.js';
+import { hashPassword, verifyPassword } from '../../shared/security/password.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 
 /** Dependencies for the authenticated password-change flow (RF-2.2.4). */
 export interface ChangePasswordDeps {

@@ -2,8 +2,8 @@ import type {
   InvitationNotification,
   PasswordResetNotification,
   RegistrationNotification,
-} from '../../application/volunteer/ports';
-import { renderHtml, renderText, type EmailContent } from './email-template';
+} from '../../application/volunteer/ports.js';
+import { renderHtml, renderText, type EmailContent } from './email-template.js';
 
 export interface WelcomeEmail {
   subject: string;

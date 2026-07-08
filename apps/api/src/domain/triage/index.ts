@@ -1,12 +1,12 @@
-export { Severity, ALL_SEVERITIES, isSeverity } from './severity';
-export { RiskLevel, riskRank, mostSevere, isHighRisk } from './risk-level';
+export { Severity, ALL_SEVERITIES, isSeverity } from './severity.js';
+export { RiskLevel, riskRank, mostSevere, isHighRisk } from './risk-level.js';
 export {
   createSymptomTag,
   countBySeverity,
   hasSeverity,
   type SymptomTag,
   type SymptomTagInput,
-} from './symptom-tag';
+} from './symptom-tag.js';
 export {
   DEFAULT_SEVERITY_WEIGHT,
   CLINICAL_TAG_CATALOG,
@@ -14,23 +14,23 @@ export {
   TAG_CATALOG_VERSION,
   getCatalogTag,
   type CatalogEntry,
-} from './triage-catalog';
+} from './triage-catalog.js';
 export {
   weightedUrgencyIndex,
   computeUrgencyIndex,
   URGENCY_WEIGHTS,
   RED_BRANCH_URGENCY,
   type UrgencyInput,
-} from './urgency-index';
+} from './urgency-index.js';
 export {
   type ClassificationOptions,
   type RiskClassificationStrategy,
-} from './classification-strategy';
+} from './classification-strategy.js';
 export {
   redTagStrategy,
   orangeThresholdStrategy,
   orangePresenceStrategy,
   yellowPresenceStrategy,
   defaultStrategies,
-} from './strategies';
-export { classifyRisk } from './classify-risk';
+} from './strategies.js';
+export { classifyRisk } from './classify-risk.js';

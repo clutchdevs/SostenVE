@@ -1,10 +1,10 @@
-import { ApiError } from '../../shared/errors/api-error';
-import { hashPassword } from '../../shared/security/password';
-import { hashToken } from '../../shared/security/invitation-token';
-import { isAcceptable } from '../../domain/coordinator/invitation';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { CoordinatorInvitationRepository } from '../../domain/coordinator/invitation';
-import type { DocumentType, VolunteerRepository } from '../../domain/volunteer/volunteer';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { hashPassword } from '../../shared/security/password.js';
+import { hashToken } from '../../shared/security/invitation-token.js';
+import { isAcceptable } from '../../domain/coordinator/invitation.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { CoordinatorInvitationRepository } from '../../domain/coordinator/invitation.js';
+import type { DocumentType, VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 
 /** Dependencies for the public coordinator self-activation flow (RF-2.6). */
 export interface AcceptInvitationDeps {

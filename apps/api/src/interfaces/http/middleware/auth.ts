@@ -1,7 +1,7 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { ForbiddenError, UnauthorizedError } from '../../../shared/errors/api-error';
-import { verifyToken, type VerifiedToken } from '../../../shared/security/jwt';
-import type { RevocationStore } from '../../../shared/security/token-revocation';
+import { ForbiddenError, UnauthorizedError } from '../../../shared/errors/api-error.js';
+import { verifyToken, type VerifiedToken } from '../../../shared/security/jwt.js';
+import type { RevocationStore } from '../../../shared/security/token-revocation.js';
 
 const AUTH_USER_KEY = 'authUser' as const;
 

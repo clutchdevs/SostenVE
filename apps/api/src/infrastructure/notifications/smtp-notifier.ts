@@ -1,18 +1,18 @@
 import { createTransport, type Transporter } from 'nodemailer';
-import type { AppConfig } from '../../config';
+import type { AppConfig } from '../../config/index.js';
 import type {
   InvitationNotification,
   Notifier,
   PasswordResetNotification,
   RegistrationNotification,
-} from '../../application/volunteer/ports';
-import { logger } from '../../shared/logger';
+} from '../../application/volunteer/ports.js';
+import { logger } from '../../shared/logger.js';
 import {
   buildInvitationEmail,
   buildPasswordResetEmail,
   buildPendingEmail,
   buildWelcomeEmail,
-} from './welcome-email';
+} from './welcome-email.js';
 
 /**
  * Real volunteer notifier over SMTP (RF-2.2.4) using nodemailer. The welcome

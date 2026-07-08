@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CircuitBreaker, CircuitOpenError } from '../../src/shared/circuit-breaker';
+import { CircuitBreaker, CircuitOpenError } from '../../src/shared/circuit-breaker.js';
 
 describe('CircuitBreaker', () => {
   it('passes results through and resets on success', async () => {

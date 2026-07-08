@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
+import { getConfig } from '../../../config/index.js';
 
 /**
  * Informed-consent text endpoints. Config-driven and DB-free so the UI can always

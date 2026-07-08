@@ -1,4 +1,4 @@
-import type { PresenceStore } from '../../application/presence/ports';
+import type { PresenceStore } from '../../application/presence/ports.js';
 
 /**
  * Production presence store over Upstash Redis (RF-2.5), driven through its REST

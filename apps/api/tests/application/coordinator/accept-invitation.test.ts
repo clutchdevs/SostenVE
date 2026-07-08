@@ -1,18 +1,18 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { acceptInvitation } from '../../../src/application/coordinator/accept-invitation';
-import { hashToken } from '../../../src/shared/security/invitation-token';
-import { verifyPassword } from '../../../src/shared/security/password';
-import type { AuditLogRepository } from '../../../src/domain/audit/audit';
+import { acceptInvitation } from '../../../src/application/coordinator/accept-invitation.js';
+import { hashToken } from '../../../src/shared/security/invitation-token.js';
+import { verifyPassword } from '../../../src/shared/security/password.js';
+import type { AuditLogRepository } from '../../../src/domain/audit/audit.js';
 import type {
   CoordinatorInvitation,
   CoordinatorInvitationRepository,
   NewCoordinatorInvitation,
-} from '../../../src/domain/coordinator/invitation';
+} from '../../../src/domain/coordinator/invitation.js';
 import type {
   NewVolunteer,
   Volunteer,
   VolunteerRepository,
-} from '../../../src/domain/volunteer/volunteer';
+} from '../../../src/domain/volunteer/volunteer.js';
 
 const TOKEN = 'a-raw-invitation-token';
 

@@ -3,8 +3,8 @@ import type {
   CaseClosure,
   CaseClosureRepository,
   NewCaseClosure,
-} from '../../domain/clinical/case-closure';
-import { decrypt, encrypt } from '../../shared/security/encryption';
+} from '../../domain/clinical/case-closure.js';
+import { decrypt, encrypt } from '../../shared/security/encryption.js';
 
 interface CaseClosureRow {
   id: string;

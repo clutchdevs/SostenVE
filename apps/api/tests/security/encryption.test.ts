@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { decrypt, encrypt } from '../../src/shared/security/encryption';
+import { decrypt, encrypt } from '../../src/shared/security/encryption.js';
 
 beforeAll(() => {
   // 32-byte key (base64) for AES-256-GCM.
