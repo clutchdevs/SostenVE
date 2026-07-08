@@ -18,11 +18,15 @@ Supabase local. `npm run dev:up` orquesta ambas cosas en un solo comando.
 - **Docker Desktop** en ejecución (provee tanto Supabase como los contenedores de la app)
 - No hace falta instalar la Supabase CLI global: viene como dependencia de desarrollo del repo.
 
-## Arranque rápido (un comando)
+## Arranque rápido
 ```bash
 npm install            # solo la primera vez (instala workspaces + Supabase CLI)
+cp .env.example .env   # solo la primera vez — trae valores de DEV listos para usar
 npm run dev:up         # arranca Supabase y luego API + Web en contenedores
 ```
+> El `.env` es **obligatorio**: `docker-compose.yml` lee de él (ya no hay valores quemados). El
+> `.env.example` viene con los valores de **desarrollo** listos; solo rellena `SMTP_*`/`FPV_API_TOKEN`
+> si quieres correo real o validación FPV real. Ver [`.env.example`](.env.example).
 - Abre la app: **http://localhost:3000**
 - Salud de la API: **http://localhost:3001/api/v1/health**
 - Supabase Studio (ver datos): **http://localhost:54323**
@@ -43,8 +47,10 @@ npm run dev:down       # baja los contenedores y detiene Supabase
    `@node-rs/argon2`) en volúmenes nombrados, y luego arrancan **API** (`:3001`) y **Web** (`:3000`),
    apuntando al Supabase del host vía `host.docker.internal`.
 
-> Los secretos/llaves de `docker-compose.yml` son **valores de desarrollo** (las llaves demo de la
-> Supabase CLI). No usar en producción. Puedes sobreescribirlos con un `.env` en la raíz.
+> La configuración (llaves de Supabase, `JWT_SECRET`, `ENCRYPTION_KEY`, etc.) vive en el **`.env`** de la
+> raíz — `docker-compose.yml` solo lo referencia, no la hardcodea. Los valores de `.env.example` son de
+> **desarrollo** (llaves demo de la Supabase CLI + secretos fake); **no usar en producción**, donde cada
+> variable se configura en Vercel (ver [`docs/05-deployment`](docs/05-deployment)).
 
 ## Alternativa sin Docker para la app (3 terminales)
 Si prefieres no contenerizar API/Web (HMR más rápido en algunos equipos):
@@ -54,9 +60,9 @@ npm run db:reset                         # migraciones
 npm run dev --workspace @ppv/api    # API en :3001  (requiere .env con llaves de Supabase)
 npm run dev --workspace @ppv/web    # Web en :3000
 ```
-Copia `.env.example` a `.env` y complétalo con los valores que imprime `npx supabase status`
-(`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) y secretos de desarrollo
-(`JWT_SECRET`, `PSEUDONYMIZATION_SALT`, `ENCRYPTION_KEY`, `CRON_SECRET`).
+`.env.example` ya trae los valores de dev, pero apuntan a `host.docker.internal` (para el contenedor).
+Corriendo el API **en el host** (sin Docker), cambia en tu `.env` `host.docker.internal` por `127.0.0.1`
+en `SUPABASE_URL` y `DATABASE_URL` (o toma los valores exactos de `npx supabase status`).
 
 > **Validación FPV en local:** development usa el padrón **real** (`fpv.verifier: http`) para poder
 > probar respuestas y fallos reales, así que necesitas `FPV_API_TOKEN` en tu `.env`. Sin él, el registro
