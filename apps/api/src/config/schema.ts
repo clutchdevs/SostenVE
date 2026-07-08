@@ -97,7 +97,9 @@ export const appConfigSchema = z.object({
     // appended as a `?token=` query param.
     password_reset_url: z.string().min(1),
     smtp: z.object({
-      host: z.string().min(1),
+      // host/username may be blank in the file: in production they come from the
+      // environment (SMTP_HOST / SMTP_USERNAME), which overrides the config value.
+      host: z.string(),
       port: z.number().int().positive(),
       username: z.string(),
     }),
