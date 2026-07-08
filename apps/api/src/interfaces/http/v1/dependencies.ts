@@ -5,6 +5,7 @@ import { SupabaseIdempotencyStore } from '../../../infrastructure/repositories/s
 import { SupabaseVolunteerRepository } from '../../../infrastructure/repositories/supabase-volunteer-repository';
 import { SupabaseVolunteerNoteRepository } from '../../../infrastructure/repositories/supabase-volunteer-note-repository';
 import { SupabaseAssignmentRepository } from '../../../infrastructure/repositories/supabase-assignment-repository';
+import { SupabaseAssignmentSettingsRepository } from '../../../infrastructure/repositories/supabase-assignment-settings-repository';
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository';
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository';
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository';
@@ -112,9 +113,20 @@ export function getAssignmentDeps(): AssignmentDeps {
       volunteers: new SupabaseVolunteerRepository(client),
       notifier: new LogAssignmentNotifier(),
       presence: createPresenceStore(getConfig()),
+      settings: new SupabaseAssignmentSettingsRepository(client),
     };
   }
   return assignmentCached;
+}
+
+let assignmentSettingsRepoCached: SupabaseAssignmentSettingsRepository | null = null;
+
+/** Assignment settings repository for the admin GET/PUT caseload-cap endpoints. */
+export function getAssignmentSettingsRepo(): SupabaseAssignmentSettingsRepository {
+  if (assignmentSettingsRepoCached === null) {
+    assignmentSettingsRepoCached = new SupabaseAssignmentSettingsRepository(forService());
+  }
+  return assignmentSettingsRepoCached;
 }
 
 /** Shared presence store for the heartbeat endpoint and coordinator visibility. */
