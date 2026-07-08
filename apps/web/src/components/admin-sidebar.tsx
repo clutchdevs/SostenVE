@@ -7,6 +7,7 @@ import {
   KeyRound,
   LogOut,
   PhoneCall,
+  Scale,
   ScrollText,
   Settings,
   UserPlus,
@@ -29,6 +30,7 @@ const NAV: NavItem[] = [
   { href: '/admin', label: 'Excepciones de registro', icon: Settings, exact: true },
   { href: '/admin/padron', label: 'Padrón de psicólogos', icon: Users },
   { href: '/admin/lineas', label: 'Líneas de crisis', icon: PhoneCall },
+  { href: '/admin/asignacion', label: 'Asignación de casos', icon: Scale },
   { href: '/admin/coordinadores', label: 'Coordinadores', icon: UserPlus },
   { href: '/admin/auditoria', label: 'Auditoría', icon: ScrollText },
 ];

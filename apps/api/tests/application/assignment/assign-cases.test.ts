@@ -34,6 +34,7 @@ function deps(
   volunteers: Volunteer[],
   online?: Set<string>,
   claimable?: Set<string>,
+  maxCaseload = 6,
 ) {
   // Default: every listed volunteer is online (presence not under test here).
   const onlineIds = online ?? new Set(volunteers.map((v) => v.id));
@@ -41,12 +42,15 @@ function deps(
   // to simulate a concurrent trigger having already taken the others.
   const claimableIds = claimable ?? new Set(pending.map((c) => c.id));
   const assignedOrder: string[] = [];
+  const assignedTo: Array<{ caseId: string; volunteerId: string }> = [];
   const statusUpdates: string[] = [];
   const claimAttempts: string[] = [];
   const d = {
     cases: {
-      async listByStatus() {
-        return pending;
+      // Only PENDING drives the queue; the other statuses feed the caseload count
+      // (empty here — these tests start every volunteer idle).
+      async listByStatus(status: string) {
+        return status === 'PENDING' ? pending : [];
       },
       async claimForAssignment(id: string) {
         claimAttempts.push(id);
@@ -62,9 +66,13 @@ function deps(
       },
     },
     assignments: {
-      async create({ caseId }: { caseId: string }) {
+      async create({ caseId, volunteerId }: { caseId: string; volunteerId: string }) {
         assignedOrder.push(caseId);
-        return { id: `a-${caseId}`, caseId, volunteerId: 'v', assignedAt: new Date() };
+        assignedTo.push({ caseId, volunteerId });
+        return { id: `a-${caseId}`, caseId, volunteerId, assignedAt: new Date() };
+      },
+      async findByCaseIds() {
+        return [];
       },
     },
     presence: {
@@ -72,12 +80,17 @@ function deps(
         return new Set(ids.filter((id) => onlineIds.has(id)));
       },
     },
+    settings: {
+      async get() {
+        return { maxActiveCaseload: maxCaseload };
+      },
+    },
     notifier: {
       async notifyAssigned() {},
       async notifyEscalated() {},
     },
   } as unknown as AssignmentDeps;
-  return { d, assignedOrder, statusUpdates, claimAttempts };
+  return { d, assignedOrder, assignedTo, statusUpdates, claimAttempts };
 }
 
 describe('assignPendingCases — urgency ordering (RF-1.5)', () => {
@@ -88,10 +101,10 @@ describe('assignPendingCases — urgency ordering (RF-1.5)', () => {
     const pending = [makeCase('low', 5, earlier), makeCase('high', 1100, later)];
     const { d, assignedOrder } = deps(pending, [makeVolunteer('v1')]);
 
-    const assigned = await assignPendingCases(d);
+    await assignPendingCases(d);
 
-    expect(assigned).toBe(1); // only one volunteer available
-    expect(assignedOrder[0]).toBe('high'); // urgency wins over arrival order
+    // One idle volunteer (cap 6) takes both, highest-urgency first.
+    expect(assignedOrder).toEqual(['high', 'low']);
   });
 
   it('breaks ties by arrival (FIFO) when urgency is equal', async () => {
@@ -175,5 +188,55 @@ describe('assignPendingCases — atomic claim guard (no double assignment)', () 
 
     expect(assigned).toBe(0);
     expect(assignedOrder).toEqual([]);
+  });
+});
+
+describe('assignPendingCases — load balancing (RF-2.5)', () => {
+  it('spreads cases evenly across idle volunteers instead of piling on one', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    const pending = [
+      makeCase('c1', 50, now),
+      makeCase('c2', 50, now),
+      makeCase('c3', 50, now),
+      makeCase('c4', 50, now),
+    ];
+    const { d, assignedTo } = deps(pending, [makeVolunteer('v1'), makeVolunteer('v2')]);
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(4);
+    // Each volunteer ends with 2 cases (balanced), not 4-and-0.
+    const perVolunteer = new Map<string, number>();
+    for (const a of assignedTo) perVolunteer.set(a.volunteerId, (perVolunteer.get(a.volunteerId) ?? 0) + 1);
+    expect(perVolunteer.get('v1')).toBe(2);
+    expect(perVolunteer.get('v2')).toBe(2);
+  });
+
+  it('stops routing to a volunteer once they hit the cap (extra cases stay queued)', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    const pending = [makeCase('c1', 50, now), makeCase('c2', 50, now), makeCase('c3', 50, now)];
+    // One volunteer, cap 2 → takes 2, the 3rd stays in the queue.
+    const { d, assignedOrder } = deps(pending, [makeVolunteer('v1')], undefined, undefined, 2);
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(2);
+    expect(assignedOrder).toHaveLength(2);
+  });
+
+  it('lets a high-risk case exceed the cap so a crisis is never left queued', async () => {
+    const now = new Date('2026-06-30T10:00:00Z');
+    // Cap 0 → nobody has capacity. A normal case stays queued, but the high-risk
+    // case bypasses the cap and is still assigned.
+    const pending = [
+      makeCase('normal', 50, now),
+      { ...makeCase('crisis', 1000, now), riskLevel: RiskLevel.HIGH },
+    ];
+    const { d, assignedOrder } = deps(pending, [makeVolunteer('v1')], undefined, undefined, 0);
+
+    const assigned = await assignPendingCases(d);
+
+    expect(assigned).toBe(1);
+    expect(assignedOrder).toEqual(['crisis']); // only the crisis got through
   });
 });

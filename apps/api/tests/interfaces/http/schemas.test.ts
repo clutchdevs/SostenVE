@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assignmentSettingsSchema,
   greenBranchSchema,
   isValidDocumentNumber,
   registerVolunteerSchema,
@@ -69,6 +70,21 @@ describe('registerVolunteerSchema', () => {
     expect(
       registerVolunteerSchema.safeParse({ ...base, numero_documento: '123456789' }).success,
     ).toBe(false);
+  });
+});
+
+describe('assignmentSettingsSchema', () => {
+  it('accepts a positive integer caseload within range', () => {
+    expect(assignmentSettingsSchema.safeParse({ max_active_caseload: 6 }).success).toBe(true);
+    expect(assignmentSettingsSchema.safeParse({ max_active_caseload: 1 }).success).toBe(true);
+  });
+
+  it('rejects zero, negatives, non-integers and out-of-range values', () => {
+    for (const n of [0, -1, 3.5, 101]) {
+      expect(assignmentSettingsSchema.safeParse({ max_active_caseload: n }).success, `${n}`).toBe(
+        false,
+      );
+    }
   });
 });
 

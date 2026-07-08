@@ -1,4 +1,5 @@
 import { selectVolunteerForCase } from '../../domain/assignment/selection';
+import { RiskLevel } from '../../domain/triage';
 import { logger } from '../../shared/logger';
 import type { Volunteer } from '../../domain/volunteer/volunteer';
 import type { AssignmentDeps } from './ports';
@@ -14,6 +15,12 @@ import type { AssignmentDeps } from './ports';
  * that flips `pendiente → asignado` only if still pending. Losing the claim means
  * a concurrent trigger already took the case, so it is skipped — never assigned
  * twice.
+ *
+ * Load balancing (RF-2.5): the current active caseload of each online psychologist
+ * is computed up front; a psychologist at the admin-configurable cap is skipped
+ * for new (non-high-risk) cases, and the least-loaded eligible one is chosen. The
+ * in-run counter is updated after each assignment so a single sweep spreads work
+ * out instead of piling it on the first volunteer.
  */
 export async function assignPendingCases(deps: AssignmentDeps): Promise<number> {
   const pending = await deps.cases.listByStatus('PENDING');
@@ -40,13 +47,27 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
   const available: Volunteer[] = activePsychologists.filter((v) => onlineIds.has(v.id));
   let assigned = 0;
 
+  // Current active caseload per volunteer (cases not yet closed): the balancing
+  // baseline. Updated in memory as we assign so one sweep spreads work out.
+  const caseload = await activeCaseloadByVolunteer(deps);
+  const { maxActiveCaseload } = await deps.settings.get();
+  const load = {
+    caseloadOf: (id: string) => caseload.get(id) ?? 0,
+    maxCaseload: maxActiveCaseload,
+  };
+
   for (const caseRecord of pending) {
-    const volunteer = selectVolunteerForCase(available, {
-      age: caseRecord.age,
-      requiresChildSpecialty: caseRecord.requiresChildSpecialty,
-    });
+    const volunteer = selectVolunteerForCase(
+      available,
+      {
+        age: caseRecord.age,
+        requiresChildSpecialty: caseRecord.requiresChildSpecialty,
+        highRisk: caseRecord.riskLevel === RiskLevel.HIGH,
+      },
+      load,
+    );
     if (!volunteer) {
-      continue; // no volunteer available -> remains in queue
+      continue; // no volunteer with capacity -> remains in queue
     }
 
     // Atomically claim the case before doing anything else. If another trigger
@@ -80,12 +101,31 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
       });
     }
 
-    available.splice(available.indexOf(volunteer), 1);
+    // Count this case against the volunteer's load so the next iteration balances
+    // against it (and skips them once they reach the cap).
+    caseload.set(volunteer.id, (caseload.get(volunteer.id) ?? 0) + 1);
     assigned += 1;
-    if (available.length === 0) {
-      break;
-    }
   }
 
   return assigned;
+}
+
+/**
+ * Active caseload per volunteer = cases still open (assigned / accepted / in
+ * follow-up; closed and re-queued cases do not count). One query set per sweep.
+ */
+async function activeCaseloadByVolunteer(deps: AssignmentDeps): Promise<Map<string, number>> {
+  const activeCases = [
+    ...(await deps.cases.listByStatus('ASSIGNED')),
+    ...(await deps.cases.listByStatus('ACCEPTED')),
+    ...(await deps.cases.listByStatus('IN_FOLLOW_UP')),
+  ];
+  const caseload = new Map<string, number>();
+  if (activeCases.length === 0) return caseload;
+
+  const assignments = await deps.assignments.findByCaseIds(activeCases.map((c) => c.id));
+  for (const a of assignments) {
+    caseload.set(a.volunteerId, (caseload.get(a.volunteerId) ?? 0) + 1);
+  }
+  return caseload;
 }

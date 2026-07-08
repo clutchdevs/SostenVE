@@ -14,13 +14,15 @@ import {
 import type { CrisisLineUpdate } from '../../../domain/crisis-line/crisis-line';
 import { getAuthUser, requireAuth } from '../middleware/auth';
 import { getValidated, validateBody, validateQuery } from '../middleware/validate';
-import { getAdminContainer } from './dependencies';
+import { getAdminContainer, getAssignmentSettingsRepo } from './dependencies';
 import { presentAuditEntry, presentCrisisLineAdmin, presentInvitation } from './presenters';
 import {
+  assignmentSettingsSchema,
   auditQuerySchema,
   coordinatorInviteSchema,
   crisisLineCreateSchema,
   crisisLineUpdateSchema,
+  type AssignmentSettingsBody,
   type AuditQuery,
   type CoordinatorInviteBody,
   type CrisisLineCreateBody,
@@ -45,6 +47,28 @@ export function createAdminRouter(): Hono {
   const router = new Hono();
 
   router.use('*', requireAuth({ roles: ['admin'] }));
+
+  // Assignment settings (RF-2.5 load balancing): the caseload cap. Admin reads it
+  // and changes it at runtime; the change is written to the audit log.
+  router.get('/assignment-settings', async (c) => {
+    const settings = await getAssignmentSettingsRepo().get();
+    return c.json({ max_active_caseload: settings.maxActiveCaseload });
+  });
+
+  router.put('/assignment-settings', validateBody(assignmentSettingsSchema), async (c) => {
+    const admin = getAuthUser(c);
+    const body = getValidated<AssignmentSettingsBody>(c, 'body');
+    const updated = await getAssignmentSettingsRepo().update({
+      maxActiveCaseload: body.max_active_caseload,
+    });
+    await getAdminContainer().crisisLines.audit.append({
+      userId: admin.sub,
+      role: admin.role,
+      affectedRecordId: 'assignment_settings',
+      actionType: `assignment_caseload_cap_set:${updated.maxActiveCaseload}`,
+    });
+    return c.json({ max_active_caseload: updated.maxActiveCaseload });
+  });
 
   // Crisis lines (source of truth for the public routing; soft-delete).
   router.get('/crisis-lines', async (c) => {

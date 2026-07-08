@@ -6,6 +6,15 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+### Añadido
+- **Balanceo de carga en la asignación + tope configurable desde el admin (RF-2.5):** la asignación ya no
+  amontona casos en el primer psicólogo. Ahora calcula la **carga activa** de cada psicólogo online (casos
+  asignados/aceptados/en seguimiento) y **elige al menos cargado**, saltando a quien ya alcanzó el **tope**
+  de casos. Un caso de **alto riesgo excede el tope** solo cuando **todos** están llenos (nunca se queda sin
+  atención; si alguien tiene cupo, va al de menor carga). El tope es **editable en runtime desde el panel de
+  admin** (nueva página *Asignación de casos* + `GET/PUT /admin/assignment-settings`, auditado), respaldado
+  por la tabla `assignment_settings` (fila única, **default 6**).
+
 ### Cambiado
 - **Registro rechazado si el postulante no está en el padrón FPV (RF-2.2):** cuando el padrón responde
   **definitivamente "no encontrado"** (`fpv_not_found`), el registro ahora se **rechaza** (HTTP 422

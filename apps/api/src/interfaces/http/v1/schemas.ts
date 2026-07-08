@@ -259,6 +259,12 @@ export const presenceSchema = z.object({
   disponible: z.boolean(),
 });
 
+// Admin-configurable assignment settings (RF-2.5 load balancing): the max active
+// caseload a psychologist may hold before the balancer skips them for new cases.
+export const assignmentSettingsSchema = z.object({
+  max_active_caseload: z.number().int().min(1).max(100),
+});
+
 export type AddNoteBody = z.infer<typeof addNoteSchema>;
 export type CaseClosureBody = z.infer<typeof caseClosureSchema>;
 export type TriageInitialBody = z.infer<typeof triageInitialSchema>;
@@ -277,4 +283,5 @@ export type ChangePasswordBody = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
 export type PresenceBody = z.infer<typeof presenceSchema>;
+export type AssignmentSettingsBody = z.infer<typeof assignmentSettingsSchema>;
 export type AuditQuery = z.infer<typeof auditQuerySchema>;
