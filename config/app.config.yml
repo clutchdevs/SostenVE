@@ -192,7 +192,9 @@ default: &default
   security:
     cors:
       development_origins: ["http://localhost:3000"]
-      production_origins: ["https://ppv.org.ve"] # placeholder, confirm final domain
+      # Dominio(s) reales de la web (solo se usa cuando NODE_ENV=production).
+      # PROVISIONAL: pon aquí la URL *.vercel.app del proyecto Web (o tu dominio).
+      production_origins: ["https://REEMPLAZAR-web.vercel.app"]
     rate_limit:
       intake_requests_per_minute: 10
       login_attempts_before_lockout: 5
@@ -225,3 +227,29 @@ test:
 
 production:
   <<: *default
+  app:
+    name: "PPV"
+    locale: "es-VE"
+
+  # Correo (RF-2.2.4). Las 3 URLs SOLO salen de aquí (no hay override por entorno).
+  # provider/from/host/port/username/password SÍ se sobreescriben con el entorno
+  # (EMAIL_PROVIDER, SMTP_*). Por el merge superficial de YAML se repite el bloque
+  # completo. REEMPLAZA las URLs por las de tu Web (provisional: la *.vercel.app).
+  email:
+    provider: "smtp" # prod envía de verdad; requiere SMTP_* en el entorno de Vercel
+    from: "PPV <no-reply@ppv.org.ve>"
+    login_url: "https://REEMPLAZAR-web.vercel.app/login"
+    coordinator_invite_url: "https://REEMPLAZAR-web.vercel.app/registro-coordinador"
+    password_reset_url: "https://REEMPLAZAR-web.vercel.app/restablecer-contrasena"
+    smtp:
+      host: "" # ← SMTP_HOST (entorno)
+      port: 587
+      username: "" # ← SMTP_USERNAME (entorno)
+
+  # Presencia en tiempo real (RF-2.5). En serverless la memoria NO sirve (cada
+  # instancia la suya): usa Redis compartido (Upstash) vía REST. Requiere
+  # UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN en el entorno.
+  presence:
+    provider: "upstash"
+    heartbeat_ttl_seconds: 65
+    heartbeat_interval_seconds: 30

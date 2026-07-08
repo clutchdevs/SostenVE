@@ -23,7 +23,8 @@
     "dev:up": "supabase start && docker compose up",
     "dev:down": "docker compose down && supabase stop",
     "dev:reset": "supabase db reset --no-seed && node scripts/seed-db.mjs",
-    "load-test": "node scripts/load-test.mjs"
+    "load-test": "node scripts/load-test.mjs",
+    "gen:secrets": "node scripts/gen-secrets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

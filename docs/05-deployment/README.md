@@ -4,7 +4,10 @@
 
 ## Contenido
 
-- **[Guía de despliegue a producción](guia-de-despliegue.md)** — paso a paso: arquitectura, servicios a
+- **[Plan — ambiente provisional (staging)](plan-ambiente-provisional.md)** — runbook accionable para
+  levantar un entorno provisional en Vercel: qué ya está listo en el repo, qué cuentas crear (Supabase,
+  Upstash, SMTP, FPV), generación de secretos, env vars por proyecto y smoke test.
+- **[Guía de despliegue a producción](guia-de-despliegue.md)** — referencia a fondo: arquitectura, servicios a
   provisionar, variables de entorno y secretos, ajustes de `app.config.yml`, migraciones de Supabase,
   despliegue de API y Web en Vercel, cron, seguridad/cumplimiento, checklist de lanzamiento y smoke tests.
 

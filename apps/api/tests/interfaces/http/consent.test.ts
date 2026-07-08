@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import app from '../../../api/index';
+import { app } from '../../../api/index';
 
 interface ConsentBody {
   version: string;
