@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { handle } from 'hono/vercel';
 import { getConfig } from '../src/config';
 import { buildCors } from '../src/interfaces/http/middleware/cors';
 import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security-headers';
@@ -67,4 +68,8 @@ app.route('/metrics', createMonitoringRouter());
 app.route('/cron', createCronRouter());
 app.route('/', createDocsRouter());
 
-export default app;
+// Vercel serverless entry: `handle` adapts the Hono app to Vercel's function
+// runtime (Web Request → Response). Runs on the Node.js runtime (default) —
+// required by the native deps (@node-rs/argon2) and nodemailer. `app` is exported
+// separately for the local dev server (dev.ts) and the tests.
+export default handle(app);

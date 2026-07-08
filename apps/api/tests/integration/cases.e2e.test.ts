@@ -40,7 +40,7 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     process.env.PSEUDONYMIZATION_SALT ??= 'e2e-test-salt';
     process.env.ENCRYPTION_KEY ??= Buffer.alloc(32, 9).toString('base64');
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
-    app = (await import('../../api/index')).default;
+    app = (await import('../../api/index')).app;
     signToken = (await import('../../src/shared/security/jwt')).signToken;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();

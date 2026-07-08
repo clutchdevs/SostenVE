@@ -50,7 +50,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     process.env.SUPABASE_URL = SUPABASE_URL;
     process.env.SUPABASE_SERVICE_ROLE_KEY = SERVICE_KEY;
     process.env.PSEUDONYMIZATION_SALT ??= 'e2e-test-salt';
-    app = (await import('../../api/index')).default;
+    app = (await import('../../api/index')).app;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });

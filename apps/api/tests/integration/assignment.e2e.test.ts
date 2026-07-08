@@ -43,7 +43,7 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
     process.env.PSEUDONYMIZATION_SALT ??= 'e2e-test-salt';
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
     process.env.CRON_SECRET ??= 'test-cron-secret';
-    app = (await import('../../api/index')).default;
+    app = (await import('../../api/index')).app;
     signToken = (await import('../../src/shared/security/jwt')).signToken;
     escalateOverdueCases = (await import('../../src/application/assignment/escalate-sla'))
       .escalateOverdueCases;

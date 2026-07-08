@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import app from '../../../api/index';
+import { app } from '../../../api/index';
 
 describe('global security headers', () => {
   it('sets security headers on a real response', async () => {

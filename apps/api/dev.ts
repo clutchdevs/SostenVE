@@ -1,5 +1,5 @@
 import { serve } from '@hono/node-server';
-import app from './api/index';
+import { app } from './api/index';
 
 /**
  * Local development server (not used in production — Vercel hosts the functions).
