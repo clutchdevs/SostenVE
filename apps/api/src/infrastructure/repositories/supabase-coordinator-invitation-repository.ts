@@ -4,7 +4,7 @@ import type {
   CoordinatorInvitationRepository,
   InvitationStatus,
   NewCoordinatorInvitation,
-} from '../../domain/coordinator/invitation';
+} from '../../domain/coordinator/invitation.js';
 
 interface InvitationRow {
   id: string;

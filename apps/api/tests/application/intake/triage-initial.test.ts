@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyInitialBranch } from '../../../src/application/intake/triage-initial';
+import { classifyInitialBranch } from '../../../src/application/intake/triage-initial.js';
 
 describe('classifyInitialBranch', () => {
   it('routes the critical Likert answer to the red branch', () => {

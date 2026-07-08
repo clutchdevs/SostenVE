@@ -1,4 +1,4 @@
-import type { RiskLevel } from '../triage';
+import type { RiskLevel } from '../triage/index.js';
 
 /**
  * Case aggregate (operational/clinical row, no direct PII) and its separated PII

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { registerVolunteer } from '../../../src/application/volunteer/register-volunteer';
+import { registerVolunteer } from '../../../src/application/volunteer/register-volunteer.js';
 import type {
   FpvVerifier,
   Notifier,
   RegistrationNotification,
-} from '../../../src/application/volunteer/ports';
+} from '../../../src/application/volunteer/ports.js';
 import type {
   NewVolunteer,
   Volunteer,
   VolunteerRepository,
-} from '../../../src/domain/volunteer/volunteer';
-import type { AuditLogRepository } from '../../../src/domain/audit/audit';
+} from '../../../src/domain/volunteer/volunteer.js';
+import type { AuditLogRepository } from '../../../src/domain/audit/audit.js';
 
 function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } {
   return {

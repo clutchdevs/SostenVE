@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { classifyRisk } from '../../../src/domain/triage/classify-risk';
-import { RiskLevel } from '../../../src/domain/triage/risk-level';
-import { Severity } from '../../../src/domain/triage/severity';
-import { createSymptomTag, type SymptomTag } from '../../../src/domain/triage/symptom-tag';
+import { classifyRisk } from '../../../src/domain/triage/classify-risk.js';
+import { RiskLevel } from '../../../src/domain/triage/risk-level.js';
+import { Severity } from '../../../src/domain/triage/severity.js';
+import { createSymptomTag, type SymptomTag } from '../../../src/domain/triage/symptom-tag.js';
 
 const OPTIONS = { orangeTagsThresholdForEscalation: 3 };
 

@@ -30,7 +30,7 @@ const dbAvailable = await canConnect();
 describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
   let app: Hono;
   let pg: Client;
-  let signToken: typeof import('../../src/shared/security/jwt').signToken;
+  let signToken: typeof import('../../src/shared/security/jwt.js').signToken;
   const caseIds: string[] = [];
   const volunteerIds: string[] = [];
 
@@ -40,8 +40,8 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     process.env.PSEUDONYMIZATION_SALT ??= 'e2e-test-salt';
     process.env.ENCRYPTION_KEY ??= Buffer.alloc(32, 9).toString('base64');
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
-    app = (await import('../../api/index')).app;
-    signToken = (await import('../../src/shared/security/jwt')).signToken;
+    app = (await import('../../api/index.js')).app;
+    signToken = (await import('../../src/shared/security/jwt.js')).signToken;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });

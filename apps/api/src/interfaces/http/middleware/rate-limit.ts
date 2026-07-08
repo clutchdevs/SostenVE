@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
-import { TooManyRequestsError } from '../../../shared/errors/api-error';
-import { createRateLimiter, type RateLimiterStore } from '../../../shared/rate-limit/rate-limiter';
+import { TooManyRequestsError } from '../../../shared/errors/api-error.js';
+import { createRateLimiter, type RateLimiterStore } from '../../../shared/rate-limit/rate-limiter.js';
 
 export interface RateLimitMiddlewareOptions {
   limit: number;

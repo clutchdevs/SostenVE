@@ -1,8 +1,8 @@
-import { ApiError } from '../../shared/errors/api-error';
-import type { RequesterType } from '../../domain/case/case';
-import type { CaseClosure } from '../../domain/clinical/case-closure';
-import { assertOwnership } from './get-case';
-import type { CaseDeps } from './ports';
+import { ApiError } from '../../shared/errors/api-error.js';
+import type { RequesterType } from '../../domain/case/case.js';
+import type { CaseClosure } from '../../domain/clinical/case-closure.js';
+import { assertOwnership } from './get-case.js';
+import type { CaseDeps } from './ports.js';
 
 export interface CaseClosureInput {
   contacted: boolean;

@@ -1,11 +1,11 @@
-import { RiskLevel } from '../../domain/triage';
+import { RiskLevel } from '../../domain/triage/index.js';
 import type {
   CaseBranch,
   CaseStatus,
   ContactMethod,
   Modality,
   RequesterType,
-} from '../../domain/case/case';
+} from '../../domain/case/case.js';
 
 /**
  * Bidirectional maps between domain enums (English) and DB/contract values

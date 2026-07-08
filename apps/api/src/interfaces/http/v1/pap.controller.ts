@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
+import { getConfig } from '../../../config/index.js';
 
 /**
  * Asynchronous Psychological First Aid (PAP) self-help guides for the requester

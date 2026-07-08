@@ -1,4 +1,4 @@
-import type { VerifiedToken } from '../../shared/security/jwt';
+import type { VerifiedToken } from '../../shared/security/jwt.js';
 
 /**
  * Typed Hono context variables shared across middleware and handlers.

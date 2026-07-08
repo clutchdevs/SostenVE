@@ -3,8 +3,8 @@ import type {
   ClinicalNote,
   ClinicalNoteRepository,
   NewClinicalNote,
-} from '../../domain/clinical/clinical-note';
-import { decrypt, encrypt } from '../../shared/security/encryption';
+} from '../../domain/clinical/clinical-note.js';
+import { decrypt, encrypt } from '../../shared/security/encryption.js';
 
 interface ClinicalNoteRow {
   id: string;

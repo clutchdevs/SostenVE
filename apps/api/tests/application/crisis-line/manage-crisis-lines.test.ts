@@ -3,9 +3,9 @@ import {
   createCrisisLine,
   deactivateCrisisLine,
   updateCrisisLine,
-} from '../../../src/application/crisis-line/manage-crisis-lines';
-import type { CrisisLineDeps } from '../../../src/application/crisis-line/manage-crisis-lines';
-import type { CrisisLine } from '../../../src/domain/crisis-line/crisis-line';
+} from '../../../src/application/crisis-line/manage-crisis-lines.js';
+import type { CrisisLineDeps } from '../../../src/application/crisis-line/manage-crisis-lines.js';
+import type { CrisisLine } from '../../../src/domain/crisis-line/crisis-line.js';
 
 const line: CrisisLine = {
   id: 'cl-1',

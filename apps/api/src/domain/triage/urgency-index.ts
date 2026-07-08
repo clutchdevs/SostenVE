@@ -1,6 +1,6 @@
-import { DEFAULT_SEVERITY_WEIGHT } from './triage-catalog';
-import { Severity } from './severity';
-import { hasSeverity, type SymptomTag } from './symptom-tag';
+import { DEFAULT_SEVERITY_WEIGHT } from './triage-catalog.js';
+import { Severity } from './severity.js';
+import { hasSeverity, type SymptomTag } from './symptom-tag.js';
 
 /**
  * Weighted Urgency Index (RF-1.5).

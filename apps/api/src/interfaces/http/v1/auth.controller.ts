@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { loginVolunteer } from '../../../application/volunteer/login-volunteer';
-import { changePassword } from '../../../application/volunteer/change-password';
-import { requestPasswordReset, resetPassword } from '../../../application/volunteer/reset-password';
-import { rateLimit } from '../middleware/rate-limit';
-import { getAuthUser, requireAuth } from '../middleware/auth';
-import { getValidated, validateBody } from '../middleware/validate';
-import { getPasswordFlowContainer, getVolunteerContainer } from './dependencies';
+import { getConfig } from '../../../config/index.js';
+import { loginVolunteer } from '../../../application/volunteer/login-volunteer.js';
+import { changePassword } from '../../../application/volunteer/change-password.js';
+import { requestPasswordReset, resetPassword } from '../../../application/volunteer/reset-password.js';
+import { rateLimit } from '../middleware/rate-limit.js';
+import { getAuthUser, requireAuth } from '../middleware/auth.js';
+import { getValidated, validateBody } from '../middleware/validate.js';
+import { getPasswordFlowContainer, getVolunteerContainer } from './dependencies.js';
 import {
   changePasswordSchema,
   forgotPasswordSchema,
@@ -16,7 +16,7 @@ import {
   type ForgotPasswordBody,
   type LoginBody,
   type ResetPasswordBody,
-} from './schemas';
+} from './schemas.js';
 
 /**
  * Auth endpoints. Login and the public password-recovery endpoints are

@@ -10,7 +10,7 @@ import type {
   VolunteerRepository,
   VolunteerRole,
   VolunteerStatus,
-} from '../../domain/volunteer/volunteer';
+} from '../../domain/volunteer/volunteer.js';
 
 interface VolunteerRow {
   id: string;

@@ -1,5 +1,5 @@
-import { Severity } from './severity';
-import { createSymptomTag, type SymptomTag } from './symptom-tag';
+import { Severity } from './severity.js';
+import { createSymptomTag, type SymptomTag } from './symptom-tag.js';
 
 /**
  * Clinical symptom-tag catalog — the real set from the FPV PRD (RF-1.3, "Pantalla

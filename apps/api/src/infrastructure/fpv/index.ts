@@ -1,12 +1,12 @@
-import type { AppConfig } from '../../config';
+import type { AppConfig } from '../../config/index.js';
 import type {
   FpvVerificationInput,
   FpvVerificationResult,
   FpvVerifier,
-} from '../../application/volunteer/ports';
-import { CircuitBreaker } from '../../shared/circuit-breaker';
-import { DummyFpvVerifier } from './dummy-fpv-verifier';
-import { HttpFpvVerifier } from './http-fpv-verifier';
+} from '../../application/volunteer/ports.js';
+import { CircuitBreaker } from '../../shared/circuit-breaker.js';
+import { DummyFpvVerifier } from './dummy-fpv-verifier.js';
+import { HttpFpvVerifier } from './http-fpv-verifier.js';
 
 /**
  * Wraps the selected FPV verifier in a circuit breaker so repeated failures of

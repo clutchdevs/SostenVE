@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { __redactForTest, logger } from '../../src/shared/logger';
+import { __redactForTest, logger } from '../../src/shared/logger.js';
 
 describe('logger PII redaction', () => {
   it('redacts sensitive fields and keeps safe ones', () => {

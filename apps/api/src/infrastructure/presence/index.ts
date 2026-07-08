@@ -1,7 +1,7 @@
-import type { AppConfig } from '../../config';
-import type { PresenceStore } from '../../application/presence/ports';
-import { MemoryPresenceStore } from './memory-presence-store';
-import { UpstashPresenceStore } from './upstash-presence-store';
+import type { AppConfig } from '../../config/index.js';
+import type { PresenceStore } from '../../application/presence/ports.js';
+import { MemoryPresenceStore } from './memory-presence-store.js';
+import { UpstashPresenceStore } from './upstash-presence-store.js';
 
 /**
  * Builds the presence store from config (RF-2.5). `memory` is the offline-safe

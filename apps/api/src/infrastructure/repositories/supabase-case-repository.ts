@@ -6,8 +6,8 @@ import type {
   CaseRepository,
   CaseStatus,
   NewCase,
-} from '../../domain/case/case';
-import type { RiskLevel } from '../../domain/triage';
+} from '../../domain/case/case.js';
+import type { RiskLevel } from '../../domain/triage/index.js';
 import {
   branchFromDb,
   branchToDb,
@@ -21,7 +21,7 @@ import {
   riskToDb,
   statusFromDb,
   statusToDb,
-} from './enum-maps';
+} from './enum-maps.js';
 
 interface CaseRow {
   id: string;

@@ -3,7 +3,12 @@
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    // Match Vercel's serverless function compiler (Node ESM): requires explicit
+    // .js extensions on relative imports. Overrides the base "bundler" so `tsc`
+    // catches missing extensions here, not at deploy time.
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "include": ["src", "api", "tests"]
 }

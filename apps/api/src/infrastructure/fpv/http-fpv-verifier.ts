@@ -2,7 +2,7 @@ import type {
   FpvVerificationInput,
   FpvVerificationResult,
   FpvVerifier,
-} from '../../application/volunteer/ports';
+} from '../../application/volunteer/ports.js';
 
 export class NotConfiguredError extends Error {
   constructor(message: string) {

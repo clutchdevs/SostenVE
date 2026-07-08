@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { load } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
-import { appConfigSchema } from '../../src/config/schema';
+import { appConfigSchema } from '../../src/config/schema.js';
 
 /**
  * Guards that every environment section of config/app.config.yml validates against

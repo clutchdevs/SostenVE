@@ -1,5 +1,5 @@
-import type { AssignmentNotifier } from '../../application/assignment/ports';
-import { logger } from '../../shared/logger';
+import type { AssignmentNotifier } from '../../application/assignment/ports.js';
+import { logger } from '../../shared/logger.js';
 
 /**
  * Assignment notifier stand-in that logs instead of contacting volunteers /

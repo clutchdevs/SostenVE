@@ -1,6 +1,6 @@
-import { ApiError, ForbiddenError } from '../../shared/errors/api-error';
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { CaseRepository } from '../../domain/case/case';
+import { ApiError, ForbiddenError } from '../../shared/errors/api-error.js';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { CaseRepository } from '../../domain/case/case.js';
 
 export interface AcceptCaseDeps {
   cases: CaseRepository;

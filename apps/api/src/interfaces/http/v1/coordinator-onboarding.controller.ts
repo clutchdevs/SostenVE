@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { acceptInvitation } from '../../../application/coordinator/accept-invitation';
-import { rateLimit } from '../middleware/rate-limit';
-import { getValidated, validateBody } from '../middleware/validate';
-import { getAcceptInvitationDeps } from './dependencies';
-import { acceptInvitationSchema, type AcceptInvitationBody } from './schemas';
+import { getConfig } from '../../../config/index.js';
+import { acceptInvitation } from '../../../application/coordinator/accept-invitation.js';
+import { rateLimit } from '../middleware/rate-limit.js';
+import { getValidated, validateBody } from '../middleware/validate.js';
+import { getAcceptInvitationDeps } from './dependencies.js';
+import { acceptInvitationSchema, type AcceptInvitationBody } from './schemas.js';
 
 /**
  * Public coordinator onboarding (RF-2.6): redeem an invitation token to activate

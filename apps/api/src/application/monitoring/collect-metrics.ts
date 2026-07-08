@@ -1,6 +1,6 @@
-import { summarizeSla, type SlaMetrics } from './sla-metrics';
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { CaseRepository } from '../../domain/case/case';
+import { summarizeSla, type SlaMetrics } from './sla-metrics.js';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { CaseRepository } from '../../domain/case/case.js';
 
 export interface MetricsDeps {
   cases: CaseRepository;

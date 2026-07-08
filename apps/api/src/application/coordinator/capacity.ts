@@ -1,5 +1,5 @@
-import { RiskLevel } from '../../domain/triage';
-import type { CaseRepository } from '../../domain/case/case';
+import { RiskLevel } from '../../domain/triage/index.js';
+import type { CaseRepository } from '../../domain/case/case.js';
 
 export interface CapacityDeps {
   cases: CaseRepository;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getActiveCrisisLineFromDb } from '../../../src/application/intake/get-active-crisis-line';
-import type { AppConfig } from '../../../src/config';
-import type { CrisisLine, CrisisLineRepository } from '../../../src/domain/crisis-line/crisis-line';
+import { getActiveCrisisLineFromDb } from '../../../src/application/intake/get-active-crisis-line.js';
+import type { AppConfig } from '../../../src/config/index.js';
+import type { CrisisLine, CrisisLineRepository } from '../../../src/domain/crisis-line/crisis-line.js';
 
 const config = {
   crisis_lines: {

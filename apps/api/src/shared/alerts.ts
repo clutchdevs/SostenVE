@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from './logger.js';
 
 /**
  * Operational alerts (fase 06 · observabilidad).

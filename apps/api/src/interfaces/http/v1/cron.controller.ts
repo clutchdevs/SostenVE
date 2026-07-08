@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { processQueue } from '../../../application/assignment/process-queue';
-import { cronAuth } from '../middleware/cron-auth';
-import { getAssignmentDeps } from './dependencies';
+import { processQueue } from '../../../application/assignment/process-queue.js';
+import { cronAuth } from '../middleware/cron-auth.js';
+import { getAssignmentDeps } from './dependencies.js';
 
 /**
  * Internal cron endpoint (invoked by Vercel Cron, not users). Protected by a

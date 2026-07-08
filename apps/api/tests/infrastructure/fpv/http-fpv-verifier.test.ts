@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   HttpFpvVerifier,
   NotConfiguredError,
-} from '../../../src/infrastructure/fpv/http-fpv-verifier';
+} from '../../../src/infrastructure/fpv/http-fpv-verifier.js';
 
 const options = {
   baseUrl: 'https://api.sistema.fpv.org.ve',

@@ -5,7 +5,7 @@ import type {
   AuditLogReader,
   AuditLogRepository,
   AuditPage,
-} from '../../domain/audit/audit';
+} from '../../domain/audit/audit.js';
 
 interface AuditRow {
   id: string;

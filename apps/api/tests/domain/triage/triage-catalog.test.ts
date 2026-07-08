@@ -5,10 +5,10 @@ import {
   TAG_CATALOG_VERSION,
   getCatalogTag,
   requiresChildSpecialty,
-} from '../../../src/domain/triage/triage-catalog';
-import { classifyRisk } from '../../../src/domain/triage/classify-risk';
-import { RiskLevel } from '../../../src/domain/triage/risk-level';
-import { Severity } from '../../../src/domain/triage/severity';
+} from '../../../src/domain/triage/triage-catalog.js';
+import { classifyRisk } from '../../../src/domain/triage/classify-risk.js';
+import { RiskLevel } from '../../../src/domain/triage/risk-level.js';
+import { Severity } from '../../../src/domain/triage/severity.js';
 
 const OPTIONS = { orangeTagsThresholdForEscalation: 3 };
 

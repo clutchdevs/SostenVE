@@ -1,7 +1,7 @@
-import type { ClassificationOptions, RiskClassificationStrategy } from './classification-strategy';
-import { RiskLevel } from './risk-level';
-import { defaultStrategies } from './strategies';
-import type { SymptomTag } from './symptom-tag';
+import type { ClassificationOptions, RiskClassificationStrategy } from './classification-strategy.js';
+import { RiskLevel } from './risk-level.js';
+import { defaultStrategies } from './strategies.js';
+import type { SymptomTag } from './symptom-tag.js';
 
 /**
  * Classifies the risk level of a case from its selected clinical tags.

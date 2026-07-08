@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { collectMetrics } from '../../../application/monitoring/collect-metrics';
-import { requireAuth } from '../middleware/auth';
-import { getCaseDeps } from './dependencies';
+import { collectMetrics } from '../../../application/monitoring/collect-metrics.js';
+import { requireAuth } from '../middleware/auth.js';
+import { getCaseDeps } from './dependencies.js';
 
 /**
  * Observability endpoint (fase 06): SLA/queue metrics + uptime for the

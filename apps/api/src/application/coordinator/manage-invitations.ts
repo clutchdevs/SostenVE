@@ -1,12 +1,12 @@
-import { ApiError } from '../../shared/errors/api-error';
-import { generateInvitationToken, hashToken } from '../../shared/security/invitation-token';
-import type { AppConfig } from '../../config';
-import type { AuditLogRepository } from '../../domain/audit/audit';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { generateInvitationToken, hashToken } from '../../shared/security/invitation-token.js';
+import type { AppConfig } from '../../config/index.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
 import type {
   CoordinatorInvitation,
   CoordinatorInvitationRepository,
-} from '../../domain/coordinator/invitation';
-import type { Notifier } from '../volunteer/ports';
+} from '../../domain/coordinator/invitation.js';
+import type { Notifier } from '../volunteer/ports.js';
 
 /** Dependencies for issuing and managing coordinator invitations (RF-2.6). */
 export interface InvitationDeps {

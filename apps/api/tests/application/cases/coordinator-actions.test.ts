@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getConfig } from '../../../src/config';
+import { getConfig } from '../../../src/config/index.js';
 import {
   coordinatorCloseCase,
   reassignCase,
-} from '../../../src/application/cases/coordinator-actions';
-import { RiskLevel } from '../../../src/domain/triage';
-import type { CaseRecord } from '../../../src/domain/case/case';
-import type { Volunteer } from '../../../src/domain/volunteer/volunteer';
+} from '../../../src/application/cases/coordinator-actions.js';
+import { RiskLevel } from '../../../src/domain/triage/index.js';
+import type { CaseRecord } from '../../../src/domain/case/case.js';
+import type { Volunteer } from '../../../src/domain/volunteer/volunteer.js';
 
 const ACTOR = { id: 'coord-1', role: 'coordinator' };
 
