@@ -1,15 +1,15 @@
 openapi: 3.1.0
 info:
-  title: Sostén — API de apoyo psicológico post-terremoto
+  title: PPV — API de apoyo psicológico post-terremoto
   version: 0.2.0
   description: >
-    API REST de la plataforma Sostén, desplegada como funciones serverless en Vercel
+    API REST de la plataforma PPV, desplegada como funciones serverless en Vercel
     (ver ADR-0009) sobre PostgreSQL en Supabase (ADR-0002). Implementa el flujo de triage
     del PRD de la Federación ("Sistema PPV 2026", ADR-0010): pantalla Likert, ramas roja/verde,
     tags clínicos ponderados, validación de psicólogos contra la BD de la FPV, y SLA de 10 min
     con escalamiento vía Vercel Cron Job. Datos clínicos cifrados en reposo y tránsito (ADR-0004).
 servers:
-  - url: https://sosten.example/api
+  - url: https://ppv.example/api
     description: Producción en Vercel (placeholder)
 
 tags:

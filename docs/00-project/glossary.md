@@ -1,4 +1,4 @@
-# Glosario — Lenguaje ubicuo del proyecto Sostén
+# Glosario — Lenguaje ubicuo del proyecto PPV
 
 > **Fase AI-DLC:** `00-project`
 > Estos términos son la fuente única de verdad. Todo documento, código y UI debe usarlos de forma

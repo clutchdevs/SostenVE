@@ -1,0 +1,255 @@
+# PPV — non-secret application configuration (versioned).
+# Secrets live in .env (see .env.example). Loaded once by the config singleton
+# in apps/api/src/config and validated with Zod. No module reads this file directly.
+
+default: &default
+  app:
+    name: "PPV"
+    locale: "es-VE"
+
+  triage:
+    orange_tags_threshold_for_escalation: 3 # interruption rule (3+ orange -> high risk)
+    likert_critical_option: 1
+
+  sla:
+    high_risk_assignment_minutes: 10
+    cron_check_interval_minutes: 2
+
+  crisis_lines:
+    routing:
+      - name: "LAPSI"
+        start_hour: 8
+        end_hour: 26 # represents 2:00 AM next day, no overlap with start_hour
+        phone: "+584242907338"
+      - name: "Colegio de Psicólogos de Miranda"
+        start_hour: 2
+        end_hour: 8
+        phone: "04127840112"
+    backup_lines:
+      - name: "VEN-911"
+        phone: "911"
+
+  clinical_records:
+    tept_diagnosis_block_days: 30 # RF-4.3
+    event_date: "2026-06-24" # earthquake date; reference for the RF-4.3 TEPT block
+
+  consent:
+    # Informed consent shown at psychologist registration (RF-2.1.1, Módulo 2).
+    # OFFICIAL FPV bioethical wording, transcribed verbatim from the PRD (RF-2.1.1).
+    # Bump `version` whenever `text` changes so the audit trail records exactly
+    # which wording each volunteer accepted.
+    psychologist:
+      version: "v1.0.0-fpv"
+      updated_at: "2026-07-01"
+      text: |
+        Consentimiento Informado para Postulantes — Programa de Formación de
+        Psicólogos Voluntarios
+
+        Al completar y enviar este formulario, usted manifiesta que actúa de manera
+        libre y voluntaria, y que comprende y acepta las siguientes condiciones:
+
+        Carácter Aprobatorio: Declaro conocer que la inscripción en este formulario
+        no garantiza la admisión automática ni la certificación. El ingreso al
+        cuerpo de voluntarios está sujeto a un proceso de selección y al
+        cumplimiento de una formación obligatoria de carácter aprobatorio, siendo
+        indispensable cumplir con las evaluaciones y requisitos exigidos durante el
+        programa.
+
+        Uso de Datos: Autorizo expresamente a que la información suministrada en
+        este formulario sea utilizada exclusivamente para fines de gestión e
+        información gremial, así como para proyectos de investigación institucional.
+
+        Confidencialidad: Se garantiza el manejo ético y la absoluta
+        confidencialidad de sus datos de identidad y de contacto, los cuales serán
+        protegidos y no se divulgarán a terceros bajo ninguna circunstancia,
+        cumpliendo estrictamente con las normativas éticas de la profesión.
+
+    # Aviso informativo de consentimiento/privacidad para el SOLICITANTE (issue #1).
+    # Se muestra de forma NO bloqueante en cada pantalla del solicitante para no
+    # añadir fricción al camino de riesgo alto. Texto OFICIAL de la FPV (2026-07-03);
+    # sube `version` cuando cambie el texto.
+    requester:
+      version: "v1.0.0-fpv"
+      updated_at: "2026-07-03"
+      text: |
+        🚨 ¿Es una emergencia o crisis inmediata?
+        Llama directamente a nuestra Línea de Ayuda Psicológica: 0424 290.7338
+        (todos los días, 8:00 am a 2:00 am) o la Línea de Apoyo Psicológico Gratuito
+        del Colegio de Miranda 0412.7840112 fuera de ese horario. Este formulario es
+        solo para atención NO inmediata.
+
+        Servicio Gratuito y Voluntario: Impulsado por la FPV y Colegios de Psicólogos
+        para brindar primeros auxilios psicológicos y restablecer tu equilibrio
+        emocional.
+
+        Terceros: Si solicitas el apoyo para un familiar, asegúrate de ingresar los
+        datos de la persona que recibirá la atención, no los tuyos.
+
+        Confidencialidad Absoluta: Garantizamos que el manejo de toda tu información
+        estará estrictamente protegido.
+
+  pap:
+    # Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el
+    # solicitante (Módulo 1). Contenido PROVISIONAL pendiente de validación por la
+    # FPV; sube `version` cuando cambien las guías. No reemplaza la atención
+    # profesional ni las líneas de crisis.
+    version: "v0.1.0-draft"
+    updated_at: "2026-06-30"
+    guides:
+      - id: "respiracion"
+        title: "Respiración para calmar la angustia"
+        summary: "Un ejercicio breve para bajar la activación cuando el cuerpo se siente acelerado."
+        steps:
+          - "Busca un lugar lo más seguro posible y siéntate o recuéstate."
+          - "Inhala por la nariz contando hasta 4."
+          - "Retén el aire contando hasta 4."
+          - "Exhala lento por la boca contando hasta 6."
+          - "Repite durante 2 o 3 minutos; si te mareas, respira normal y descansa."
+      - id: "anclaje"
+        title: "Anclaje 5-4-3-2-1 para volver al presente"
+        summary: "Cuando la mente se llena de imágenes del sismo, este ejercicio te ayuda a regresar al aquí y ahora."
+        steps:
+          - "Nombra 5 cosas que puedas VER a tu alrededor."
+          - "Nombra 4 cosas que puedas TOCAR y siente su textura."
+          - "Nombra 3 sonidos que puedas OÍR."
+          - "Nombra 2 olores que puedas percibir."
+          - "Nombra 1 cosa que puedas saborear o una cosa buena de ti."
+      - id: "dormir"
+        title: "Si no logras dormir"
+        summary: "Es normal que el sueño se altere tras un evento traumático. Algunas ideas para acompañarte."
+        steps:
+          - "Mantén un horario regular para acostarte y levantarte, aunque duermas poco."
+          - "Evita noticias o videos del sismo en la hora previa a dormir."
+          - "Haz el ejercicio de respiración 4-4-6 al acostarte."
+          - "Si no duermes en 20 minutos, levántate, haz algo tranquilo y vuelve a intentar."
+          - "Reduce café y bebidas energéticas en la tarde y noche."
+      - id: "acompanar-nino"
+        title: "Cómo acompañar a un niño o niña tras el sismo"
+        summary: "Los menores expresan el malestar de otra forma. Tu calma es su mayor sostén."
+        steps:
+          - "Mantén la calma: los niños se regulan con tu tono de voz y tu cuerpo."
+          - "Explica lo ocurrido con palabras simples y honestas, sin detalles que asusten."
+          - "Permite el juego y el dibujo: son su manera de procesar lo vivido."
+          - "Sostén las rutinas posibles (comida, descanso) para devolver seguridad."
+          - "Valida sus emociones: 'es normal tener miedo, estoy contigo'."
+      - id: "perdida"
+        title: "Primeros pasos ante una pérdida"
+        summary: "El duelo tras un desastre es una respuesta humana. No hay una forma 'correcta' de sentirlo."
+        steps:
+          - "Permítete sentir: la tristeza, la rabia o el aturdimiento son esperables."
+          - "Busca a alguien de confianza con quien hablar o estar en silencio."
+          - "Cuida lo básico: hidratación, algo de comida y descanso."
+          - "Pospón decisiones grandes mientras la conmoción esté muy intensa."
+          - "Si el dolor te supera o aparecen pensamientos de no querer vivir, busca ayuda de inmediato."
+      - id: "pap-basico"
+        title: "Acompañar a otra persona: mirar, escuchar, conectar"
+        summary: "Principios de Primeros Auxilios Psicológicos para apoyar a alguien cercano."
+        steps:
+          - "MIRAR: observa si la persona está segura y qué necesita con urgencia."
+          - "ESCUCHAR: acércate con calma, presta atención sin presionar a que hable."
+          - "CONECTAR: ayúdala a cubrir necesidades básicas y a contactar a sus seres queridos."
+          - "No minimices ('no fue para tanto') ni fuerces consejos; acompaña."
+          - "Si hay riesgo para su vida, comunícate con una línea de crisis ya."
+
+  fpv: &fpv
+    # http: real FPV padrón API (issue #6) — the default routing. dummy: an
+    # always-approves stand-in used ONLY in development/tests (overridden below).
+    # Production uses http and requires FPV_API_TOKEN in the environment.
+    verifier: "http" # dummy | http
+    base_url: "https://api.sistema.fpv.org.ve"
+    request_timeout_seconds: 8
+    circuit_breaker:
+      failure_threshold: 3
+      cooldown_seconds: 30
+
+  email:
+    # provider: log (no real send, just logs) | smtp (nodemailer). Default "log"
+    # keeps tests/e2e offline. Switch to "smtp" to send via the SMTP server below;
+    # in local dev point it at the Supabase Inbucket SMTP (enable smtp_port = 54325
+    # in supabase/config.toml) and read the emails at http://localhost:54324.
+    provider: "log"
+    from: "PPV <no-reply@ppv.org.ve>"
+    login_url: "http://localhost:3000/login"
+    coordinator_invite_url: "http://localhost:3000/registro-coordinador"
+    password_reset_url: "http://localhost:3000/restablecer-contrasena" # RF-2.2.4 reset link
+    smtp:
+      host: "host.docker.internal" # API container -> host's Inbucket
+      port: 54325
+      username: "" # Inbucket needs no auth; SMTP_PASSWORD (env) used when set
+
+  presence:
+    # provider: memory (dev/tests, single process) | upstash (production Redis via
+    # REST). RF-2.5: online kept for `heartbeat_ttl_seconds`, refreshed by the PWA
+    # every `heartbeat_interval_seconds`. For upstash, set UPSTASH_REDIS_REST_URL
+    # and UPSTASH_REDIS_REST_TOKEN in the environment.
+    provider: "memory"
+    heartbeat_ttl_seconds: 65
+    heartbeat_interval_seconds: 30
+
+  rbac:
+    roles: ["requester", "psychologist", "coordinator", "admin"]
+
+  security:
+    cors:
+      development_origins: ["http://localhost:3000"]
+      # Dominio(s) reales de la web (solo se usa cuando NODE_ENV=production).
+      # PROVISIONAL: pon aquí la URL *.vercel.app del proyecto Web (o tu dominio).
+      production_origins: ["https://REEMPLAZAR-web.vercel.app"]
+    rate_limit:
+      intake_requests_per_minute: 10
+      login_attempts_before_lockout: 5
+      login_lockout_minutes: 15
+    jwt:
+      access_token_ttl_minutes: 15
+      refresh_token_ttl_days: 7
+    session:
+      idle_timeout_minutes: 30 # RF-2.7: expire a session after 30 min inactivity
+      invitation_ttl_days: 7 # RF-2.6: coordinator invitation validity window
+      password_reset_ttl_minutes: 60 # RF-2.2.4: password reset link validity window
+
+development:
+  <<: *default
+  app:
+    name: "PPV (dev)"
+    locale: "es-VE"
+  # Dev usa el servicio REAL de la FPV (fpv.verifier: http, heredado del default)
+  # para poder probar respuestas y fallos reales del padrón. Requiere FPV_API_TOKEN
+  # en el .env; sin token, verify() lanza y el registro cae a pending_approval.
+
+test:
+  <<: *default
+  # Los tests automatizados NO deben depender de un servicio externo (sin token, sin
+  # red, deterministas): usan el dummy. vitest corre con NODE_ENV=test, así que esta
+  # sección se selecciona automáticamente en la suite.
+  fpv:
+    <<: *fpv
+    verifier: "dummy"
+
+production:
+  <<: *default
+  app:
+    name: "PPV"
+    locale: "es-VE"
+
+  # Correo (RF-2.2.4). Las 3 URLs SOLO salen de aquí (no hay override por entorno).
+  # provider/from/host/port/username/password SÍ se sobreescriben con el entorno
+  # (EMAIL_PROVIDER, SMTP_*). Por el merge superficial de YAML se repite el bloque
+  # completo. REEMPLAZA las URLs por las de tu Web (provisional: la *.vercel.app).
+  email:
+    provider: "smtp" # prod envía de verdad; requiere SMTP_* en el entorno de Vercel
+    from: "PPV <no-reply@ppv.org.ve>"
+    login_url: "https://REEMPLAZAR-web.vercel.app/login"
+    coordinator_invite_url: "https://REEMPLAZAR-web.vercel.app/registro-coordinador"
+    password_reset_url: "https://REEMPLAZAR-web.vercel.app/restablecer-contrasena"
+    smtp:
+      host: "" # ← SMTP_HOST (entorno)
+      port: 587
+      username: "" # ← SMTP_USERNAME (entorno)
+
+  # Presencia en tiempo real (RF-2.5). En serverless la memoria NO sirve (cada
+  # instancia la suya): usa Redis compartido (Upstash) vía REST. Requiere
+  # UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN en el entorno.
+  presence:
+    provider: "upstash"
+    heartbeat_ttl_seconds: 65
+    heartbeat_interval_seconds: 30

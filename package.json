@@ -1,0 +1,40 @@
+{
+  "name": "ppv",
+  "version": "0.3.0",
+  "private": true,
+  "description": "PPV — post-earthquake psychological support platform (Venezuela 2026)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "format": "prettier --write .",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:seed": "node scripts/seed-db.mjs",
+    "db:reset": "supabase db reset --no-seed && node scripts/seed-db.mjs",
+    "dev:up": "supabase start && docker compose up",
+    "dev:down": "docker compose down && supabase stop",
+    "dev:reset": "supabase db reset --no-seed && node scripts/seed-db.mjs",
+    "load-test": "node scripts/load-test.mjs",
+    "gen:secrets": "node scripts/gen-secrets.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/pg": "^8.11.10",
+    "autocannon": "^8.0.0",
+    "eslint": "^9.13.0",
+    "pg": "^8.13.1",
+    "prettier": "^3.3.3",
+    "supabase": "^1.207.9",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.11.0"
+  }
+}

@@ -1,0 +1,122 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { AuthShell } from '../../src/components/auth-shell';
+import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { ui } from '../../src/lib/ui';
+
+/**
+ * Public password reset redemption (RF-2.2.4, issue #36). Opened from the reset
+ * email, which carries the single-use token as `?token=…`. Setting a new password
+ * consumes the token and invalidates prior sessions; on success we send the user
+ * to the login screen. The token is read client-side to avoid a Suspense boundary.
+ */
+export default function ResetPasswordPage() {
+  const router = useRouter();
+  const [token, setToken] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('token');
+    if (fromUrl) setToken(fromUrl);
+  }, []);
+
+  async function submit() {
+    setError('');
+    if (
+      password.length < 12 ||
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      setError(
+        'La contraseña debe tener al menos 12 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial.',
+      );
+      return;
+    }
+    if (password !== confirm) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await apiFetch('/auth/reset-password', {
+        method: 'POST',
+        auth: false,
+        body: { token, contrasena: password },
+      });
+      setDone(true);
+      setTimeout(() => router.replace('/login'), 1500);
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 400
+          ? 'El enlace es inválido o ha expirado. Solicita uno nuevo.'
+          : 'No se pudo restablecer la contraseña. Intenta de nuevo.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <AuthShell title="Contraseña restablecida">
+        <p className={ui.muted}>Redirigiendo al inicio de sesión…</p>
+      </AuthShell>
+    );
+  }
+
+  return (
+    <AuthShell
+      title="Nueva contraseña"
+      subtitle="Define una nueva contraseña para tu cuenta."
+      backHref="/login"
+      backLabel="← Volver al inicio de sesión"
+    >
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+      >
+        <input
+          className={ui.field}
+          placeholder="Token de recuperación"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+        />
+        <input
+          className={ui.field}
+          type="password"
+          placeholder="Nueva contraseña (mín. 12, con mayúsculas, números y símbolo)"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <input
+          className={ui.field}
+          type="password"
+          placeholder="Confirmar contraseña"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        {error && <p className={ui.error}>{error}</p>}
+        <button type="submit" disabled={busy || !token} className={`w-full ${ui.primaryBtn}`}>
+          Restablecer contraseña
+        </button>
+      </form>
+      <Link href="/login" className={`mt-4 inline-block ${ui.link}`}>
+        Volver al inicio de sesión
+      </Link>
+    </AuthShell>
+  );
+}

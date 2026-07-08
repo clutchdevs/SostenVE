@@ -1,8 +1,9 @@
-# PRD — Flujo central de Sostén (Sistema PPV 2026)
+# PRD — Flujo central de PPV (Sistema PPV 2026)
 
 > **Fase AI-DLC:** `01-requirements`  ·  **Estado:** aprobado para diseño
 > **Autor:** equipo de desarrollo, sobre el PRD "Sistema PPV 2026" de la Federación
-> **Fecha:** 2026-06-27 (reescrito 2026-06-28 — ver ADR-0010)
+> **Fuente canónica:** `Documento de Requisitos de Producto (PRD).pdf` (FPV)
+> **Fecha:** 2026-06-27 (reescrito 2026-06-28 — ver ADR-0010; reconciliado con el PDF vigente 2026-06-30)
 
 Este documento refleja el flujo del PRD de la Federación, que **reemplaza** el flujo original de
 "formulario con 4 preguntas". El cambio de enfoque está registrado en
@@ -97,6 +98,20 @@ ponderado resultante define la prioridad.
 - **Validación automática contra la BD de la FPV**: el sistema verifica que el voluntario esté en el
   padrón de la Federación antes de habilitarlo. No hay autoregistro abierto que active una cuenta sin
   esta validación.
+- **Implementación (Bloque 4):** la verificación está detrás de un **Adapter** (`FpvVerifier`) con un
+  **dummy que siempre aprueba** mientras la FPV no entregue el contrato de su API; se cambia por
+  configuración cuando exista (ver ADR-0013). Si el servicio externo cae, el registro no se bloquea:
+  pasa a `pending_approval` (Caso de Excepción, RF-2.2) para que un administrador lo resuelva.
+
+### 2.1 Registro y login de coordinadores (RF-2.6 / RF-2.7)
+- **Signup cerrado por token (RF-2.6):** los coordinadores **no** se autorregistran. Un administrador de
+  la FPV genera un **token de invitación** de un solo uso; el coordinador lo canjea para activarse. El
+  backend persiste solo el **hash** del token, lo invalida al usarse y encripta la contraseña.
+- **Login (RF-2.7):** ruta dedicada `/login-coordinador`, **bloqueo de cuenta 15 min tras 5 fallos**, y
+  **cierre de sesión por inactividad** (el PRD fija **30 min**; ver desvíos en
+  [`prd-cobertura-y-brechas.md`](prd-cobertura-y-brechas.md) §D).
+- **Presencia en tiempo real (RF-2.5):** al hacer login el voluntario queda `Online`; heartbeats cada 30 s
+  con TTL de 65 s en un store de presencia (Redis). **Fuera del MVP actual** (requiere store compartido).
 
 ## 3. Módulo 3 — Asignación, SLA y escalamiento
 1. Un caso clasificado entra al motor de asignación (riesgo alto primero; resto por orden de llegada
@@ -132,10 +147,15 @@ ponderado resultante define la prioridad.
 - [ ] Un caso de riesgo alto sin aceptar en 10 min se escala automáticamente vía cron job.
 - [ ] El registro de un voluntario se valida contra la BD de la FPV.
 - [ ] Las líneas de crisis se muestran aun con el backend frío.
-- [ ] No se puede registrar un diagnóstico de TEPT antes de 4 semanas del evento (RF-4.3).
-- [ ] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (sección 8 ética del PRD FPV).
+- [ ] No se puede registrar un diagnóstico de TEPT antes de 4 semanas del evento (regla de seguridad
+      clínica propia; **en el PDF vigente RF-4.3 es el interruptor de disponibilidad**, no este bloqueo).
+- [x] El consentimiento informado aparece en **cada** interfaz del solicitante, no solo al inicio (issue #1):
+      aviso **no bloqueante** (`ConsentNotice`, colapsable) en `/intake`, `/intake/roja`, `/intake/verde` y
+      `/guias`, con el **texto oficial de la FPV** servido desde config (`GET /consent/requester`,
+      `v1.0.0-fpv`). No añade fricción al camino de riesgo alto / líneas de crisis.
 
 ## 7. Decisiones abiertas (Human-in-the-Loop)
-- `<TODO — Human-in-the-Loop>` Pesos/umbrales finales de los tags clínicos (valida la FPV).
-- `<TODO — Human-in-the-Loop>` Texto de consentimiento informado.
+- ✅ Pesos/umbrales de los tags clínicos — **validados por la FPV el 2026-07-03** (decisión final, ADR-0010).
+- ✅ Consentimiento del solicitante — **texto oficial de la FPV** (`v1.0.0-fpv`, 2026-07-03, issue #1); el del
+  postulante también es oficial (`v1.0.0-fpv`).
 - `<TODO — Human-in-the-Loop>` Umbral de tiempo de espera aceptable por categoría.

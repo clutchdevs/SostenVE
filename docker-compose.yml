@@ -1,0 +1,97 @@
+# PPV — local app stack (API + Web).
+#
+# The database is the Supabase local stack, managed by the Supabase CLI
+# (`supabase start`), NOT this compose file — reproducing all of Supabase here
+# would be heavy and brittle. Use `npm run dev:up` to start Supabase AND this
+# compose in one command (and `npm run dev:down` to stop both).
+#
+# Cross-platform deps: an `installer` service runs `npm ci` into named volumes so
+# native modules (e.g. @node-rs/argon2) are built for Linux regardless of the
+# host OS. API/Web reuse those volumes and just run their dev servers.
+#
+# All values below come from the root `.env` (copy it from `.env.example`).
+# Nothing is hardcoded here: a stale edit can't ship weak dev keys, and there
+# is one place to look for config. In PRODUCTION neither this file nor `.env`
+# is used — env vars are set in Vercel.
+
+x-node-env: &node-env
+  SUPABASE_URL: ${SUPABASE_URL}
+  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+  DATABASE_URL: ${DATABASE_URL}
+  JWT_SECRET: ${JWT_SECRET}
+  PSEUDONYMIZATION_SALT: ${PSEUDONYMIZATION_SALT}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  CRON_SECRET: ${CRON_SECRET}
+  # Email (SMTP) — pass through from the host env / root .env so a real provider
+  # (e.g. Gmail) can be enabled for local testing. Empty by default → the app
+  # keeps the offline "log" notifier. See .env.example.
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_USERNAME: ${SMTP_USERNAME}
+  SMTP_FROM: ${SMTP_FROM}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
+  # FPV padrón API token (X-API-TOKEN) used by HttpFpvVerifier for validate +
+  # psicologo. Empty by default; set FPV_API_TOKEN in the root .env to enable the
+  # real padrón validation (and volunteer auto-approval). See .env.example.
+  FPV_API_TOKEN: ${FPV_API_TOKEN}
+
+services:
+  installer:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm ci"
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+  api:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm run dev --workspace @ppv/api"
+    environment:
+      <<: *node-env
+      PORT: 3001
+    ports:
+      - '3001:3001'
+    depends_on:
+      installer:
+        condition: service_completed_successfully
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+  web:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm run dev --workspace @ppv/web -- -H 0.0.0.0"
+    environment:
+      # The browser calls the API on the host-published port.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+      # Reliable file watching for HMR on bind mounts (Windows/Docker).
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - '3000:3000'
+    depends_on:
+      installer:
+        condition: service_completed_successfully
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+
+volumes:
+  root_node_modules:
+  api_node_modules:
+  web_node_modules:

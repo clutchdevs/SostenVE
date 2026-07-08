@@ -4,9 +4,14 @@
 # --- Secretos y entorno (NUNCA versionar) ---
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 secrets/
+
+# Archivos .http de REST Client con credenciales reales; versionar solo el .example
+*.http
+!*.http.example
 
 # --- Node.js ---
 node_modules/
@@ -18,6 +23,10 @@ dist/
 build/
 coverage/
 .cache/
+.next/
+next-env.d.ts
+.turbo/
+*.tsbuildinfo
 
 # --- Python ---
 __pycache__/

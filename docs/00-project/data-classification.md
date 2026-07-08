@@ -1,4 +1,4 @@
-# Clasificación de datos — Proyecto Sostén
+# Clasificación de datos — Proyecto PPV
 
 > **Fase AI-DLC:** `00-project`
 > Inventario de datos por sensibilidad. Define el trato mínimo obligatorio (cifrado, acceso) de
@@ -31,4 +31,7 @@
 ## Reglas derivadas
 - Ningún dato **Restringido** se muestra en listados de coordinador por defecto (ver matriz del charter).
 - Los respaldos automáticos heredan la clasificación del dato más sensible que contienen → se tratan como **Restringido**.
-- La política exacta de retención y de quién, además del psicólogo tratante, accede a lo Restringido, es decisión de la Federación: `<TODO — Human-in-the-Loop>`.
+- **Acceso a notas clínicas** (decisión FPV, issue #25): además del psicólogo tratante, el **coordinador/admin**
+  puede leer el contenido clínico, pero toda lectura se **audita** (`clinical_note_read`). La **PII de contacto**
+  (nombre/teléfono) permanece restringida al psicólogo asignado.
+- La política exacta de **retención** de lo Restringido sigue siendo decisión de la Federación: `<TODO — Human-in-the-Loop>`.
