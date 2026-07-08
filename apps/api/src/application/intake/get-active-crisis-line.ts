@@ -1,11 +1,11 @@
-import type { AppConfig } from '../../config';
-import type { CrisisLine, CrisisLineRepository } from '../../domain/crisis-line/crisis-line';
+import type { AppConfig } from '../../config/index.js';
+import type { CrisisLine, CrisisLineRepository } from '../../domain/crisis-line/crisis-line.js';
 import {
   selectActiveCrisisLine,
   type ActiveCrisisLine,
   type BackupLine,
   type RoutingLine,
-} from './crisis-line-routing';
+} from './crisis-line-routing.js';
 
 /**
  * Returns the crisis line active for the current hour plus the backup lines,

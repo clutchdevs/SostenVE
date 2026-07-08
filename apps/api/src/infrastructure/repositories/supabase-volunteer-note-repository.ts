@@ -3,7 +3,7 @@ import type {
   NewVolunteerNote,
   VolunteerNote,
   VolunteerNoteRepository,
-} from '../../domain/volunteer/volunteer-note';
+} from '../../domain/volunteer/volunteer-note.js';
 
 interface VolunteerNoteRow {
   id: string;

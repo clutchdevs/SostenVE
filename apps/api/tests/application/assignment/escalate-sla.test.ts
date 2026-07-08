@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { escalateOverdueCases } from '../../../src/application/assignment/escalate-sla';
-import { logger } from '../../../src/shared/logger';
-import { RiskLevel } from '../../../src/domain/triage';
-import type { CaseRecord } from '../../../src/domain/case/case';
-import type { Volunteer } from '../../../src/domain/volunteer/volunteer';
-import type { AssignmentDeps } from '../../../src/application/assignment/ports';
+import { escalateOverdueCases } from '../../../src/application/assignment/escalate-sla.js';
+import { logger } from '../../../src/shared/logger.js';
+import { RiskLevel } from '../../../src/domain/triage/index.js';
+import type { CaseRecord } from '../../../src/domain/case/case.js';
+import type { Volunteer } from '../../../src/domain/volunteer/volunteer.js';
+import type { AssignmentDeps } from '../../../src/application/assignment/ports.js';
 
 function highRiskCase(id: string): CaseRecord {
   return {

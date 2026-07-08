@@ -3,7 +3,7 @@ import type {
   NewPasswordResetToken,
   PasswordResetToken,
   PasswordResetTokenRepository,
-} from '../../domain/volunteer/password-reset';
+} from '../../domain/volunteer/password-reset.js';
 
 interface ResetTokenRow {
   id: string;

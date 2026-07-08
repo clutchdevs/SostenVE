@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
-import { UnauthorizedError } from '../errors/api-error';
-import type { RevocationStore } from './token-revocation';
+import { UnauthorizedError } from '../errors/api-error.js';
+import type { RevocationStore } from './token-revocation.js';
 
 /**
  * JWT signing/verification with `jose` (see ADR-0005).

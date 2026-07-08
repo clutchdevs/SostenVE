@@ -1,7 +1,7 @@
-import { generatePseudonymId } from '../../domain/identity/pseudonym';
-import { RED_BRANCH_URGENCY, RiskLevel } from '../../domain/triage';
-import { getActiveCrisisLine } from './get-active-crisis-line';
-import type { IntakeCaseResult, IntakeDeps } from './types';
+import { generatePseudonymId } from '../../domain/identity/pseudonym.js';
+import { RED_BRANCH_URGENCY, RiskLevel } from '../../domain/triage/index.js';
+import { getActiveCrisisLine } from './get-active-crisis-line.js';
+import type { IntakeCaseResult, IntakeDeps } from './types.js';
 
 export type RedBranchSubChannel = 'llamar' | 'recibir-llamada' | 'whatsapp-silencioso';
 

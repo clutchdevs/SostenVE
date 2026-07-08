@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generatePseudonymId } from '../../../src/domain/identity/pseudonym';
+import { generatePseudonymId } from '../../../src/domain/identity/pseudonym.js';
 
 const SALT = 'test-secret-salt';
 

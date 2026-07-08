@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { getConfig } from '../../../src/config';
+import { getConfig } from '../../../src/config/index.js';
 import {
   requestPasswordReset,
   resetPassword,
-} from '../../../src/application/volunteer/reset-password';
-import { hashToken } from '../../../src/shared/security/invitation-token';
-import type { AuditEntry, AuditLogRepository } from '../../../src/domain/audit/audit';
+} from '../../../src/application/volunteer/reset-password.js';
+import { hashToken } from '../../../src/shared/security/invitation-token.js';
+import type { AuditEntry, AuditLogRepository } from '../../../src/domain/audit/audit.js';
 import type {
   NewPasswordResetToken,
   PasswordResetToken,
   PasswordResetTokenRepository,
-} from '../../../src/domain/volunteer/password-reset';
-import type { Notifier, PasswordResetNotification } from '../../../src/application/volunteer/ports';
-import type { Volunteer, VolunteerRepository, VolunteerStatus } from '../../../src/domain/volunteer/volunteer';
+} from '../../../src/domain/volunteer/password-reset.js';
+import type { Notifier, PasswordResetNotification } from '../../../src/application/volunteer/ports.js';
+import type { Volunteer, VolunteerRepository, VolunteerStatus } from '../../../src/domain/volunteer/volunteer.js';
 
 function volunteer(status: VolunteerStatus): Volunteer {
   return {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DomainError } from '../../../src/domain/shared/domain-error';
+import { DomainError } from '../../../src/domain/shared/domain-error.js';
 import {
   assertCanDiagnoseTept,
   canDiagnoseTept,
   daysBetween,
-} from '../../../src/domain/clinical/tept-rule';
+} from '../../../src/domain/clinical/tept-rule.js';
 
 const BLOCK_DAYS = 30;
 const EVENT = new Date('2026-06-24T00:00:00Z');

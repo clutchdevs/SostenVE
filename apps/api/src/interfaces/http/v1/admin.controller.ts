@@ -1,21 +1,21 @@
 import { Hono } from 'hono';
-import { queryAuditLog } from '../../../application/audit/query-audit-log';
+import { queryAuditLog } from '../../../application/audit/query-audit-log.js';
 import {
   createCrisisLine,
   deactivateCrisisLine,
   listCrisisLines,
   updateCrisisLine,
-} from '../../../application/crisis-line/manage-crisis-lines';
+} from '../../../application/crisis-line/manage-crisis-lines.js';
 import {
   inviteCoordinator,
   listInvitations,
   revokeInvitation,
-} from '../../../application/coordinator/manage-invitations';
-import type { CrisisLineUpdate } from '../../../domain/crisis-line/crisis-line';
-import { getAuthUser, requireAuth } from '../middleware/auth';
-import { getValidated, validateBody, validateQuery } from '../middleware/validate';
-import { getAdminContainer, getAssignmentSettingsRepo } from './dependencies';
-import { presentAuditEntry, presentCrisisLineAdmin, presentInvitation } from './presenters';
+} from '../../../application/coordinator/manage-invitations.js';
+import type { CrisisLineUpdate } from '../../../domain/crisis-line/crisis-line.js';
+import { getAuthUser, requireAuth } from '../middleware/auth.js';
+import { getValidated, validateBody, validateQuery } from '../middleware/validate.js';
+import { getAdminContainer, getAssignmentSettingsRepo } from './dependencies.js';
+import { presentAuditEntry, presentCrisisLineAdmin, presentInvitation } from './presenters.js';
 import {
   assignmentSettingsSchema,
   auditQuerySchema,
@@ -27,7 +27,7 @@ import {
   type CoordinatorInviteBody,
   type CrisisLineCreateBody,
   type CrisisLineUpdateBody,
-} from './schemas';
+} from './schemas.js';
 
 /** Maps the Spanish update body to the domain patch (only present keys). */
 function toUpdate(body: CrisisLineUpdateBody): CrisisLineUpdate {

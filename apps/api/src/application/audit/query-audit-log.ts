@@ -1,4 +1,4 @@
-import type { AuditLogQuery, AuditLogReader, AuditPage } from '../../domain/audit/audit';
+import type { AuditLogQuery, AuditLogReader, AuditPage } from '../../domain/audit/audit.js';
 
 export interface QueryAuditLogDeps {
   reader: AuditLogReader;

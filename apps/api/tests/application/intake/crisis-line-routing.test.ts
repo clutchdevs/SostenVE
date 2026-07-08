@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectActiveCrisisLine } from '../../../src/application/intake/crisis-line-routing';
+import { selectActiveCrisisLine } from '../../../src/application/intake/crisis-line-routing.js';
 
 const routing = [
   { name: 'LAPSI', start_hour: 8, end_hour: 26, phone: '+584242907338' },

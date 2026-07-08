@@ -1,12 +1,12 @@
-import { ApiError } from '../../shared/errors/api-error';
-import { hashPassword } from '../../shared/security/password';
-import { generateInvitationToken, hashToken } from '../../shared/security/invitation-token';
-import { isRedeemable } from '../../domain/volunteer/password-reset';
-import type { AppConfig } from '../../config';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { PasswordResetTokenRepository } from '../../domain/volunteer/password-reset';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
-import type { Notifier } from './ports';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { hashPassword } from '../../shared/security/password.js';
+import { generateInvitationToken, hashToken } from '../../shared/security/invitation-token.js';
+import { isRedeemable } from '../../domain/volunteer/password-reset.js';
+import type { AppConfig } from '../../config/index.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { PasswordResetTokenRepository } from '../../domain/volunteer/password-reset.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { Notifier } from './ports.js';
 
 /** Dependencies for requesting a password reset (RF-2.2.4, issue #36). */
 export interface RequestPasswordResetDeps {

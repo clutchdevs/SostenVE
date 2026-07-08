@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { getCapacity } from '../../../application/coordinator/capacity';
-import { requireAuth } from '../middleware/auth';
-import { getCaseDeps } from './dependencies';
+import { getCapacity } from '../../../application/coordinator/capacity.js';
+import { requireAuth } from '../middleware/auth.js';
+import { getCaseDeps } from './dependencies.js';
 
 /** Coordinator panel endpoints. */
 export function createCoordinatorRouter(): Hono {

@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { getConfig } from '../../../src/config';
-import { loginVolunteer } from '../../../src/application/volunteer/login-volunteer';
-import { hashPassword } from '../../../src/shared/security/password';
-import type { Volunteer, VolunteerRepository, VolunteerStatus } from '../../../src/domain/volunteer/volunteer';
+import { getConfig } from '../../../src/config/index.js';
+import { loginVolunteer } from '../../../src/application/volunteer/login-volunteer.js';
+import { hashPassword } from '../../../src/shared/security/password.js';
+import type { Volunteer, VolunteerRepository, VolunteerStatus } from '../../../src/domain/volunteer/volunteer.js';
 
 const PASSWORD = 'a-strong-password';
 let passwordHash = '';

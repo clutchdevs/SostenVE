@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { app } from '../../../api/index';
+import { app } from '../../../api/index.js';
 
 describe('OpenAPI document & Swagger UI', () => {
   it('serves a valid OpenAPI 3.1 document covering all endpoints', async () => {

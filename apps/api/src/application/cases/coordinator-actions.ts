@@ -1,11 +1,11 @@
-import { ApiError } from '../../shared/errors/api-error';
-import { RiskLevel } from '../../domain/triage';
-import type { AppConfig } from '../../config';
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { CaseRepository } from '../../domain/case/case';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
-import type { AssignmentNotifier } from '../assignment/ports';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { RiskLevel } from '../../domain/triage/index.js';
+import type { AppConfig } from '../../config/index.js';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { CaseRepository } from '../../domain/case/case.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { AssignmentNotifier } from '../assignment/ports.js';
 
 /** Who performed the coordinator action (recorded in the audit log). */
 export interface CoordinatorActor {

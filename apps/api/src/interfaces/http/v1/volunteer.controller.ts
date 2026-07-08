@@ -1,20 +1,20 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { registerVolunteer } from '../../../application/volunteer/register-volunteer';
-import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer';
-import { assignPendingCases } from '../../../application/assignment/assign-cases';
-import { logger } from '../../../shared/logger';
+import { getConfig } from '../../../config/index.js';
+import { registerVolunteer } from '../../../application/volunteer/register-volunteer.js';
+import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer.js';
+import { assignPendingCases } from '../../../application/assignment/assign-cases.js';
+import { logger } from '../../../shared/logger.js';
 import {
   addVolunteerNote,
   listVolunteerNotes,
-} from '../../../application/volunteer/manage-volunteer-notes';
-import type { Volunteer, VolunteerDetail, VolunteerStatus } from '../../../domain/volunteer/volunteer';
-import type { VolunteerNote } from '../../../domain/volunteer/volunteer-note';
-import { ApiError } from '../../../shared/errors/api-error';
-import { requireAuth, getAuthUser } from '../middleware/auth';
-import { rateLimit } from '../middleware/rate-limit';
-import { getValidated, validateBody } from '../middleware/validate';
-import { getAssignmentDeps, getPresenceStore, getVolunteerContainer } from './dependencies';
+} from '../../../application/volunteer/manage-volunteer-notes.js';
+import type { Volunteer, VolunteerDetail, VolunteerStatus } from '../../../domain/volunteer/volunteer.js';
+import type { VolunteerNote } from '../../../domain/volunteer/volunteer-note.js';
+import { ApiError } from '../../../shared/errors/api-error.js';
+import { requireAuth, getAuthUser } from '../middleware/auth.js';
+import { rateLimit } from '../middleware/rate-limit.js';
+import { getValidated, validateBody } from '../middleware/validate.js';
+import { getAssignmentDeps, getPresenceStore, getVolunteerContainer } from './dependencies.js';
 import {
   presenceSchema,
   registerVolunteerSchema,
@@ -22,7 +22,7 @@ import {
   type PresenceBody,
   type RegisterVolunteerBody,
   type VolunteerNoteBody,
-} from './schemas';
+} from './schemas.js';
 
 const STATUS_TO_VALIDATION: Record<VolunteerStatus, string> = {
   active: 'validado',

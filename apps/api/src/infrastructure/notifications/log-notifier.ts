@@ -3,8 +3,8 @@ import type {
   Notifier,
   PasswordResetNotification,
   RegistrationNotification,
-} from '../../application/volunteer/ports';
-import { logger } from '../../shared/logger';
+} from '../../application/volunteer/ports.js';
+import { logger } from '../../shared/logger.js';
 
 /**
  * Notifier stand-in that logs the notification (PII redacted by the logger)

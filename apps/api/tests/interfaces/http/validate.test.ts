@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler';
-import { getValidated, validateBody } from '../../../src/interfaces/http/middleware/validate';
+import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler.js';
+import { getValidated, validateBody } from '../../../src/interfaces/http/middleware/validate.js';
 
 const schema = z.object({ name: z.string().min(1) });
 

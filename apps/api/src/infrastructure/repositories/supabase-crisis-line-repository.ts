@@ -4,7 +4,7 @@ import type {
   CrisisLineRepository,
   CrisisLineUpdate,
   NewCrisisLine,
-} from '../../domain/crisis-line/crisis-line';
+} from '../../domain/crisis-line/crisis-line.js';
 
 interface CrisisLineRow {
   id: string;

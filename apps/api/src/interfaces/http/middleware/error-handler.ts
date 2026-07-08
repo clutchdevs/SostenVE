@@ -1,8 +1,8 @@
 import type { Context } from 'hono';
 import { ZodError } from 'zod';
-import { ApiError, ValidationError } from '../../../shared/errors/api-error';
-import { DomainError } from '../../../domain/shared/domain-error';
-import { logger } from '../../../shared/logger';
+import { ApiError, ValidationError } from '../../../shared/errors/api-error.js';
+import { DomainError } from '../../../domain/shared/domain-error.js';
+import { logger } from '../../../shared/logger.js';
 
 interface ErrorBody {
   error: { code: string; message: string; details?: unknown };

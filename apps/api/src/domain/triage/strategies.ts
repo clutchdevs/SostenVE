@@ -1,7 +1,7 @@
-import type { RiskClassificationStrategy } from './classification-strategy';
-import { RiskLevel } from './risk-level';
-import { Severity } from './severity';
-import { countBySeverity, hasSeverity } from './symptom-tag';
+import type { RiskClassificationStrategy } from './classification-strategy.js';
+import { RiskLevel } from './risk-level.js';
+import { Severity } from './severity.js';
+import { countBySeverity, hasSeverity } from './symptom-tag.js';
 
 /**
  * Risk-classification strategies (interruption rule from flujo-central.md §1.5).

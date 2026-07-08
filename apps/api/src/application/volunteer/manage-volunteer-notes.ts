@@ -1,11 +1,11 @@
-import { ApiError } from '../../shared/errors/api-error';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
+import { ApiError } from '../../shared/errors/api-error.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 import type {
   VolunteerNote,
   VolunteerNoteRepository,
-} from '../../domain/volunteer/volunteer-note';
-import type { Actor } from './manage-volunteer';
+} from '../../domain/volunteer/volunteer-note.js';
+import type { Actor } from './manage-volunteer.js';
 
 export interface VolunteerNotesDeps {
   notes: VolunteerNoteRepository;

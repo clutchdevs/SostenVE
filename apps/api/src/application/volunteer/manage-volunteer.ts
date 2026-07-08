@@ -1,9 +1,9 @@
-import { ApiError } from '../../shared/errors/api-error';
-import { generatePassword, hashPassword } from '../../shared/security/password';
-import { logger } from '../../shared/logger';
-import type { AuditLogRepository } from '../../domain/audit/audit';
-import type { Volunteer, VolunteerRepository } from '../../domain/volunteer/volunteer';
-import type { Notifier } from './ports';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { generatePassword, hashPassword } from '../../shared/security/password.js';
+import { logger } from '../../shared/logger.js';
+import type { AuditLogRepository } from '../../domain/audit/audit.js';
+import type { Volunteer, VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { Notifier } from './ports.js';
 
 export interface ManageVolunteerDeps {
   volunteers: VolunteerRepository;

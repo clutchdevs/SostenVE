@@ -1,6 +1,6 @@
-import { ApiError } from '../../shared/errors/api-error';
-import type { CaseDetail } from './get-case';
-import type { CaseDeps } from './ports';
+import { ApiError } from '../../shared/errors/api-error.js';
+import type { CaseDetail } from './get-case.js';
+import type { CaseDeps } from './ports.js';
 
 export interface CoordinatorActor {
   id: string;

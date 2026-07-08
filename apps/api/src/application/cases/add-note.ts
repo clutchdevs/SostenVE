@@ -1,9 +1,9 @@
-import { assertCanDiagnoseTept } from '../../domain/clinical/tept-rule';
-import { ReferralType, resolveReferral, type ReferralDecision } from '../../domain/clinical/acute-psychotic-crisis';
-import { RiskLevel } from '../../domain/triage';
-import type { ClinicalNote } from '../../domain/clinical/clinical-note';
-import { assertOwnership } from './get-case';
-import type { CaseDeps } from './ports';
+import { assertCanDiagnoseTept } from '../../domain/clinical/tept-rule.js';
+import { ReferralType, resolveReferral, type ReferralDecision } from '../../domain/clinical/acute-psychotic-crisis.js';
+import { RiskLevel } from '../../domain/triage/index.js';
+import type { ClinicalNote } from '../../domain/clinical/clinical-note.js';
+import { assertOwnership } from './get-case.js';
+import type { CaseDeps } from './ports.js';
 
 export interface AddNoteInput {
   diagnosis?: string;

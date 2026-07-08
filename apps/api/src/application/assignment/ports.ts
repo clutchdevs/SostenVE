@@ -1,8 +1,8 @@
-import type { AssignmentRepository } from '../../domain/assignment/assignment';
-import type { AssignmentSettingsRepository } from '../../domain/assignment/assignment-settings';
-import type { CaseRepository } from '../../domain/case/case';
-import type { VolunteerRepository } from '../../domain/volunteer/volunteer';
-import type { PresenceStore } from '../presence/ports';
+import type { AssignmentRepository } from '../../domain/assignment/assignment.js';
+import type { AssignmentSettingsRepository } from '../../domain/assignment/assignment-settings.js';
+import type { CaseRepository } from '../../domain/case/case.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { PresenceStore } from '../presence/ports.js';
 
 /** Notifies the assigned volunteer / the coordinators on escalation (Adapter). */
 export interface AssignmentNotifier {

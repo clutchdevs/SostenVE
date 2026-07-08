@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { swaggerUI } from '@hono/swagger-ui';
-import { buildOpenApiDocument } from '../openapi-document';
+import { buildOpenApiDocument } from '../openapi-document.js';
 
 /**
  * Serves the OpenAPI document and an interactive Swagger UI for all endpoints.

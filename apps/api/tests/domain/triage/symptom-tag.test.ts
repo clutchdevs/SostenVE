@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DomainError } from '../../../src/domain/shared/domain-error';
+import { DomainError } from '../../../src/domain/shared/domain-error.js';
 import {
   countBySeverity,
   createSymptomTag,
   hasSeverity,
-} from '../../../src/domain/triage/symptom-tag';
-import { Severity } from '../../../src/domain/triage/severity';
+} from '../../../src/domain/triage/symptom-tag.js';
+import { Severity } from '../../../src/domain/triage/severity.js';
 
 describe('createSymptomTag', () => {
   it('creates a frozen, immutable tag', () => {

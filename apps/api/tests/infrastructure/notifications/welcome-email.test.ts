@@ -4,7 +4,7 @@ import {
   buildPasswordResetEmail,
   buildPendingEmail,
   buildWelcomeEmail,
-} from '../../../src/infrastructure/notifications/welcome-email';
+} from '../../../src/infrastructure/notifications/welcome-email.js';
 
 describe('welcome email', () => {
   it('includes the temporary password and the login URL in text and HTML (RF-2.2.4)', () => {

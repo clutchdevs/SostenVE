@@ -1,4 +1,4 @@
-import type { PresenceStore } from '../../application/presence/ports';
+import type { PresenceStore } from '../../application/presence/ports.js';
 
 /**
  * In-memory presence store for local dev and tests. Holds each volunteer's

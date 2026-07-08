@@ -3,9 +3,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import {
   configureSessionValidation,
   requireAuth,
-} from '../../../src/interfaces/http/middleware/auth';
-import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler';
-import { signToken } from '../../../src/shared/security/jwt';
+} from '../../../src/interfaces/http/middleware/auth.js';
+import { errorHandler } from '../../../src/interfaces/http/middleware/error-handler.js';
+import { signToken } from '../../../src/shared/security/jwt.js';
 
 /**
  * In-place session destruction (RF-2.7): once session validation is configured,

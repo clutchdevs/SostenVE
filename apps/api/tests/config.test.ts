@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getConfig } from '../src/config';
+import { getConfig } from '../src/config/index.js';
 
 describe('config singleton', () => {
   it('loads and validates the configuration', () => {

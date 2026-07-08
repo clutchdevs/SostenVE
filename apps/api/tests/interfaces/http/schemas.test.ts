@@ -5,7 +5,7 @@ import {
   isValidDocumentNumber,
   registerVolunteerSchema,
   venezuelanPhoneSchema,
-} from '../../../src/interfaces/http/v1/schemas';
+} from '../../../src/interfaces/http/v1/schemas.js';
 
 describe('venezuelanPhoneSchema', () => {
   it('accepts mobile carrier prefixes (tolerant of separators / +58)', () => {

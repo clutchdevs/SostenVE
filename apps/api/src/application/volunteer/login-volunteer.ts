@@ -1,8 +1,8 @@
-import { UnauthorizedError } from '../../shared/errors/api-error';
-import { verifyPassword } from '../../shared/security/password';
-import { signToken } from '../../shared/security/jwt';
-import type { AppConfig } from '../../config';
-import type { VolunteerRepository, VolunteerRole } from '../../domain/volunteer/volunteer';
+import { UnauthorizedError } from '../../shared/errors/api-error.js';
+import { verifyPassword } from '../../shared/security/password.js';
+import { signToken } from '../../shared/security/jwt.js';
+import type { AppConfig } from '../../config/index.js';
+import type { VolunteerRepository, VolunteerRole } from '../../domain/volunteer/volunteer.js';
 
 export interface LoginInput {
   email: string;

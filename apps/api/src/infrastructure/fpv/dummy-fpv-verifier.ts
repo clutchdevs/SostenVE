@@ -2,7 +2,7 @@ import type {
   FpvVerificationInput,
   FpvVerificationResult,
   FpvVerifier,
-} from '../../application/volunteer/ports';
+} from '../../application/volunteer/ports.js';
 
 /**
  * Dummy FPV verifier — ALWAYS approves.

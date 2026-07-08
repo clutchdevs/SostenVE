@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { changePassword } from '../../../src/application/volunteer/change-password';
-import { hashPassword } from '../../../src/shared/security/password';
-import type { AuditEntry, AuditLogRepository } from '../../../src/domain/audit/audit';
-import type { Volunteer, VolunteerRepository } from '../../../src/domain/volunteer/volunteer';
+import { changePassword } from '../../../src/application/volunteer/change-password.js';
+import { hashPassword } from '../../../src/shared/security/password.js';
+import type { AuditEntry, AuditLogRepository } from '../../../src/domain/audit/audit.js';
+import type { Volunteer, VolunteerRepository } from '../../../src/domain/volunteer/volunteer.js';
 
 const CURRENT = 'current-password';
 

@@ -1,24 +1,24 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
-import { getConfig } from '../src/config';
-import { buildCors } from '../src/interfaces/http/middleware/cors';
-import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security-headers';
-import { errorHandler } from '../src/interfaces/http/middleware/error-handler';
-import { createIntakeRouter } from '../src/interfaces/http/v1/intake.controller';
-import { createCrisisLinesRouter } from '../src/interfaces/http/v1/crisis-lines.controller';
-import { createConsentRouter } from '../src/interfaces/http/v1/consent.controller';
-import { createPapRouter } from '../src/interfaces/http/v1/pap.controller';
-import { createVolunteerRouter } from '../src/interfaces/http/v1/volunteer.controller';
-import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller';
-import { createCronRouter } from '../src/interfaces/http/v1/cron.controller';
-import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller';
-import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller';
-import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coordinator-onboarding.controller';
-import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller';
-import { createMonitoringRouter } from '../src/interfaces/http/v1/monitoring.controller';
-import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller';
-import { configureSessionValidation } from '../src/interfaces/http/middleware/auth';
-import { getVolunteerContainer } from '../src/interfaces/http/v1/dependencies';
+import { getConfig } from '../src/config/index.js';
+import { buildCors } from '../src/interfaces/http/middleware/cors.js';
+import { buildSecurityHeaders } from '../src/interfaces/http/middleware/security-headers.js';
+import { errorHandler } from '../src/interfaces/http/middleware/error-handler.js';
+import { createIntakeRouter } from '../src/interfaces/http/v1/intake.controller.js';
+import { createCrisisLinesRouter } from '../src/interfaces/http/v1/crisis-lines.controller.js';
+import { createConsentRouter } from '../src/interfaces/http/v1/consent.controller.js';
+import { createPapRouter } from '../src/interfaces/http/v1/pap.controller.js';
+import { createVolunteerRouter } from '../src/interfaces/http/v1/volunteer.controller.js';
+import { createAuthRouter } from '../src/interfaces/http/v1/auth.controller.js';
+import { createCronRouter } from '../src/interfaces/http/v1/cron.controller.js';
+import { createCasesRouter } from '../src/interfaces/http/v1/cases.controller.js';
+import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.controller.js';
+import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coordinator-onboarding.controller.js';
+import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller.js';
+import { createMonitoringRouter } from '../src/interfaces/http/v1/monitoring.controller.js';
+import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller.js';
+import { configureSessionValidation } from '../src/interfaces/http/middleware/auth.js';
+import { getVolunteerContainer } from '../src/interfaces/http/v1/dependencies.js';
 
 /**
  * API entry point. All routes are versioned under `/api/v1` (see CONTRIBUTING.md).

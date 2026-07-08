@@ -1,22 +1,22 @@
 import { Hono } from 'hono';
-import { getConfig } from '../../../config';
-import { classifyInitialBranch } from '../../../application/intake/triage-initial';
-import { submitRedBranch } from '../../../application/intake/submit-red-branch';
-import { submitGreenBranch } from '../../../application/intake/submit-green-branch';
-import { withIdempotency } from '../../../application/intake/idempotency';
-import { assignPendingCases } from '../../../application/assignment/assign-cases';
-import { logger } from '../../../shared/logger';
-import type { IntakeCaseResult } from '../../../application/intake/types';
+import { getConfig } from '../../../config/index.js';
+import { classifyInitialBranch } from '../../../application/intake/triage-initial.js';
+import { submitRedBranch } from '../../../application/intake/submit-red-branch.js';
+import { submitGreenBranch } from '../../../application/intake/submit-green-branch.js';
+import { withIdempotency } from '../../../application/intake/idempotency.js';
+import { assignPendingCases } from '../../../application/assignment/assign-cases.js';
+import { logger } from '../../../shared/logger.js';
+import type { IntakeCaseResult } from '../../../application/intake/types.js';
 import {
   branchToDb,
   contactMethodFromDb,
   modalityFromDb,
   requesterFromDb,
-} from '../../../infrastructure/repositories/enum-maps';
-import { rateLimit } from '../middleware/rate-limit';
-import { getValidated, validateBody } from '../middleware/validate';
-import { getAssignmentDeps, getIntakeContainer } from './dependencies';
-import { presentIntakeResult } from './presenters';
+} from '../../../infrastructure/repositories/enum-maps.js';
+import { rateLimit } from '../middleware/rate-limit.js';
+import { getValidated, validateBody } from '../middleware/validate.js';
+import { getAssignmentDeps, getIntakeContainer } from './dependencies.js';
+import { presentIntakeResult } from './presenters.js';
 import {
   greenBranchSchema,
   redBranchSchema,
@@ -24,7 +24,7 @@ import {
   type GreenBranchBody,
   type RedBranchBody,
   type TriageInitialBody,
-} from './schemas';
+} from './schemas.js';
 
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 

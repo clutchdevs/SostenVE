@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { signToken, verifyToken } from '../../src/shared/security/jwt';
-import { InMemoryRevocationStore } from '../../src/shared/security/token-revocation';
+import { signToken, verifyToken } from '../../src/shared/security/jwt.js';
+import { InMemoryRevocationStore } from '../../src/shared/security/token-revocation.js';
 
 const CLAIMS = { sub: 'user-1', role: 'psychologist', tokenVersion: 1 };
 

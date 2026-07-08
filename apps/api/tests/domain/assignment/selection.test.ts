@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { selectVolunteerForCase } from '../../../src/domain/assignment/selection';
-import type { LoadContext } from '../../../src/domain/assignment/selection';
-import type { Volunteer } from '../../../src/domain/volunteer/volunteer';
+import { selectVolunteerForCase } from '../../../src/domain/assignment/selection.js';
+import type { LoadContext } from '../../../src/domain/assignment/selection.js';
+import type { Volunteer } from '../../../src/domain/volunteer/volunteer.js';
 
 function volunteer(id: string, specialty?: string): Volunteer {
   return {
