@@ -9,31 +9,33 @@
 # native modules (e.g. @node-rs/argon2) are built for Linux regardless of the
 # host OS. API/Web reuse those volumes and just run their dev servers.
 #
-# Default secrets/keys below are LOCAL-DEV ONLY (Supabase CLI demo values).
+# All values below come from the root `.env` (copy it from `.env.example`).
+# Nothing is hardcoded here: a stale edit can't ship weak dev keys, and there
+# is one place to look for config. In PRODUCTION neither this file nor `.env`
+# is used — env vars are set in Vercel.
 
 x-node-env: &node-env
-  SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
-  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
-  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
-  DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:54322/postgres}
-  JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-at-least-32-bytes!!}
-  PSEUDONYMIZATION_SALT: ${PSEUDONYMIZATION_SALT:-local-dev-pseudonym-salt}
-  # MUST decode to exactly 32 bytes (AES-256). base64 of "local-dev-32-byte-encryption-key".
-  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-bG9jYWwtZGV2LTMyLWJ5dGUtZW5jcnlwdGlvbi1rZXk=}
-  CRON_SECRET: ${CRON_SECRET:-local-dev-cron-secret}
+  SUPABASE_URL: ${SUPABASE_URL}
+  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+  DATABASE_URL: ${DATABASE_URL}
+  JWT_SECRET: ${JWT_SECRET}
+  PSEUDONYMIZATION_SALT: ${PSEUDONYMIZATION_SALT}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  CRON_SECRET: ${CRON_SECRET}
   # Email (SMTP) — pass through from the host env / root .env so a real provider
   # (e.g. Gmail) can be enabled for local testing. Empty by default → the app
   # keeps the offline "log" notifier. See .env.example.
-  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
-  SMTP_HOST: ${SMTP_HOST:-}
-  SMTP_PORT: ${SMTP_PORT:-}
-  SMTP_USERNAME: ${SMTP_USERNAME:-}
-  SMTP_FROM: ${SMTP_FROM:-}
-  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_USERNAME: ${SMTP_USERNAME}
+  SMTP_FROM: ${SMTP_FROM}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
   # FPV padrón API token (X-API-TOKEN) used by HttpFpvVerifier for validate +
   # psicologo. Empty by default; set FPV_API_TOKEN in the root .env to enable the
   # real padrón validation (and volunteer auto-approval). See .env.example.
-  FPV_API_TOKEN: ${FPV_API_TOKEN:-}
+  FPV_API_TOKEN: ${FPV_API_TOKEN}
 
 services:
   installer:
