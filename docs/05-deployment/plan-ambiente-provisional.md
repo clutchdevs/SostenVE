@@ -93,6 +93,15 @@ curl -s -X POST $API/cron/check-sla -H "Authorization: Bearer $CRON_SECRET"   # 
 - Registra un psicólogo real → se valida contra el **padrón FPV** → `FPV_API_TOKEN` OK.
 - El cron de Vercel corre cada 2 min (ver logs) → presencia (Upstash) + asignación funcionan.
 
+## Nota: cron en el plan Hobby (gratis) de Vercel
+Vercel Hobby solo permite cron **1 vez al día**, así que `vercel.json` usa `0 0 * * *` (diario). El motor de
+asignación es **orientado a eventos** (al crear el caso / al ponerse online un psicólogo), por lo que el
+cron es solo **red de seguridad** (escalado de SLA + reintentos) — el flujo principal no depende de él.
+- **Para el barrido real cada 2 min sin pagar Pro:** usa un **cron externo gratis** (p. ej.
+  [cron-job.org](https://cron-job.org)) que haga `GET https://TU-API.vercel.app/api/v1/cron/check-sla`
+  con el header `Authorization: Bearer <CRON_SECRET>` cada 2 minutos.
+- **Al pasar a Vercel Pro:** vuelve a poner `*/2 * * * *` en `vercel.json` y quita el cron externo.
+
 ## Checklist rápido
 - [ ] Cuentas creadas (Supabase, Upstash, SMTP, token FPV).
 - [ ] `npm run gen:secrets` → secretos en Vercel (staging).
