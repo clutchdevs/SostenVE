@@ -7,6 +7,10 @@ import { ChevronRight, Inbox } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../src/features/psychologist-portal/psychologist-case-card';
 import {
+  CaseListSkeleton,
+  KpiCardSkeleton,
+} from '../../src/features/psychologist-portal/case-skeletons';
+import {
   greeting,
   isActiveCase,
   sortByUrgency,
@@ -64,9 +68,19 @@ export default function PsychologistHome() {
 
       {/* KPI cards */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard value={summary.nuevos} label="Nuevo · acepta en <5 min" tone="orange" />
-        <KpiCard value={summary.enCurso} label="En curso" tone="blue" />
-        <KpiCard value={summary.atendidosMes} label="Atendidos este mes" tone="dark" />
+        {loaded ? (
+          <>
+            <KpiCard value={summary.nuevos} label="Nuevo · acepta en <5 min" tone="orange" />
+            <KpiCard value={summary.enCurso} label="En curso" tone="blue" />
+            <KpiCard value={summary.atendidosMes} label="Atendidos este mes" tone="dark" />
+          </>
+        ) : (
+          <>
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+          </>
+        )}
       </section>
 
       {error && (
@@ -91,7 +105,9 @@ export default function PsychologistHome() {
             </Link>
           )}
         </div>
-        {preview.length > 0 ? (
+        {!loaded ? (
+          <CaseListSkeleton rows={3} />
+        ) : preview.length > 0 ? (
           <div className="space-y-3">
             {preview.map((caso) => (
               <PsychologistCaseCard
@@ -102,7 +118,7 @@ export default function PsychologistHome() {
             ))}
           </div>
         ) : (
-          loaded && !error && <EmptyState />
+          !error && <EmptyState />
         )}
       </section>
     </div>

@@ -10,6 +10,7 @@ import {
   type ClosureSubmission,
 } from '../../../../src/features/psychologist-portal/clinical-closure-form';
 import { CaseIdentityCard } from '../../../../src/features/psychologist-portal/case-identity-card';
+import { CaseDetailSkeleton } from '../../../../src/features/psychologist-portal/case-skeletons';
 import { ClosureSummary } from '../../../../src/features/psychologist-portal/closure-summary';
 import { apiFetch } from '../../../../src/lib/api-client';
 import type {
@@ -74,8 +75,16 @@ export default function CaseDetailPage() {
 
   if (!detail) {
     return (
-      <div className="mx-auto max-w-3xl">
-        <p className="text-slate-600">{message || 'Cargando…'}</p>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-400">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Volver a mis casos
+        </span>
+        {message ? (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-risk-high">{message}</p>
+        ) : (
+          <CaseDetailSkeleton />
+        )}
       </div>
     );
   }

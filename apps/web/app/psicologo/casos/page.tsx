@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FilterX, Search, SearchX } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../../src/features/psychologist-portal/psychologist-case-card';
+import { CaseListSkeleton } from '../../../src/features/psychologist-portal/case-skeletons';
 import {
   EMPTY_FILTERS,
   filterCases,
@@ -42,6 +43,7 @@ export default function CasesListPage() {
   const [filters, setFilters] = useState<CaseFilters>(EMPTY_FILTERS);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     apiFetch<CaseSummary[]>('/cases')
@@ -49,7 +51,8 @@ export default function CasesListPage() {
       .catch((err) => {
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
         else setError('No se pudieron cargar los casos. Intenta de nuevo.');
-      });
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   const results = useMemo(
@@ -128,10 +131,14 @@ export default function CasesListPage() {
       )}
 
       <section className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-          {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
-        </p>
-        {results.length > 0 ? (
+        {loaded && (
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+          </p>
+        )}
+        {!loaded ? (
+          <CaseListSkeleton rows={5} />
+        ) : results.length > 0 ? (
           results.map((caso) => (
             <PsychologistCaseCard
               key={caso.caso_id}
