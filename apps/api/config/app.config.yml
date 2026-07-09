@@ -231,10 +231,11 @@ production:
     name: "PPV"
     locale: "es-VE"
 
-  # Correo (RF-2.2.4). Las 3 URLs SOLO salen de aquí (no hay override por entorno).
-  # provider/from/host/port/username/password SÍ se sobreescriben con el entorno
-  # (EMAIL_PROVIDER, SMTP_*). Por el merge superficial de YAML se repite el bloque
-  # completo. REEMPLAZA las URLs por las de tu Web (provisional: la *.vercel.app).
+  # Correo (RF-2.2.4). Las 3 URLs de abajo son PLACEHOLDERS; en despliegue se
+  # rebasa su origen con la env var WEB_BASE_URL (p.ej. https://tu-web.vercel.app),
+  # conservando cada path. provider/from/host/port/username/password se
+  # sobreescriben con el entorno (EMAIL_PROVIDER, SMTP_*). Por el merge superficial
+  # de YAML se repite el bloque completo.
   email:
     provider: "smtp" # prod envía de verdad; requiere SMTP_* en el entorno de Vercel
     from: "PPV <no-reply@ppv.org.ve>"
