@@ -7,7 +7,12 @@ import { ChevronRight, Inbox } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../src/features/psychologist-portal/psychologist-case-card';
 import {
+  CaseListSkeleton,
+  KpiCardSkeleton,
+} from '../../src/features/psychologist-portal/case-skeletons';
+import {
   greeting,
+  isActiveCase,
   sortByUrgency,
   summarizeCaseload,
 } from '../../src/features/psychologist-portal/caseload';
@@ -35,7 +40,11 @@ export default function PsychologistHome() {
   }, []);
 
   const summary = useMemo(() => summarizeCaseload(cases), [cases]);
-  const ordered = useMemo(() => sortByUrgency(cases), [cases]);
+  // The dashboard surfaces the working queue: active cases only (assigned /
+  // accepted / in follow-up). Closed ones live under the "Cerrados" filter in
+  // "Mis casos", so they don't saturate the home list.
+  const active = useMemo(() => cases.filter(isActiveCase), [cases]);
+  const ordered = useMemo(() => sortByUrgency(active), [active]);
   const PREVIEW_LIMIT = 5;
   const preview = ordered.slice(0, PREVIEW_LIMIT);
 
@@ -59,9 +68,19 @@ export default function PsychologistHome() {
 
       {/* KPI cards */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard value={summary.nuevos} label="Nuevo · acepta en <5 min" tone="orange" />
-        <KpiCard value={summary.enCurso} label="En curso" tone="blue" />
-        <KpiCard value={summary.atendidosMes} label="Atendidos este mes" tone="dark" />
+        {loaded ? (
+          <>
+            <KpiCard value={summary.nuevos} label="Nuevo · acepta en <5 min" tone="orange" />
+            <KpiCard value={summary.enCurso} label="En curso" tone="blue" />
+            <KpiCard value={summary.atendidosMes} label="Atendidos este mes" tone="dark" />
+          </>
+        ) : (
+          <>
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+          </>
+        )}
       </section>
 
       {error && (
@@ -76,17 +95,19 @@ export default function PsychologistHome() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Casos asignados a ti
           </h2>
-          {cases.length > 0 && (
+          {active.length > 0 && (
             <Link
               href="/psicologo/casos"
               className="inline-flex items-center gap-1 text-sm font-medium text-navy hover:text-navy-hover"
             >
-              Ver todos ({cases.length})
+              Ver todos ({active.length})
               <ChevronRight className="h-4 w-4" aria-hidden />
             </Link>
           )}
         </div>
-        {preview.length > 0 ? (
+        {!loaded ? (
+          <CaseListSkeleton rows={3} />
+        ) : preview.length > 0 ? (
           <div className="space-y-3">
             {preview.map((caso) => (
               <PsychologistCaseCard
@@ -97,7 +118,7 @@ export default function PsychologistHome() {
             ))}
           </div>
         ) : (
-          loaded && !error && <EmptyState />
+          !error && <EmptyState />
         )}
       </section>
     </div>

@@ -183,8 +183,8 @@ default: &default
     # every `heartbeat_interval_seconds`. For upstash, set UPSTASH_REDIS_REST_URL
     # and UPSTASH_REDIS_REST_TOKEN in the environment.
     provider: "memory"
-    heartbeat_ttl_seconds: 65
-    heartbeat_interval_seconds: 30
+    heartbeat_ttl_seconds: 130
+    heartbeat_interval_seconds: 60
 
   rbac:
     roles: ["requester", "psychologist", "coordinator", "admin"]
@@ -252,5 +252,5 @@ production:
   # UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN en el entorno.
   presence:
     provider: "upstash"
-    heartbeat_ttl_seconds: 65
-    heartbeat_interval_seconds: 30
+    heartbeat_ttl_seconds: 130
+    heartbeat_interval_seconds: 60

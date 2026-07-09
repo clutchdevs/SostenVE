@@ -2,15 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Search, SearchX } from 'lucide-react';
+import { FilterX, Search, SearchX } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../../src/features/psychologist-portal/psychologist-case-card';
+import { CaseListSkeleton } from '../../../src/features/psychologist-portal/case-skeletons';
 import {
   EMPTY_FILTERS,
   filterCases,
   sortByUrgency,
   type BranchFilter,
   type CaseFilters,
+  type EstadoFilter,
   type RiskFilter,
 } from '../../../src/features/psychologist-portal/caseload';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
@@ -29,12 +31,19 @@ const BRANCH_TABS: { key: BranchFilter; label: string; dot?: string }[] = [
   { key: 'verde', label: 'Verde', dot: 'bg-emerald-500' },
 ];
 
+const ESTADO_TABS: { key: EstadoFilter; label: string; dot?: string }[] = [
+  { key: 'activos', label: 'Activos', dot: 'bg-emerald-500' },
+  { key: 'cerrados', label: 'Cerrados', dot: 'bg-slate-400' },
+  { key: 'todas', label: 'Todos' },
+];
+
 export default function CasesListPage() {
   const router = useRouter();
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [filters, setFilters] = useState<CaseFilters>(EMPTY_FILTERS);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     apiFetch<CaseSummary[]>('/cases')
@@ -42,13 +51,21 @@ export default function CasesListPage() {
       .catch((err) => {
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
         else setError('No se pudieron cargar los casos. Intenta de nuevo.');
-      });
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   const results = useMemo(
     () => sortByUrgency(filterCases(cases, filters)),
     [cases, filters],
   );
+
+  // "Dirty" whenever any filter departs from the default view (active + no search).
+  const isFiltered =
+    filters.search !== '' ||
+    filters.risk !== 'todas' ||
+    filters.branch !== 'todas' ||
+    filters.estado !== EMPTY_FILTERS.estado;
 
   if (needsAuth) return <AuthRequired />;
 
@@ -75,19 +92,35 @@ export default function CasesListPage() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <FilterGroup
-            legend="Riesgo"
-            tabs={RISK_TABS}
+        <div className="flex flex-wrap items-center gap-3">
+          <FilterSelect
+            label="Estado"
+            options={ESTADO_TABS}
+            value={filters.estado}
+            onChange={(estado) => setFilters((f) => ({ ...f, estado }))}
+          />
+          <FilterSelect
+            label="Riesgo"
+            options={RISK_TABS}
             value={filters.risk}
             onChange={(risk) => setFilters((f) => ({ ...f, risk }))}
           />
-          <FilterGroup
-            legend="Rama"
-            tabs={BRANCH_TABS}
+          <FilterSelect
+            label="Rama"
+            options={BRANCH_TABS}
             value={filters.branch}
             onChange={(branch) => setFilters((f) => ({ ...f, branch }))}
           />
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              <FilterX className="h-3.5 w-3.5" aria-hidden />
+              Limpiar filtros
+            </button>
+          )}
         </div>
       </div>
 
@@ -98,10 +131,14 @@ export default function CasesListPage() {
       )}
 
       <section className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-          {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
-        </p>
-        {results.length > 0 ? (
+        {loaded && (
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+          </p>
+        )}
+        {!loaded ? (
+          <CaseListSkeleton rows={5} />
+        ) : results.length > 0 ? (
           results.map((caso) => (
             <PsychologistCaseCard
               key={caso.caso_id}
@@ -117,41 +154,33 @@ export default function CasesListPage() {
   );
 }
 
-function FilterGroup<T extends string>({
-  legend,
-  tabs,
+function FilterSelect<T extends string>({
+  label,
+  options,
   value,
   onChange,
 }: {
-  legend: string;
-  tabs: { key: T; label: string; dot?: string }[];
+  label: string;
+  options: { key: T; label: string; dot?: string }[];
   value: T;
   onChange: (key: T) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{legend}</span>
-      <div className="flex flex-wrap gap-1.5">
-        {tabs.map((tab) => {
-          const active = tab.key === value;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => onChange(tab.key)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                active
-                  ? 'border-navy bg-navy text-white'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {tab.dot && <span className={`h-1.5 w-1.5 rounded-full ${tab.dot}`} aria-hidden />}
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <label className="inline-flex items-center gap-2">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        aria-label={label}
+        className="rounded-lg border border-slate-300 bg-white py-1.5 pl-2.5 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-navy focus:ring-2 focus:ring-navy/10"
+      >
+        {options.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

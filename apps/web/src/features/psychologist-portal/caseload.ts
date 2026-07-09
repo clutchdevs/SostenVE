@@ -127,14 +127,28 @@ export function sortByUrgency(cases: CaseSummary[]): CaseSummary[] {
 
 export type RiskFilter = 'todas' | 'riesgo_alto' | 'riesgo_moderado' | 'seguimiento';
 export type BranchFilter = 'todas' | 'roja' | 'verde';
+export type EstadoFilter = 'activos' | 'cerrados' | 'todas';
 
 export interface CaseFilters {
   search: string;
   risk: RiskFilter;
   branch: BranchFilter;
+  estado: EstadoFilter;
 }
 
-export const EMPTY_FILTERS: CaseFilters = { search: '', risk: 'todas', branch: 'todas' };
+/** A case is "active" while it is not closed (assigned / accepted / in follow-up). */
+export function isActiveCase(c: CaseSummary): boolean {
+  return c.estado !== 'cerrado';
+}
+
+// Default view hides closed cases so the working queue doesn't get saturated;
+// closed ones stay reachable via the "Cerrados" filter.
+export const EMPTY_FILTERS: CaseFilters = {
+  search: '',
+  risk: 'todas',
+  branch: 'todas',
+  estado: 'activos',
+};
 
 function matchesSearch(c: CaseSummary, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -153,6 +167,8 @@ function matchesSearch(c: CaseSummary, query: string): boolean {
 export function filterCases(cases: CaseSummary[], filters: CaseFilters): CaseSummary[] {
   return cases.filter(
     (c) =>
+      (filters.estado === 'todas' ||
+        (filters.estado === 'activos' ? isActiveCase(c) : !isActiveCase(c))) &&
       (filters.risk === 'todas' || c.nivel_riesgo === filters.risk) &&
       (filters.branch === 'todas' || c.rama === filters.branch) &&
       matchesSearch(c, filters.search),

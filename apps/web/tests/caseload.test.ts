@@ -6,6 +6,7 @@ import {
   EMPTY_FILTERS,
   filterCases,
   greeting,
+  isActiveCase,
   priorityStyle,
   sortByUrgency,
   summarizeCaseload,
@@ -116,5 +117,37 @@ describe('filterCases', () => {
   it('combines search with a risk filter', () => {
     const r = filterCases(cases, { ...EMPTY_FILTERS, search: 'e', risk: 'riesgo_moderado' });
     expect(r.map((c) => c.caso_id)).toEqual(['b2']);
+  });
+});
+
+describe('isActiveCase', () => {
+  it('is active for any non-closed state and inactive once closed', () => {
+    for (const estado of ['pendiente', 'asignado', 'aceptado', 'en_seguimiento']) {
+      expect(isActiveCase(makeCase({ estado }))).toBe(true);
+    }
+    expect(isActiveCase(makeCase({ estado: 'cerrado' }))).toBe(false);
+  });
+});
+
+describe('filterCases by estado', () => {
+  const mixed = [
+    makeCase({ caso_id: 'asg', estado: 'asignado' }),
+    makeCase({ caso_id: 'acc', estado: 'aceptado' }),
+    makeCase({ caso_id: 'fup', estado: 'en_seguimiento' }),
+    makeCase({ caso_id: 'cer', estado: 'cerrado' }),
+  ];
+
+  it("defaults to active only (hides closed) so the queue doesn't saturate", () => {
+    expect(filterCases(mixed, EMPTY_FILTERS).map((c) => c.caso_id)).toEqual(['asg', 'acc', 'fup']);
+  });
+
+  it('shows only closed cases under the "cerrados" filter', () => {
+    expect(filterCases(mixed, { ...EMPTY_FILTERS, estado: 'cerrados' }).map((c) => c.caso_id)).toEqual([
+      'cer',
+    ]);
+  });
+
+  it('shows everything under "todas"', () => {
+    expect(filterCases(mixed, { ...EMPTY_FILTERS, estado: 'todas' })).toHaveLength(4);
   });
 });
