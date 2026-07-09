@@ -43,7 +43,7 @@ Además del coordinador sembrado, se puede dar de alta uno nuevo por **token de 
 | `seed-pseudo-adulto` | `asignado` | `riesgo_moderado` | 34 | Asignado al **psicólogo de adultos** (`psicologo.adultos@ppv.test`); contacto "Luis de Prueba". Adulto (≥18) → **no** requiere especialidad infantil; ejercita la ruta de asignación no infantil. |
 
 ## Líneas de crisis
-Espejo de `config/app.config.yml`, para el **ruteo desde BD** (`GET /crisis-lines/active`) y el **CRUD admin**:
+Espejo de `apps/api/config/app.config.yml`, para el **ruteo desde BD** (`GET /crisis-lines/active`) y el **CRUD admin**:
 
 | Línea | Teléfono | Ventana | Tipo |
 |---|---|---|---|

@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "config/app.config.yml"
+    }
+  },
   "crons": [
     {
       "path": "/api/v1/cron/check-sla",

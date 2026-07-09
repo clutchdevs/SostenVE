@@ -9,7 +9,7 @@ import { appConfigSchema } from '../../src/config/schema.js';
  * the schema — so a broken `production:` (e.g. a missing email URL after the
  * shallow YAML merge) fails in CI, not at boot in production.
  */
-const CONFIG_PATH = join(process.cwd(), '..', '..', 'config', 'app.config.yml');
+const CONFIG_PATH = join(process.cwd(), 'config', 'app.config.yml');
 const doc = load(readFileSync(CONFIG_PATH, 'utf8')) as Record<string, unknown>;
 
 describe('app.config.yml sections', () => {
