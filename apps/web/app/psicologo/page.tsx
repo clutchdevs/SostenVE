@@ -8,6 +8,7 @@ import { AuthRequired } from '../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../src/features/psychologist-portal/psychologist-case-card';
 import {
   greeting,
+  isActiveCase,
   sortByUrgency,
   summarizeCaseload,
 } from '../../src/features/psychologist-portal/caseload';
@@ -35,7 +36,11 @@ export default function PsychologistHome() {
   }, []);
 
   const summary = useMemo(() => summarizeCaseload(cases), [cases]);
-  const ordered = useMemo(() => sortByUrgency(cases), [cases]);
+  // The dashboard surfaces the working queue: active cases only (assigned /
+  // accepted / in follow-up). Closed ones live under the "Cerrados" filter in
+  // "Mis casos", so they don't saturate the home list.
+  const active = useMemo(() => cases.filter(isActiveCase), [cases]);
+  const ordered = useMemo(() => sortByUrgency(active), [active]);
   const PREVIEW_LIMIT = 5;
   const preview = ordered.slice(0, PREVIEW_LIMIT);
 
@@ -76,12 +81,12 @@ export default function PsychologistHome() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Casos asignados a ti
           </h2>
-          {cases.length > 0 && (
+          {active.length > 0 && (
             <Link
               href="/psicologo/casos"
               className="inline-flex items-center gap-1 text-sm font-medium text-navy hover:text-navy-hover"
             >
-              Ver todos ({cases.length})
+              Ver todos ({active.length})
               <ChevronRight className="h-4 w-4" aria-hidden />
             </Link>
           )}
