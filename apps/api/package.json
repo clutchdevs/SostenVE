@@ -5,7 +5,9 @@
   "type": "module",
   "description": "PPV backend — serverless Hono API on Vercel + Supabase",
   "scripts": {
+    "prebuild": "node ../../scripts/build-config.mjs",
     "build": "tsc -p tsconfig.build.json",
+    "predev": "node ../../scripts/build-config.mjs",
     "dev": "tsx watch dev.ts",
     "test": "vitest run",
     "test:watch": "vitest",
