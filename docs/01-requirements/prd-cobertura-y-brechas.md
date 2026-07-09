@@ -30,7 +30,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ✅ Registrar solicitud (intake de baja fricción: Likert → ramas roja/verde).
 - ✅ Visualizar líneas de crisis instantáneas (con fail-safe de caché/embebido en cliente).
 - ✅ Acceder a **guías de Primeros Auxilios Psicológicos (PAP) asíncronas** (issue #22): contenido
-  **versionado** en `config/app.config.yml`, expuesto por `GET /pap` (público, sin BD) y página
+  **versionado** en `apps/api/config/app.config.yml`, expuesto por `GET /pap` (público, sin BD) y página
   `/guias` enlazada desde inicio, intake y la confirmación de Rama Verde. Texto provisional pendiente FPV.
 
 ### Psicólogo Voluntario
@@ -108,7 +108,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 
 ### Módulo 2 — Registro y validación de psicólogos
 - ✅ RF-2.1.1 Consentimiento informado obligatorio: checkbox que bloquea el alta, texto bioético
-  **versionado** en `config/app.config.yml` (expuesto por `GET /consent/active`) y aceptación
+  **versionado** en `apps/api/config/app.config.yml` (expuesto por `GET /consent/active`) y aceptación
   auditable (versión + timestamp en `volunteers` y en `audit_log`). El texto es el **oficial de la FPV**
   transcrito del PRD (RF-2.1.1), versión `v1.0.0-fpv` (issue #32); se cambia sin tocar código.
 - ✅ RF-2.1.2 Formulario de postulación completo: tipo + número de documento (cédula) separados del

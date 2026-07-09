@@ -5,7 +5,9 @@
   "type": "module",
   "description": "PPV backend — serverless Hono API on Vercel + Supabase",
   "scripts": {
+    "prebuild": "node ../../scripts/build-config.mjs",
     "build": "tsc -p tsconfig.build.json",
+    "predev": "node ../../scripts/build-config.mjs",
     "dev": "tsx watch dev.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -13,6 +15,7 @@
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.7",
     "@hono/swagger-ui": "^0.6.1",
     "@node-rs/argon2": "2.0.2",
     "@supabase/supabase-js": "^2.45.4",
@@ -25,7 +28,6 @@
     "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.13.7",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.7.5",
     "@types/nodemailer": "^6.4.16",
