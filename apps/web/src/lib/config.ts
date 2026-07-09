@@ -16,9 +16,11 @@ export const SESSION_IDLE_TIMEOUT_MINUTES = 30;
 /**
  * Presence heartbeat interval in seconds (RF-2.5.2). Mirrors
  * `presence.heartbeat_interval_seconds`; the PWA pings while online so the
- * backend keeps the volunteer's presence key alive (65 s TTL server-side).
+ * backend keeps the volunteer's presence key alive (130 s TTL server-side).
+ * Kept well below the TTL so a single missed ping doesn't drop presence, while
+ * halving the write volume to the presence store (Upstash cost) vs a 30 s ping.
  */
-export const PRESENCE_HEARTBEAT_INTERVAL_SECONDS = 30;
+export const PRESENCE_HEARTBEAT_INTERVAL_SECONDS = 60;
 
 export function weeksSince(dateIso: string, now: Date = new Date()): number {
   const ms = now.getTime() - new Date(dateIso).getTime();
