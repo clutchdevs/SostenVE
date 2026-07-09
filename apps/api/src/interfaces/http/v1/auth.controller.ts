@@ -35,9 +35,13 @@ export function createAuthRouter(): Hono {
   );
 
   router.post('/login', validateBody(loginSchema), async (c) => {
+    console.error('[LOGIN-DBG] handler start');
     const body = getValidated<LoginBody>(c, 'body');
+    console.error('[LOGIN-DBG] before getVolunteerContainer');
     const { loginDeps } = getVolunteerContainer();
+    console.error('[LOGIN-DBG] after getVolunteerContainer');
     const result = await loginVolunteer({ email: body.email, password: body.contrasena }, loginDeps);
+    console.error('[LOGIN-DBG] after loginVolunteer');
     return c.json({
       token: result.accessToken,
       refresh_token: result.refreshToken,
