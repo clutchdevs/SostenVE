@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Search, SearchX } from 'lucide-react';
+import { FilterX, Search, SearchX } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../../src/features/psychologist-portal/psychologist-case-card';
 import {
@@ -57,6 +57,13 @@ export default function CasesListPage() {
     [cases, filters],
   );
 
+  // "Dirty" whenever any filter departs from the default view (active + no search).
+  const isFiltered =
+    filters.search !== '' ||
+    filters.risk !== 'todas' ||
+    filters.branch !== 'todas' ||
+    filters.estado !== EMPTY_FILTERS.estado;
+
   if (needsAuth) return <AuthRequired />;
 
   return (
@@ -101,6 +108,16 @@ export default function CasesListPage() {
             value={filters.branch}
             onChange={(branch) => setFilters((f) => ({ ...f, branch }))}
           />
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              <FilterX className="h-3.5 w-3.5" aria-hidden />
+              Limpiar filtros
+            </button>
+          )}
         </div>
       </div>
 
