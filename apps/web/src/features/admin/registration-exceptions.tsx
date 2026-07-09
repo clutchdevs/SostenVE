@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle, BadgeCheck, Check } from 'lucide-react';
+import { Spinner } from '../../components/spinner';
 import type { VolunteerView } from '../../lib/types';
 import { exceptionLabel, initialsOf } from './volunteers';
 
@@ -65,8 +66,8 @@ export function RegistrationExceptions({ exceptions, busyId, onApprove, onReject
                 onClick={() => onApprove(v.id)}
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent-green px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                <Check className="h-4 w-4" aria-hidden />
-                Aprobar
+                {busy ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
+                {busy ? 'Procesando…' : 'Aprobar'}
               </button>
               <button
                 type="button"

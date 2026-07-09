@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Spinner } from '../../components/spinner';
 import {
   CLOSE_REASONS,
   CONTACT_MEDIUMS,
@@ -52,6 +53,7 @@ export function ClinicalClosureForm({
   const [referralDestination, setReferralDestination] = useState('');
   const [hours, setHours] = useState(contacted === false ? 0.05 : 0.25);
   const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const needsDestination = referralType !== 'ninguna' && referralType !== '';
   const canSubmit =
@@ -59,30 +61,35 @@ export function ClinicalClosureForm({
     hours > 0 &&
     (contacted ? closeReason !== '' : noContactReason !== '');
 
-  function submit() {
-    if (!canSubmit || contacted === null) return;
-    void onSubmit(
-      contacted
-        ? {
-            contacto: true,
-            sexo: sex || undefined,
-            sintomas: symptoms,
-            medio_contacto: contactMedium || undefined,
-            tecnicas: techniques,
-            motivo_cierre: closeReason || undefined,
-            derivacion_tipo: referralType || undefined,
-            derivacion_destino: needsDestination ? referralDestination || undefined : undefined,
-            horas: hours,
-            comentario: comment || undefined,
-          }
-        : {
-            contacto: false,
-            motivo_no_contacto: noContactReason || undefined,
-            sintomas: [],
-            tecnicas: [],
-            horas: hours,
-          },
-    );
+  async function submit() {
+    if (!canSubmit || contacted === null || submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(
+        contacted
+          ? {
+              contacto: true,
+              sexo: sex || undefined,
+              sintomas: symptoms,
+              medio_contacto: contactMedium || undefined,
+              tecnicas: techniques,
+              motivo_cierre: closeReason || undefined,
+              derivacion_tipo: referralType || undefined,
+              derivacion_destino: needsDestination ? referralDestination || undefined : undefined,
+              horas: hours,
+              comentario: comment || undefined,
+            }
+          : {
+              contacto: false,
+              motivo_no_contacto: noContactReason || undefined,
+              sintomas: [],
+              tecnicas: [],
+              horas: hours,
+            },
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -90,7 +97,7 @@ export function ClinicalClosureForm({
       className="space-y-4 rounded-lg border border-slate-200 bg-white p-4"
       onSubmit={(e) => {
         e.preventDefault();
-        submit();
+        void submit();
       }}
     >
       <h3 className="font-semibold">Cierre del caso</h3>
@@ -211,10 +218,11 @@ export function ClinicalClosureForm({
 
       <button
         type="submit"
-        disabled={!canSubmit}
-        className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
+        disabled={!canSubmit || submitting}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
       >
-        Guardar y cerrar caso
+        {submitting && <Spinner />}
+        {submitting ? 'Cerrando…' : 'Guardar y cerrar caso'}
       </button>
     </form>
   );

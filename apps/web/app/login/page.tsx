@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
+import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 import { getRole, homePathForRole, isSessionActive, saveSession } from '../../src/lib/session';
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [checking, setChecking] = useState(true);
 
   // An active (non-expired) session shouldn't see the login form again; send the
@@ -27,6 +29,7 @@ export default function LoginPage() {
 
   async function submit() {
     setError('');
+    setSubmitting(true);
     try {
       const res = await apiFetch<{ token: string; rol: string }>('/auth/login', {
         method: 'POST',
@@ -35,8 +38,10 @@ export default function LoginPage() {
       });
       saveSession(res.token, res.rol);
       router.replace(homePathForRole(res.rol));
+      // Keep the button disabled through the redirect; the page unmounts.
     } catch {
       setError('Credenciales inválidas');
+      setSubmitting(false);
     }
   }
 
@@ -66,9 +71,9 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className={ui.error}>{error}</p>}
-        <button type="submit" className={`w-full ${ui.primaryBtn}`}>
+        <SubmitButton pending={submitting} pendingText="Entrando…" className="w-full">
           Entrar
-        </button>
+        </SubmitButton>
       </form>
       <Link href="/recuperar-contrasena" className={`mt-4 inline-block ${ui.link}`}>
         ¿Olvidaste tu contraseña?
