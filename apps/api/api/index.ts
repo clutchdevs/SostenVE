@@ -29,8 +29,14 @@ import { getVolunteerContainer } from '../src/interfaces/http/v1/dependencies.js
  * The Vercel platform adapter is finalized in Block 8 (deployment).
  */
 const config = getConfig();
-const corsOrigins =
-  process.env.NODE_ENV === 'production'
+// CORS allow-list. `CORS_ORIGINS` (comma-separated) overrides the committed config
+// so the deployed web origin(s) can be set per-environment on Vercel without a
+// rebuild; otherwise fall back to the per-NODE_ENV origins from config.
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : process.env.NODE_ENV === 'production'
     ? config.security.cors.production_origins
     : config.security.cors.development_origins;
 
