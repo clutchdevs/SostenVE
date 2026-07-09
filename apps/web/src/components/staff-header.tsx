@@ -12,17 +12,42 @@ const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrador',
 };
 
-/** Role-aware primary destination for the workspace. */
-const ROLE_HOME: Record<string, { href: string; label: string }> = {
-  psychologist: { href: '/psicologo', label: 'Mis casos' },
-  coordinator: { href: '/coordinador', label: 'Panel' },
-  admin: { href: '/admin', label: 'Administración' },
+interface NavItem {
+  href: string;
+  label: string;
+  /** Exact-match the pathname for the active state (used for each role's home). */
+  exact?: boolean;
+}
+
+/**
+ * Role-aware navigation, mirroring each workspace's desktop sidebar so the
+ * small-screen menu offers the same destinations.
+ */
+const ROLE_NAV: Record<string, NavItem[]> = {
+  psychologist: [
+    { href: '/psicologo', label: 'Inicio', exact: true },
+    { href: '/psicologo/casos', label: 'Mis casos' },
+  ],
+  coordinator: [
+    { href: '/coordinador', label: 'Cola de casos', exact: true },
+    { href: '/coordinador/psicologos', label: 'Psicólogos en atención' },
+    { href: '/coordinador/voluntarios', label: 'Voluntarios' },
+    { href: '/coordinador/reportes', label: 'Reportes' },
+  ],
+  admin: [
+    { href: '/admin', label: 'Excepciones de registro', exact: true },
+    { href: '/admin/padron', label: 'Padrón de psicólogos' },
+    { href: '/admin/lineas', label: 'Líneas de crisis' },
+    { href: '/admin/asignacion', label: 'Asignación de casos' },
+    { href: '/admin/coordinadores', label: 'Coordinadores' },
+    { href: '/admin/auditoria', label: 'Auditoría' },
+  ],
 };
 
 /**
- * Top bar for staff areas (shown below `lg`, where the sidebar is hidden): brand,
- * role-aware navigation and sign-out. On phones the links collapse into a
- * hamburger menu so the bar doesn't overflow; from `sm` up they show inline.
+ * Top bar for staff areas (shown below `lg`, where the sidebar is hidden). The
+ * full role navigation lives behind a hamburger menu so the bar never overflows
+ * on phones/tablets and offers the same destinations as the desktop sidebar.
  */
 export function StaffHeader() {
   const router = useRouter();
@@ -34,7 +59,7 @@ export function StaffHeader() {
     setRole(getRole());
   }, []);
 
-  // Close the mobile menu on navigation.
+  // Close the menu on navigation.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -44,7 +69,9 @@ export function StaffHeader() {
     router.push('/login');
   }
 
-  const home = role ? ROLE_HOME[role] : undefined;
+  const nav = role ? (ROLE_NAV[role] ?? []) : [];
+  const isActive = (item: NavItem) =>
+    item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -52,63 +79,45 @@ export function StaffHeader() {
         <Link href="/" className="text-lg font-bold text-brand" onClick={() => setOpen(false)}>
           PPV
         </Link>
-
-        {/* Inline navigation (tablet and up) */}
-        <nav className="hidden items-center gap-3 text-sm sm:flex">
-          {home && (
-            <Link href={home.href} className="font-medium text-slate-700 hover:text-brand">
-              {home.label}
-            </Link>
-          )}
-          {role && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-              {ROLE_LABEL[role] ?? role}
-            </span>
-          )}
-          <Link href="/cambiar-contrasena" className="font-medium text-slate-700 hover:text-brand">
-            Contraseña
-          </Link>
-          <button
-            type="button"
-            onClick={signOut}
-            className="rounded-md border border-slate-300 px-3 py-1 font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Cerrar sesión
-          </button>
-        </nav>
-
-        {/* Hamburger (phones) */}
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={open}
           aria-controls="staff-mobile-menu"
-          className="inline-flex items-center justify-center rounded-md border border-slate-300 p-2 text-slate-700 hover:bg-slate-50 sm:hidden"
+          className="inline-flex items-center justify-center rounded-md border border-slate-300 p-2 text-slate-700 hover:bg-slate-50"
         >
           {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
         </button>
       </div>
 
-      {/* Collapsible menu (phones) */}
       {open && (
-        <nav id="staff-mobile-menu" className="border-t border-slate-200 px-4 py-2 sm:hidden">
+        <nav id="staff-mobile-menu" className="border-t border-slate-200 px-4 py-2">
           {role && (
             <span className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
               {ROLE_LABEL[role] ?? role}
             </span>
           )}
-          {home && (
+          {nav.map((item) => (
             <Link
-              href={home.href}
-              className="block rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(item) ? 'page' : undefined}
+              className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                isActive(item) ? 'bg-slate-100 text-brand' : 'text-slate-700 hover:bg-slate-50'
+              }`}
             >
-              {home.label}
+              {item.label}
             </Link>
-          )}
+          ))}
           <Link
             href="/cambiar-contrasena"
-            className="block rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            aria-current={pathname === '/cambiar-contrasena' ? 'page' : undefined}
+            className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+              pathname === '/cambiar-contrasena'
+                ? 'bg-slate-100 text-brand'
+                : 'text-slate-700 hover:bg-slate-50'
+            }`}
           >
             Contraseña
           </Link>
