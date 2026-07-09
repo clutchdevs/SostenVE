@@ -153,8 +153,8 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "presence": {
       "provider": "memory",
-      "heartbeat_ttl_seconds": 65,
-      "heartbeat_interval_seconds": 30
+      "heartbeat_ttl_seconds": 130,
+      "heartbeat_interval_seconds": 60
     },
     "rbac": {
       "roles": [
@@ -341,8 +341,8 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "presence": {
       "provider": "memory",
-      "heartbeat_ttl_seconds": 65,
-      "heartbeat_interval_seconds": 30
+      "heartbeat_ttl_seconds": 130,
+      "heartbeat_interval_seconds": 60
     },
     "rbac": {
       "roles": [
@@ -529,8 +529,8 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "presence": {
       "provider": "memory",
-      "heartbeat_ttl_seconds": 65,
-      "heartbeat_interval_seconds": 30
+      "heartbeat_ttl_seconds": 130,
+      "heartbeat_interval_seconds": 60
     },
     "rbac": {
       "roles": [
@@ -717,8 +717,8 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "presence": {
       "provider": "upstash",
-      "heartbeat_ttl_seconds": 65,
-      "heartbeat_interval_seconds": 30
+      "heartbeat_ttl_seconds": 130,
+      "heartbeat_interval_seconds": 60
     },
     "rbac": {
       "roles": [
