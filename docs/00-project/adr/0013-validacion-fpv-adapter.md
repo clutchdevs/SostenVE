@@ -25,7 +25,7 @@ implementaciones:
   - Otro no-2xx / error de red / timeout → lanza (el Circuit Breaker corta → `pending_approval`).
 
 La implementación se elige por **config** (`fpv.verifier: dummy | http`), sin tocar los casos de uso.
-El `base_url` y el timeout viven en `config/app.config.yml`; el token `X-API-TOKEN` es **secreto** y se
+El `base_url` y el timeout viven en `apps/api/config/app.config.yml`; el token `X-API-TOKEN` es **secreto** y se
 lee de la env `FPV_API_TOKEN` (nunca en el repo). La verificación se envuelve en un **Circuit Breaker**:
 si el servicio externo falla repetidamente, corta y el registro **cae a `pending_approval`** (Caso de
 Excepción, RF-2.2) en vez de bloquearse.

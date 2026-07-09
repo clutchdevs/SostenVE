@@ -11,7 +11,7 @@
 ## Qué ya dejé listo (en el repo)
 - ✅ **Adaptador serverless Hono→Vercel** cableado (`apps/api/api/index.ts` → `export default handle(app)`)
   + **rewrites** en `apps/api/vercel.json` (`/(.*) → /api`). Sin esto la API **no** desplegaba en Vercel.
-- ✅ Sección **`production:`** de `config/app.config.yml` (correo, CORS, **presencia → Upstash**). Solo
+- ✅ Sección **`production:`** de `apps/api/config/app.config.yml` (correo, CORS, **presencia → Upstash**). Solo
   falta **reemplazar `REEMPLAZAR-web.vercel.app`** por la URL real de tu Web (2 lugares: `email.*` y
   `security.cors.production_origins`).
 - ✅ **Generador de secretos**: `npm run gen:secrets` (o `node scripts/gen-secrets.mjs`).
@@ -48,7 +48,7 @@ npm run gen:secrets        # imprime JWT_SECRET, ENCRYPTION_KEY, PSEUDONYMIZATIO
 
 Anota la URL de cada uno (ej. `https://ppv-web.vercel.app`, `https://ppv-api.vercel.app`).
 
-### 4) Ajustar `config/app.config.yml` con tu URL de Web
+### 4) Ajustar `apps/api/config/app.config.yml` con tu URL de Web
 Reemplaza `REEMPLAZAR-web.vercel.app` por tu dominio de Web (en `email.login_url`,
 `email.coordinator_invite_url`, `email.password_reset_url` y `security.cors.production_origins`),
 commitea y deja que Vercel redepliegue.

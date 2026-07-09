@@ -67,7 +67,7 @@ Deben estar cerradas **antes** de abrir al público (ver [ADR-0006](../00-projec
 ## 4. Variables de entorno
 
 Todos los **secretos** viven en el entorno (Vercel → Project → Settings → Environment Variables),
-**nunca en el repo**. Lo que no es secreto vive en `config/app.config.yml`. Referencia:
+**nunca en el repo**. Lo que no es secreto vive en `apps/api/config/app.config.yml`. Referencia:
 [`.env.example`](../../.env.example).
 
 ### 4.1 API (`apps/api`)
@@ -112,7 +112,7 @@ echo "CRON_SECRET=$(openssl rand -hex 32)"
 
 ---
 
-## 5. Ajustar `config/app.config.yml` (no son secretos → se commitean)
+## 5. Ajustar `apps/api/config/app.config.yml` (no son secretos → se commitean)
 
 Hoy la config trae **URLs de `localhost`** en los correos y un dominio CORS placeholder. Dos ajustes:
 
@@ -269,7 +269,7 @@ curl -s -X POST $API/cron/check-sla -H "Authorization: Bearer $CRON_SECRET"   # 
 
 ## Referencias
 - Variables/secretos: [`.env.example`](../../.env.example)
-- Config no-secreta: [`config/app.config.yml`](../../config/app.config.yml)
+- Config no-secreta: [`apps/api/config/app.config.yml`](../../apps/api/config/app.config.yml)
 - Cron: [`apps/api/vercel.json`](../../apps/api/vercel.json)
 - ADRs: [`docs/00-project/adr`](../00-project/adr) — 0002 (pooler), 0004 (cifrado), 0005 (JWT/argon2),
   0006 (hosting), 0009 (cron), 0011 (seudonimización)

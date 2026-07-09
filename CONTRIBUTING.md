@@ -16,7 +16,7 @@ Conventions that every contributor and every pull request must follow. Several o
 
 ## Configuration
 - Non-secret values (thresholds, SLA, crisis lines, CORS origins, etc.) go in
-  `config/app.config.yml`, versioned and environment-scoped.
+  `apps/api/config/app.config.yml`, versioned and environment-scoped.
 - `.env` holds **only** secrets (see `.env.example`); never commit a real `.env`.
 - No module reads the YAML directly — everything consumes the validated config singleton
   (`apps/api/src/config`).
