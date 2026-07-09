@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Spinner } from '../../components/spinner';
 import { EVENT_DATE, TEPT_BLOCK_DAYS, weeksSince } from '../../lib/config';
 
 export interface NoteSubmission {
@@ -29,6 +30,7 @@ export function NoteForm({
   const [diagnostico, setDiagnostico] = useState('');
   const [tept, setTept] = useState(false);
   const [crisis, setCrisis] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const teptTooEarly = tept && weeksSince(eventDate, now) < TEPT_BLOCK_DAYS / 7;
   const canSubmit = contenido.trim().length > 0 && !teptTooEarly;
@@ -36,15 +38,20 @@ export function NoteForm({
   return (
     <form
       className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (!canSubmit) return;
-        void onSubmit({
-          contenido,
-          diagnostico: diagnostico || undefined,
-          tept_diagnostico: tept,
-          crisis_psicotica_aguda: crisis,
-        });
+        if (!canSubmit || submitting) return;
+        setSubmitting(true);
+        try {
+          await onSubmit({
+            contenido,
+            diagnostico: diagnostico || undefined,
+            tept_diagnostico: tept,
+            crisis_psicotica_aguda: crisis,
+          });
+        } finally {
+          setSubmitting(false);
+        }
       }}
     >
       <h3 className="font-semibold">Nueva nota clínica</h3>
@@ -75,10 +82,11 @@ export function NoteForm({
       </label>
       <button
         type="submit"
-        disabled={!canSubmit}
-        className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
+        disabled={!canSubmit || submitting}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
       >
-        Guardar nota
+        {submitting && <Spinner />}
+        {submitting ? 'Guardando…' : 'Guardar nota'}
       </button>
     </form>
   );

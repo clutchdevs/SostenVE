@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
+import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 import { clearSession, homePathForRole, getRole, isSessionActive } from '../../src/lib/session';
@@ -124,9 +125,9 @@ export default function ChangePasswordPage() {
           onChange={(e) => setConfirm(e.target.value)}
         />
         {error && <p className={ui.error}>{error}</p>}
-        <button type="submit" disabled={busy} className={`w-full ${ui.primaryBtn}`}>
+        <SubmitButton pending={busy} pendingText="Cambiando…" className="w-full">
           Cambiar contraseña
-        </button>
+        </SubmitButton>
       </form>
     </AuthShell>
   );

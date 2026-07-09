@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
+import { SubmitButton } from '../../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import {
   FALLBACK_CRISIS_LINES,
@@ -33,6 +34,7 @@ export default function RedBranchPage() {
   const [age, setAge] = useState('');
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -62,6 +64,7 @@ export default function RedBranchPage() {
       return;
     }
     setError('');
+    setBusy(true);
     // Age is a critical clinical parameter (minor vs geriatric priority) per
     // RF-1.2.2 / RF-1.2.3; sent when provided.
     const parsedAge = age.trim() === '' ? undefined : Number(age);
@@ -150,14 +153,16 @@ export default function RedBranchPage() {
                 onChange={(e) => setAge(e.target.value)}
               />
               {error && <p className={ui.error}>{error}</p>}
-              <button
+              <SubmitButton
                 type="button"
                 onClick={submit}
+                pending={busy}
                 disabled={!contact}
-                className={`w-full ${ui.primaryBtn}`}
+                pendingText="Enviando…"
+                className="w-full"
               >
                 Enviar
-              </button>
+              </SubmitButton>
             </div>
           )}
         </section>

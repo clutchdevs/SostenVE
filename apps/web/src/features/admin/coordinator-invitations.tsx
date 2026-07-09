@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
 import { SESSION_IDLE_TIMEOUT_MINUTES } from '../../lib/config';
 import type { CoordinatorInvitationCreated, CoordinatorInvitationView } from '../../lib/types';
@@ -21,12 +22,15 @@ const EMPTY = { nombre: '', email: '' };
 /** Admin UI to invite coordinators by token (RF-2.6) and manage invitations. */
 export function CoordinatorInvitations({ invitations, onChange }: Props) {
   const [form, setForm] = useState({ ...EMPTY });
-  const [busy, setBusy] = useState(false);
+  // Tracks which action is running ('invite' or an invitation id) so the spinner
+  // shows on the exact button; any non-null value disables all actions.
+  const [pending, setPending] = useState<string | null>(null);
+  const busy = pending !== null;
   const [error, setError] = useState('');
   const [lastToken, setLastToken] = useState<string | null>(null);
 
-  async function run(action: () => Promise<unknown>) {
-    setBusy(true);
+  async function run(id: string, action: () => Promise<unknown>) {
+    setPending(id);
     setError('');
     try {
       await action();
@@ -34,13 +38,13 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
     } catch {
       setError('No se pudo completar la acción. Intenta de nuevo.');
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   }
 
   function invite() {
     const body = { nombre: form.nombre.trim(), email: form.email.trim() };
-    return run(async () => {
+    return run('invite', async () => {
       const created = await apiFetch<CoordinatorInvitationCreated>(
         '/admin/coordinators/invitations',
         { method: 'POST', body },
@@ -52,7 +56,7 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
   }
 
   const revoke = (inv: CoordinatorInvitationView) =>
-    run(() => apiFetch(`/admin/coordinators/invitations/${inv.id}`, { method: 'DELETE' }));
+    run(inv.id, () => apiFetch(`/admin/coordinators/invitations/${inv.id}`, { method: 'DELETE' }));
 
   return (
     <section>
@@ -103,9 +107,10 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
                   type="button"
                   disabled={busy}
                   onClick={() => revoke(inv)}
-                  className="rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
                 >
-                  Revocar
+                  {pending === inv.id && <Spinner />}
+                  {pending === inv.id ? 'Revocando…' : 'Revocar'}
                 </button>
               )}
             </div>
@@ -147,9 +152,10 @@ export function CoordinatorInvitations({ invitations, onChange }: Props) {
         <button
           type="submit"
           disabled={busy}
-          className="mt-3 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          Invitar coordinador
+          {pending === 'invite' && <Spinner />}
+          {pending === 'invite' ? 'Invitando…' : 'Invitar coordinador'}
         </button>
       </form>
     </section>

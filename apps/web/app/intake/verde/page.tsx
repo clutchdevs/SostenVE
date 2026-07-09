@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
+import { SubmitButton } from '../../../src/components/submit-button';
 import { TagPicker } from '../../../src/features/intake/tag-picker';
 import {
   buildGreenPayload,
@@ -286,14 +287,15 @@ export default function GreenBranchPage() {
           Atrás
         </button>
         {isLast ? (
-          <button
+          <SubmitButton
             type="button"
             onClick={submit}
-            disabled={!form.contact.trim() || busy}
-            className={ui.primaryBtn}
+            pending={busy}
+            disabled={!form.contact.trim()}
+            pendingText="Enviando…"
           >
             Enviar solicitud
-          </button>
+          </SubmitButton>
         ) : (
           <button
             type="button"

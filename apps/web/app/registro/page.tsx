@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 import {
@@ -180,8 +181,8 @@ export default function RegistroPage() {
   }
 
   const availabilityChosen = slots.size > 0;
-  const canSubmit =
-    !!consent && consentChecked && modalidad.length > 0 && availabilityChosen && !submitting;
+  // Form completeness only; the submitting state disables the button separately.
+  const canSubmit = !!consent && consentChecked && modalidad.length > 0 && availabilityChosen;
 
   return (
     <main className="mx-auto max-w-md px-4 py-12">
@@ -388,13 +389,14 @@ export default function RegistroPage() {
 
         {error && <p className={ui.error}>{error}</p>}
 
-        <button
-          type="submit"
+        <SubmitButton
+          pending={submitting}
           disabled={!canSubmit}
-          className={`w-full ${ui.primaryBtn} disabled:cursor-not-allowed`}
+          pendingText="Enviando…"
+          className="w-full disabled:cursor-not-allowed"
         >
-          {submitting ? 'Enviando…' : 'Registrarme'}
-        </button>
+          Registrarme
+        </SubmitButton>
       </form>
 
       <p className={`mt-4 text-center ${ui.muted}`}>
