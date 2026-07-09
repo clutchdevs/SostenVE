@@ -11,6 +11,7 @@ import {
   sortByUrgency,
   type BranchFilter,
   type CaseFilters,
+  type EstadoFilter,
   type RiskFilter,
 } from '../../../src/features/psychologist-portal/caseload';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
@@ -27,6 +28,12 @@ const BRANCH_TABS: { key: BranchFilter; label: string; dot?: string }[] = [
   { key: 'todas', label: 'Todas' },
   { key: 'roja', label: 'Roja', dot: 'bg-risk-high' },
   { key: 'verde', label: 'Verde', dot: 'bg-emerald-500' },
+];
+
+const ESTADO_TABS: { key: EstadoFilter; label: string; dot?: string }[] = [
+  { key: 'activos', label: 'Activos', dot: 'bg-emerald-500' },
+  { key: 'cerrados', label: 'Cerrados', dot: 'bg-slate-400' },
+  { key: 'todas', label: 'Todos' },
 ];
 
 export default function CasesListPage() {
@@ -76,6 +83,12 @@ export default function CasesListPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <FilterGroup
+            legend="Estado"
+            tabs={ESTADO_TABS}
+            value={filters.estado}
+            onChange={(estado) => setFilters((f) => ({ ...f, estado }))}
+          />
           <FilterGroup
             legend="Riesgo"
             tabs={RISK_TABS}
