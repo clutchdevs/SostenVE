@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { Skeleton } from '../../../src/components/skeleton';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 
 interface AssignmentSettings {
@@ -86,6 +87,15 @@ export default function AssignmentSettingsPage() {
         </p>
       )}
 
+      {saved === null && !error ? (
+        <div className="max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+          <Skeleton className="h-4 w-2/3" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-28" />
+            <Skeleton className="h-10 w-24 rounded-xl" />
+          </div>
+        </div>
+      ) : (
       <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6">
         <label htmlFor="cap" className="block text-sm font-medium text-slate-700">
           Máximo de casos activos por psicólogo
@@ -112,6 +122,7 @@ export default function AssignmentSettingsPage() {
         </div>
         <p className="mt-2 text-xs text-slate-500">Por defecto: 6. Rango permitido: 1–100.</p>
       </div>
+      )}
     </div>
   );
 }

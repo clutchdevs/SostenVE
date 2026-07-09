@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import { AuditViewer } from '../../../src/features/admin/audit-viewer';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import type { AuditEntryView, AuditPageView } from '../../../src/lib/types';
@@ -15,6 +16,7 @@ export default function AuditPage() {
   const [filter, setFilter] = useState('');
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams({
@@ -29,6 +31,8 @@ export default function AuditPage() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudo cargar la auditoría.');
+    } finally {
+      setLoaded(true);
     }
   }, [page, filter]);
 
@@ -51,16 +55,20 @@ export default function AuditPage() {
           {error}
         </p>
       )}
-      <AuditViewer
-        entries={entries}
-        filter={filter}
-        onFilter={onFilter}
-        page={page}
-        pageSize={PAGE_SIZE}
-        total={total}
-        onPrev={() => setPage((p) => Math.max(0, p - 1))}
-        onNext={() => setPage((p) => p + 1)}
-      />
+      {!loaded ? (
+        <ListSkeleton rows={6} />
+      ) : (
+        <AuditViewer
+          entries={entries}
+          filter={filter}
+          onFilter={onFilter}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
+      )}
     </div>
   );
 }

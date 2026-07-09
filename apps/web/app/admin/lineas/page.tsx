@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import { CrisisLinesAdmin } from '../../../src/features/admin/crisis-lines-admin';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import type { CrisisLineAdmin } from '../../../src/lib/types';
@@ -10,6 +11,7 @@ export default function CrisisLinesPage() {
   const [lines, setLines] = useState<CrisisLineAdmin[]>([]);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -17,6 +19,8 @@ export default function CrisisLinesPage() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudieron cargar las líneas de crisis.');
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -33,7 +37,7 @@ export default function CrisisLinesPage() {
           {error}
         </p>
       )}
-      <CrisisLinesAdmin lines={lines} onChange={load} />
+      {!loaded ? <ListSkeleton rows={4} /> : <CrisisLinesAdmin lines={lines} onChange={load} />}
     </div>
   );
 }

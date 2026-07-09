@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import { CoordinatorInvitations } from '../../../src/features/admin/coordinator-invitations';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import type { CoordinatorInvitationView } from '../../../src/lib/types';
@@ -10,6 +11,7 @@ export default function CoordinatorsPage() {
   const [invitations, setInvitations] = useState<CoordinatorInvitationView[]>([]);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -17,6 +19,8 @@ export default function CoordinatorsPage() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudieron cargar las invitaciones.');
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -33,7 +37,11 @@ export default function CoordinatorsPage() {
           {error}
         </p>
       )}
-      <CoordinatorInvitations invitations={invitations} onChange={load} />
+      {!loaded ? (
+        <ListSkeleton rows={3} />
+      ) : (
+        <CoordinatorInvitations invitations={invitations} onChange={load} />
+      )}
     </div>
   );
 }
