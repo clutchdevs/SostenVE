@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
+import { ListSkeleton } from '../../src/components/skeleton';
 import { RegistrationExceptions } from '../../src/features/admin/registration-exceptions';
 import { autoValidationRate } from '../../src/features/admin/volunteers';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
@@ -13,6 +14,7 @@ export default function RegistrationExceptionsPage() {
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -21,6 +23,8 @@ export default function RegistrationExceptionsPage() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudieron cargar los registros. Intenta de nuevo.');
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -67,12 +71,16 @@ export default function RegistrationExceptionsPage() {
         </p>
       )}
 
-      <RegistrationExceptions
-        exceptions={exceptions}
-        busyId={busyId}
-        onApprove={(id) => resolve(id, 'approve')}
-        onReject={(id) => resolve(id, 'reject')}
-      />
+      {!loaded ? (
+        <ListSkeleton rows={3} />
+      ) : (
+        <RegistrationExceptions
+          exceptions={exceptions}
+          busyId={busyId}
+          onApprove={(id) => resolve(id, 'approve')}
+          onReject={(id) => resolve(id, 'reject')}
+        />
+      )}
 
       {rate !== null && (
         <div className="flex items-start gap-3 rounded-2xl border border-teal-200 bg-teal-50 p-5">

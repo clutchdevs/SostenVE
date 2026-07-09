@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import { VolunteerCard } from '../../../src/features/coordinator/volunteer-card';
 import { filterVolunteers } from '../../../src/features/admin/volunteers';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
@@ -21,6 +22,7 @@ export default function CoordinatorVolunteersPage() {
   const [status, setStatus] = useState<VolunteerStatus | 'all'>('all');
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -28,6 +30,8 @@ export default function CoordinatorVolunteersPage() {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudo cargar el listado de voluntarios.');
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -88,16 +92,24 @@ export default function CoordinatorVolunteersPage() {
       )}
 
       <section className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-          {results.length} {results.length === 1 ? 'voluntario' : 'voluntarios'}
-        </p>
-        {results.map((v) => (
-          <VolunteerCard key={v.id} volunteer={v} onChange={load} />
-        ))}
-        {results.length === 0 && !error && (
-          <p className="rounded-2xl border border-dashed border-slate-300 bg-surface-card/60 px-6 py-12 text-center text-sm text-slate-500">
-            No hay voluntarios que coincidan.
+        {loaded && (
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {results.length} {results.length === 1 ? 'voluntario' : 'voluntarios'}
           </p>
+        )}
+        {!loaded ? (
+          <ListSkeleton rows={5} />
+        ) : (
+          <>
+            {results.map((v) => (
+              <VolunteerCard key={v.id} volunteer={v} onChange={load} />
+            ))}
+            {results.length === 0 && !error && (
+              <p className="rounded-2xl border border-dashed border-slate-300 bg-surface-card/60 px-6 py-12 text-center text-sm text-slate-500">
+                No hay voluntarios que coincidan.
+              </p>
+            )}
+          </>
         )}
       </section>
     </div>
