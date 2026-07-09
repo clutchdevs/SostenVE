@@ -4,6 +4,10 @@
 
 ## Contenido
 
+- **[Plan de instalación (paso a paso)](plan-de-instalacion.md)** — el runbook **práctico y probado**
+  para levantar el entorno desde cero en Vercel + Supabase + Upstash: provisión de cada servicio, qué
+  variable va en cuál proyecto, crear el primer admin, smoke tests, una tabla de **troubleshooting** con
+  los síntomas reales y sus causas, y las trampas que ya vienen resueltas en el código. **Empieza por aquí.**
 - **[Plan — ambiente provisional (staging)](plan-ambiente-provisional.md)** — runbook accionable para
   levantar un entorno provisional en Vercel: qué ya está listo en el repo, qué cuentas crear (Supabase,
   Upstash, SMTP, FPV), generación de secretos, env vars por proyecto y smoke test.
