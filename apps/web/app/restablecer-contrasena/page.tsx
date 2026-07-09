@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
+import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 
@@ -110,9 +111,14 @@ export default function ResetPasswordPage() {
           onChange={(e) => setConfirm(e.target.value)}
         />
         {error && <p className={ui.error}>{error}</p>}
-        <button type="submit" disabled={busy || !token} className={`w-full ${ui.primaryBtn}`}>
+        <SubmitButton
+          pending={busy}
+          disabled={!token}
+          pendingText="Restableciendo…"
+          className="w-full"
+        >
           Restablecer contraseña
-        </button>
+        </SubmitButton>
       </form>
       <Link href="/login" className={`mt-4 inline-block ${ui.link}`}>
         Volver al inicio de sesión

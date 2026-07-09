@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Check, Lock, Ban, IdCard } from 'lucide-react';
+import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
 import { initialsOf, STATUS_STYLE } from '../admin/volunteers';
 import type { VolunteerDetailView, VolunteerNoteView, VolunteerView } from '../../lib/types';
@@ -19,7 +20,10 @@ const ROLE_LABEL: Record<string, string> = {
 
 /** Volunteer row with management actions (approve/suspend) and confidential notes (RF-2.3/2.4). */
 export function VolunteerCard({ volunteer, onChange }: Props) {
-  const [busy, setBusy] = useState(false);
+  // Which action is running ('act' for approve/suspend, 'note' for saving a note)
+  // so the spinner shows on the right button; any non-null value disables both.
+  const [pending, setPending] = useState<'act' | 'note' | null>(null);
+  const busy = pending !== null;
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<VolunteerNoteView[] | null>(null);
   const [draft, setDraft] = useState('');
@@ -43,7 +47,7 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
   }
 
   async function act(action: 'approve' | 'reject') {
-    setBusy(true);
+    setPending('act');
     setError('');
     try {
       await apiFetch(`/volunteers/${volunteer.id}/${action}`, { method: 'POST' });
@@ -51,7 +55,7 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
     } catch {
       setError('No se pudo completar la acción.');
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   }
 
@@ -71,7 +75,7 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
 
   async function addNote() {
     if (!draft.trim()) return;
-    setBusy(true);
+    setPending('note');
     setError('');
     try {
       await apiFetch(`/volunteers/${volunteer.id}/notes`, {
@@ -83,7 +87,7 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
     } catch {
       setError('No se pudo guardar la nota.');
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   }
 
@@ -125,8 +129,8 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
               onClick={() => act('approve')}
               className="inline-flex items-center gap-1 rounded-xl bg-accent-green px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
-              <Check className="h-4 w-4" aria-hidden />
-              Activar
+              {pending === 'act' ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
+              {pending === 'act' ? 'Activando…' : 'Activar'}
             </button>
           )}
           {volunteer.estado === 'active' && (
@@ -136,8 +140,8 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
               onClick={() => act('reject')}
               className="inline-flex items-center gap-1 rounded-xl border border-accent-coral px-3 py-1.5 text-sm font-semibold text-accent-coral hover:bg-red-50 disabled:opacity-50"
             >
-              <Ban className="h-4 w-4" aria-hidden />
-              Suspender
+              {pending === 'act' ? <Spinner /> : <Ban className="h-4 w-4" aria-hidden />}
+              {pending === 'act' ? 'Suspendiendo…' : 'Suspender'}
             </button>
           )}
         </div>
@@ -239,9 +243,10 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
               type="button"
               disabled={busy || !draft.trim()}
               onClick={addNote}
-              className="rounded-lg bg-navy px-3 py-2 text-sm font-medium text-white hover:bg-navy-hover disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-medium text-white hover:bg-navy-hover disabled:opacity-50"
             >
-              Guardar
+              {pending === 'note' && <Spinner />}
+              {pending === 'note' ? 'Guardando…' : 'Guardar'}
             </button>
           </div>
         </div>

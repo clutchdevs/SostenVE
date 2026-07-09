@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
+import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 
@@ -67,9 +68,9 @@ export default function ForgotPasswordPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button type="submit" disabled={busy || !email} className={`w-full ${ui.primaryBtn}`}>
+        <SubmitButton pending={busy} disabled={!email} pendingText="Enviando…" className="w-full">
           Enviar enlace
-        </button>
+        </SubmitButton>
       </form>
     </AuthShell>
   );

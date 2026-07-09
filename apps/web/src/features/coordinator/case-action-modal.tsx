@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
 import { caseCode, requesterLabel } from './operations';
 import type { CaseSummary, VolunteerView } from '../../lib/types';
@@ -121,11 +122,18 @@ export function CaseActionModal({ caso, mode, psychologists, onCancel, onDone }:
             type="button"
             disabled={busy}
             onClick={confirm}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+            className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
               mode === 'close' ? 'bg-accent-coral hover:opacity-90' : 'bg-navy hover:bg-navy-hover'
             }`}
           >
-            {mode === 'reassign' ? 'Reasignar' : 'Cerrar caso'}
+            {busy && <Spinner />}
+            {busy
+              ? mode === 'reassign'
+                ? 'Reasignando…'
+                : 'Cerrando…'
+              : mode === 'reassign'
+                ? 'Reasignar'
+                : 'Cerrar caso'}
           </button>
         </div>
       </div>

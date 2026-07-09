@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
 import type { CrisisLineAdmin } from '../../lib/types';
 
@@ -17,11 +18,14 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
   const [form, setForm] = useState<LineForm>({ ...EMPTY });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<LineForm>({ ...EMPTY });
-  const [busy, setBusy] = useState(false);
+  // Which action is running (e.g. 'create', `edit:<id>`, `toggle:<id>`) so the
+  // spinner shows on the exact button; any non-null value disables all actions.
+  const [pending, setPending] = useState<string | null>(null);
+  const busy = pending !== null;
   const [error, setError] = useState('');
 
-  async function run(action: () => Promise<unknown>) {
-    setBusy(true);
+  async function run(id: string, action: () => Promise<unknown>) {
+    setPending(id);
     setError('');
     try {
       await action();
@@ -29,7 +33,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
     } catch {
       setError('No se pudo completar la acción. Intenta de nuevo.');
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   }
 
@@ -52,7 +56,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
     for (const k of ['cobertura', 'hora_inicio', 'hora_fin'] as const) {
       if (body[k] === null) delete body[k];
     }
-    return run(async () => {
+    return run('create', async () => {
       await apiFetch('/admin/crisis-lines', { method: 'POST', body });
       setForm({ ...EMPTY });
     });
@@ -76,19 +80,19 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
       setError('El nombre y el teléfono son obligatorios.');
       return;
     }
-    return run(async () => {
+    return run(`edit:${id}`, async () => {
       await apiFetch(`/admin/crisis-lines/${id}`, { method: 'PATCH', body: toBody(editForm) });
       setEditingId(null);
     });
   }
 
   const toggle = (line: CrisisLineAdmin) =>
-    run(() =>
+    run(`toggle:${line.id}`, () =>
       apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'PATCH', body: { activa: !line.activa } }),
     );
 
   const remove = (line: CrisisLineAdmin) =>
-    run(() => apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'DELETE' }));
+    run(`remove:${line.id}`, () => apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'DELETE' }));
 
   function windowLabel(line: CrisisLineAdmin): string {
     if (line.hora_inicio == null || line.hora_fin == null) return 'Respaldo';
@@ -173,9 +177,10 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
                   type="button"
                   disabled={busy}
                   onClick={() => saveEdit(line.id)}
-                  className="rounded-md bg-brand px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                 >
-                  Guardar cambios
+                  {pending === `edit:${line.id}` && <Spinner />}
+                  {pending === `edit:${line.id}` ? 'Guardando…' : 'Guardar cambios'}
                 </button>
                 <button
                   type="button"
@@ -222,8 +227,9 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
                   type="button"
                   disabled={busy}
                   onClick={() => toggle(line)}
-                  className="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
                 >
+                  {pending === `toggle:${line.id}` && <Spinner />}
                   {line.activa ? 'Desactivar' : 'Activar'}
                 </button>
                 {line.activa && (
@@ -231,9 +237,10 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
                     type="button"
                     disabled={busy}
                     onClick={() => remove(line)}
-                    className="rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
                   >
-                    Eliminar
+                    {pending === `remove:${line.id}` && <Spinner />}
+                    {pending === `remove:${line.id}` ? 'Eliminando…' : 'Eliminar'}
                   </button>
                 )}
               </div>
@@ -260,9 +267,10 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
         <button
           type="submit"
           disabled={busy}
-          className="mt-3 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          Crear línea
+          {pending === 'create' && <Spinner />}
+          {pending === 'create' ? 'Creando…' : 'Crear línea'}
         </button>
       </form>
     </section>
