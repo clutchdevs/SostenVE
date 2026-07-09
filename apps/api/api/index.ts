@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Hono } from 'hono';
 import { handle } from '@hono/node-server/vercel';
 import { getConfig } from '../src/config/index.js';
@@ -79,4 +80,27 @@ app.route('/', createDocsRouter());
 // the native deps (@node-rs/argon2) and nodemailer require Node, not Edge (the
 // `hono/vercel` adapter is Edge-only and crashes at invocation on Node). `app` is
 // exported separately for the local dev server (dev.ts) and the tests.
-export default handle(app);
+const vercelListener = handle(app);
+
+// Body-stream bridge (fixes hanging POSTs on Vercel). Vercel's Node runtime buffers
+// and parses the request body onto `req.body`, which DRAINS the raw stream. The
+// node-server adapter then builds its Web Request from that now-empty stream, so
+// `c.req.json()` never resolves and every POST that reads a body times out (GETs,
+// having no body, are unaffected — which is why only writes/login hung). We re-expose
+// the already-parsed body as `req.rawBody` (a Buffer); the adapter uses that Buffer
+// directly instead of reading the drained stream (see its `newRequestFromIncoming`).
+export default function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const vercelReq = req as IncomingMessage & { body?: unknown; rawBody?: Buffer };
+  try {
+    if (!Buffer.isBuffer(vercelReq.rawBody) && vercelReq.body != null) {
+      vercelReq.rawBody = Buffer.isBuffer(vercelReq.body)
+        ? vercelReq.body
+        : typeof vercelReq.body === 'string'
+          ? Buffer.from(vercelReq.body)
+          : Buffer.from(JSON.stringify(vercelReq.body));
+    }
+  } catch {
+    // If the body can't be reconstructed, fall through — the adapter still runs.
+  }
+  return vercelListener(req, res);
+}
