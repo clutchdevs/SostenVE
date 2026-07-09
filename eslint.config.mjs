@@ -44,6 +44,7 @@ export default tseslint.config(
         console: 'readonly',
         URL: 'readonly',
         setTimeout: 'readonly',
+        Buffer: 'readonly',
       },
     },
   },
