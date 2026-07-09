@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { KpiSkeleton, RowSkeleton } from '../../../src/components/skeleton';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import type { Capacity } from '../../../src/lib/types';
 
@@ -41,6 +42,17 @@ export default function ReportsPage() {
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-risk-high">
           {error}
         </p>
+      )}
+
+      {!capacity && !error && (
+        <>
+          <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <KpiSkeleton />
+            <KpiSkeleton />
+            <KpiSkeleton />
+          </section>
+          <RowSkeleton />
+        </>
       )}
 
       {capacity && (

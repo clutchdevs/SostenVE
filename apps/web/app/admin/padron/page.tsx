@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, SearchX } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import {
   filterVolunteers,
   initialsOf,
@@ -30,6 +31,7 @@ export default function PadronPage() {
   const [status, setStatus] = useState<VolunteerStatus | 'all'>('all');
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     apiFetch<VolunteerView[]>('/volunteers?status=all')
@@ -37,7 +39,8 @@ export default function PadronPage() {
       .catch((err) => {
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
         else setError('No se pudo cargar el padrón. Intenta de nuevo.');
-      });
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   const results = useMemo(
@@ -96,10 +99,14 @@ export default function PadronPage() {
       )}
 
       <section className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-          {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
-        </p>
-        {results.length > 0 ? (
+        {loaded && (
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+          </p>
+        )}
+        {!loaded ? (
+          <ListSkeleton rows={5} />
+        ) : results.length > 0 ? (
           results.map((v) => {
             const style = STATUS_STYLE[v.estado];
             return (

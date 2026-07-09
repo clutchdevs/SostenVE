@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
+import { KpiSkeleton, ListSkeleton } from '../../src/components/skeleton';
 import { CaseQueueTable } from '../../src/features/coordinator/case-queue-table';
 import { CaseActionModal } from '../../src/features/coordinator/case-action-modal';
 import { sortForBoard, summarizeOps } from '../../src/features/coordinator/operations';
@@ -23,6 +24,7 @@ export default function CoordinatorBoard() {
   const [error, setError] = useState('');
   const [now, setNow] = useState(() => new Date());
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [action, setAction] = useState<CaseAction | null>(null);
   const activeRef = useRef(true);
 
@@ -36,6 +38,8 @@ export default function CoordinatorBoard() {
       if (!activeRef.current) return;
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
       else setError('No se pudieron cargar los casos. Intenta de nuevo.');
+    } finally {
+      if (activeRef.current) setLoaded(true);
     }
   }, []);
 
@@ -95,10 +99,21 @@ export default function CoordinatorBoard() {
       </header>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Kpi value={summary.riesgoAlto} label="Riesgo alto" className="text-accent-coral" />
-        <Kpi value={summary.enCola} label="En cola" className="text-accent-amber" />
-        <Kpi value={summary.psicologos} label="Psicólogos en atención" className="text-accent-teal" />
-        <Kpi value={`${summary.esperaPromedioMin}m`} label="Espera promedio" className="text-navy" />
+        {loaded ? (
+          <>
+            <Kpi value={summary.riesgoAlto} label="Riesgo alto" className="text-accent-coral" />
+            <Kpi value={summary.enCola} label="En cola" className="text-accent-amber" />
+            <Kpi value={summary.psicologos} label="Psicólogos en atención" className="text-accent-teal" />
+            <Kpi value={`${summary.esperaPromedioMin}m`} label="Espera promedio" className="text-navy" />
+          </>
+        ) : (
+          <>
+            <KpiSkeleton />
+            <KpiSkeleton />
+            <KpiSkeleton />
+            <KpiSkeleton />
+          </>
+        )}
       </section>
 
       {error && (
@@ -107,12 +122,16 @@ export default function CoordinatorBoard() {
         </p>
       )}
 
-      <CaseQueueTable
-        cases={board}
-        now={now}
-        onReassign={(caso) => setAction({ caso, mode: 'reassign' })}
-        onClose={(caso) => setAction({ caso, mode: 'close' })}
-      />
+      {!loaded ? (
+        <ListSkeleton rows={5} />
+      ) : (
+        <CaseQueueTable
+          cases={board}
+          now={now}
+          onReassign={(caso) => setAction({ caso, mode: 'reassign' })}
+          onClose={(caso) => setAction({ caso, mode: 'close' })}
+        />
+      )}
 
       {action && (
         <CaseActionModal

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { UserRound } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
+import { ListSkeleton } from '../../../src/components/skeleton';
 import { isLive } from '../../../src/features/coordinator/operations';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import type { CaseSummary } from '../../../src/lib/types';
@@ -23,6 +24,7 @@ export default function PsychologistsOnDutyPage() {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     apiFetch<CaseSummary[]>('/cases')
@@ -30,7 +32,8 @@ export default function PsychologistsOnDutyPage() {
       .catch((err) => {
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
         else setError('No se pudieron cargar los casos.');
-      });
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   const workloads = useMemo<Workload[]>(() => {
@@ -63,6 +66,9 @@ export default function PsychologistsOnDutyPage() {
         </p>
       )}
 
+      {!loaded ? (
+        <ListSkeleton rows={4} />
+      ) : (
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {workloads.map((w) => (
           <article
@@ -96,6 +102,7 @@ export default function PsychologistsOnDutyPage() {
           </div>
         )}
       </section>
+      )}
     </div>
   );
 }
