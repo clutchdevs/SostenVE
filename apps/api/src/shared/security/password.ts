@@ -1,4 +1,4 @@
-import { Algorithm, hash, verify } from '@node-rs/argon2';
+import { Algorithm, hashSync, verifySync } from '@node-rs/argon2';
 import { randomBytes } from 'node:crypto';
 
 /**
@@ -15,8 +15,13 @@ const ARGON2_OPTIONS = {
   parallelism: 1,
 } as const;
 
-export function hashPassword(plain: string): Promise<string> {
-  return hash(plain, ARGON2_OPTIONS);
+// Use the SYNCHRONOUS argon2 bindings, not the async ones. The async variants
+// (`hash`/`verify`) run on a native worker thread whose callback can silently
+// never resolve when the module is bundled into a serverless function (Vercel),
+// hanging the request until the platform timeout. The sync variants are CPU-bound
+// but fast (~50-100ms at these params) and safe in a per-request serverless model.
+export async function hashPassword(plain: string): Promise<string> {
+  return hashSync(plain, ARGON2_OPTIONS);
 }
 
 /**
@@ -30,7 +35,7 @@ export function generatePassword(): string {
 
 export async function verifyPassword(plain: string, passwordHash: string): Promise<boolean> {
   try {
-    return await verify(passwordHash, plain);
+    return verifySync(passwordHash, plain);
   } catch {
     // A malformed hash must not crash auth; treat as a failed verification.
     return false;
