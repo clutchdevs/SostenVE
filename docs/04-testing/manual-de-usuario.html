@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es-VE">
+<head>
+<meta charset="utf-8">
+<title>Manual de usuario — PPV</title>
+<style>
+  @page{ size:A4; }
+  :root{
+    --brand:#2f6bd6; --brand-dark:#1e3a8a; --navy:#191a36;
+    --ink:#1f2937; --muted:#6b7280; --line:#e6e8ee; --tint:#eef4fd; --tint2:#f7f9fc;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.62; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* En PDF los márgenes de página los pone puppeteer (uniformes en TODAS las
+     páginas). En pantalla simulamos hojas con padding + sombra. */
+  .page{ width:100%; }
+  @media screen{
+    body{ background:#eceef3; }
+    .page{ width:210mm; min-height:277mm; padding:15mm 16mm; margin:22px auto;
+      background:#fff; box-shadow:0 6px 24px rgba(0,0,0,.12); }
+  }
+  @media print{ .cover,.toc{ min-height:262mm; } }
+
+  /* ── Portada (tarjeta con degradado) ── */
+  .cover{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    background:linear-gradient(160deg,#22307a 0%,#2f6bd6 100%); color:#fff; border-radius:16px;
+    padding:24mm 20mm; page-break-after:always; }
+  .cover .logo{ width:148px; height:148px; border-radius:28px; background:#fff; padding:10px; object-fit:contain;
+    box-shadow:0 14px 34px rgba(0,0,0,.28); }
+  .cover .kicker{ margin-top:30px; letter-spacing:3px; text-transform:uppercase; font-size:12px;
+    font-weight:700; color:#cfe0ff; }
+  .cover h1{ margin:10px 0 0; font-size:46px; line-height:1.1; color:#fff; font-weight:800; }
+  .cover .sub{ margin-top:14px; font-size:17px; color:#e8eefb; font-weight:600; }
+  .cover .sub b{ color:#fff; }
+  .cover .divider{ width:72px; height:4px; border-radius:3px; background:#8fb4ff; margin:22px auto; }
+  .cover .tag{ max-width:430px; color:#c7d3f0; font-size:14px; }
+  .cover .foot{ margin-top:46px; color:#b8c4e6; font-size:12.5px; }
+  .cover .foot b{ color:#fff; }
+
+  /* ── Índice ── */
+  .toc h2{ font-size:24px; color:var(--navy); margin:0 0 4px; border:0; background:none; padding:0; }
+  .toc .lead{ color:var(--muted); margin:0 0 22px; font-size:13.5px; }
+  .toc ol{ list-style:none; margin:0; padding:0; }
+  .toc li{ display:flex; gap:14px; align-items:flex-start; padding:14px 6px; border-bottom:1px solid var(--line); }
+  .toc .badge{ flex:none; width:34px; height:34px; border-radius:10px; display:flex; align-items:center;
+    justify-content:center; font-weight:800; color:#fff;
+    background:linear-gradient(160deg,var(--brand),var(--brand-dark)); font-size:15px; }
+  .toc .t{ font-weight:700; color:var(--ink); }
+  .toc .d{ color:var(--muted); font-size:12.5px; }
+
+  /* ── Contenido ── */
+  h2{ font-size:21px; color:var(--navy); margin:0 0 14px; padding:10px 0 10px 14px;
+    border-left:5px solid var(--brand); background:linear-gradient(90deg,var(--tint),transparent);
+    page-break-before:always; page-break-after:avoid; border-radius:0 8px 8px 0; }
+  .flow > h2:first-child{ page-break-before:avoid; }
+  h3{ font-size:15.5px; color:var(--brand-dark); margin:24px 0 8px; page-break-after:avoid; }
+  h4{ page-break-after:avoid; }
+  p,li{ font-size:13.5px; }
+  a{ color:var(--brand); text-decoration:none; }
+  strong{ color:#111827; }
+  code{ background:#eef2f7; color:#334155; padding:1px 6px; border-radius:5px; font-size:12px;
+    font-family:ui-monospace,"Cascadia Code",Consolas,monospace; }
+  ul,ol{ padding-left:20px; }
+  li{ margin:3px 0; }
+  blockquote{ margin:16px 0; padding:12px 16px; background:var(--tint); border-left:4px solid var(--brand);
+    border-radius:8px; color:#334155; page-break-inside:avoid; }
+  blockquote p{ font-size:12.8px; margin:4px 0; }
+  table{ border-collapse:separate; border-spacing:0; width:100%; margin:14px 0; font-size:12.5px;
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; page-break-inside:avoid; }
+  th,td{ padding:8px 11px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); }
+  th{ background:var(--navy); color:#fff; font-weight:600; }
+  tr:nth-child(even) td{ background:var(--tint2); }
+  tr:last-child td{ border-bottom:0; }
+
+  /* Figura = imagen + pie, agrupados (no se parten entre páginas). */
+  figure.fig{ margin:18px 0; text-align:center; page-break-inside:avoid; }
+  figure.fig img{ max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 6px 18px rgba(15,23,42,.10); }
+  figure.fig figcaption{ color:var(--muted); font-size:11.5px; margin-top:7px; }
+  /* Fallback por si alguna imagen no tuviera pie. */
+  p[align="center"]{ text-align:center; page-break-inside:avoid; margin:16px 0; }
+  p[align="center"] img{ max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 6px 18px rgba(15,23,42,.10); }
+
+  hr{ border:0; border-top:1px solid var(--line); margin:26px 0; }
+</style>
+</head>
+<body>
+
+  <section class="page cover">
+    <img class="logo" src="img/ppv-logo.jpeg" alt="PPV">
+    <div class="kicker">Federación de Psicólogos de Venezuela</div>
+    <h1>Manual de usuario</h1>
+    <div class="sub"><b>PPV</b> — Programa de Psicólogos Voluntarios</div>
+    <div class="divider"></div>
+    <p class="tag">Apoyo psicológico gratuito para personas afectadas por el terremoto · Venezuela.
+       Guía por rol y guion de pruebas.</p>
+    <div class="foot"><b>Documento para pruebas de la FPV</b> · julio de 2026<br>
+      <span style="font-size:11.5px;">Desarrollado por <b>ClutchDevs</b> · © 2026 · Todos los derechos reservados</span></div>
+  </section>
+
+  <section class="page toc">
+    <h2>Contenido</h2>
+    <p class="lead">Este manual explica, paso a paso, qué puede hacer cada tipo de usuario.</p>
+    <ol>
+      <li><span class="badge">A</span><div><a class="t" href="#parte-a--solicitante-persona-que-pide-ayuda">Solicitante</a><div class="d">Cómo una persona pide apoyo (público, sin cuenta).</div></div></li>
+      <li><span class="badge">B</span><div><a class="t" href="#parte-b--psicólogo-voluntario">Psicólogo voluntario</a><div class="d">Registro, disponibilidad y atención de casos.</div></div></li>
+      <li><span class="badge">C</span><div><a class="t" href="#parte-c--coordinador">Coordinador</a><div class="d">Cola en vivo, reasignación y gestión de voluntarios.</div></div></li>
+      <li><span class="badge">D</span><div><a class="t" href="#parte-d--administrador">Administrador</a><div class="d">Configuración y supervisión de la plataforma.</div></div></li>
+      <li><span class="badge">✓</span><div><a class="t" href="#guion-de-pruebas-sugerido-recorrido-end-to-end">Guion de pruebas</a><div class="d">Recorrido end-to-end sugerido para la FPV.</div></div></li>
+      <li><span class="badge">ℹ</span><div><a class="t" href="#notas-para-las-pruebas">Notas para las pruebas</a><div class="d">Formatos, correos, disponibilidad, móvil.</div></div></li>
+    </ol>
+  </section>
+
+  <main class="page flow">
+<h2>Los 4 tipos de usuario</h2>
+<table>
+<thead>
+<tr>
+<th>Rol</th>
+<th>Quién es</th>
+<th>Cómo entra</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Solicitante</strong></td>
+<td>Persona que busca apoyo psicológico</td>
+<td>Público, <strong>sin cuenta</strong></td>
+</tr>
+<tr>
+<td><strong>Psicólogo</strong></td>
+<td>Voluntario que atiende casos</td>
+<td>Se registra / recibe credenciales por correo</td>
+</tr>
+<tr>
+<td><strong>Coordinador</strong></td>
+<td>Gestiona la operación diaria</td>
+<td>Recibe una <strong>invitación</strong> por correo</td>
+</tr>
+<tr>
+<td><strong>Administrador</strong></td>
+<td>Configura y supervisa la plataforma</td>
+<td>Cuenta creada por el equipo técnico</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Parte A — Solicitante (persona que pide ayuda)</h2>
+<p><strong>No necesita cuenta.</strong> Todo es anónimo y gratuito.</p>
+<h3>A.1 Pedir apoyo</h3>
+<ol>
+<li>Entra a <code>https://TU-WEB.vercel.app</code>.</li>
+<li>Toca el botón grande <strong>&quot;Necesito apoyo psicológico&quot;</strong>.</li>
+</ol>
+<figure class="fig"><img src="img/01-landing.png" alt="Pantalla de inicio" width="320"><figcaption>Pantalla de inicio: el botón azul es la acción principal para quien busca ayuda.</figcaption></figure>
+<ol start="3">
+<li>Aparece la pregunta <strong>&quot;¿Cómo te sientes en este momento?&quot;</strong> con 5 opciones. Según la respuesta,
+el sistema enruta a una de dos vías (roja o verde).</li>
+</ol>
+<figure class="fig"><img src="img/02-intake-triage.png" alt="Triage inicial" width="320"><figcaption>Triage: la persona indica cómo se siente; eso decide la prioridad y la ruta.</figcaption></figure>
+<h3>A.2 Ruta ROJA (riesgo alto / emergencia)</h3>
+<p>Si elige <em>&quot;Estoy en crisis / en peligro ahora&quot;</em> o <em>&quot;Muy mal, necesito ayuda pronto&quot;</em>:</p>
+<ul>
+<li>Se muestran <strong>de inmediato las líneas de crisis</strong> (teléfonos para llamar ya).</li>
+<li>Puede pedir que <strong>lo contacten</strong>: <em>&quot;Recibir una llamada&quot;</em> o <em>&quot;WhatsApp silencioso&quot;</em>, dejando un
+teléfono (formato venezolano: <code>0414/0424/0412/0416/0426</code> + 7 dígitos) y, opcionalmente, la edad.</li>
+<li>Al enviar, la solicitud entra a la cola con <strong>prioridad alta</strong>.</li>
+</ul>
+<figure class="fig"><img src="img/03-intake-roja.png" alt="Ruta roja — líneas de crisis" width="320"><figcaption>Ruta roja: líneas de crisis inmediatas + opción de ser contactado.</figcaption></figure>
+<h3>A.3 Ruta VERDE (seguimiento)</h3>
+<p>Si elige una opción más leve, entra a un formulario de <strong>4 pasos</strong>:</p>
+<ol>
+<li><strong>Síntomas</strong> — marca lo que aplique.</li>
+<li><strong>Ubicación</strong> — estado (y ciudad opcional).</li>
+<li><strong>Hábitos</strong> — cambios recientes (sueño, alimentación…), opcional.</li>
+<li><strong>Contacto</strong> — nombre (opcional), <strong>edad</strong> (ayuda a asignar atención infantil o adulta),
+teléfono y si prefiere <strong>llamada</strong> o <strong>WhatsApp</strong>.</li>
+</ol>
+<p>Al enviar, verá la confirmación de que <strong>un psicólogo voluntario lo contactará</strong>.</p>
+<figure class="fig"><img src="img/04-intake-verde.png" alt="Ruta verde — formulario" width="320"><figcaption>Ruta verde: formulario por pasos para atención no urgente.</figcaption></figure>
+<h3>A.4 Guías de autoayuda</h3>
+<p>El enlace <strong>&quot;Guías de autoayuda&quot;</strong> (<code>/guias</code>) abre ejercicios de Primeros Auxilios Psicológicos
+(respiración, anclaje, sueño, acompañar a un niño, duelo…).</p>
+<figure class="fig"><img src="img/05-guias.png" alt="Guías de autoayuda" width="320"><figcaption>Guías de autoayuda (Primeros Auxilios Psicológicos).</figcaption></figure>
+<blockquote>
+<p>💡 <strong>Qué probar:</strong> crea varios casos con distintas respuestas (rojas y verdes), con y sin edad de
+menor, para ver cómo se clasifican y asignan.</p>
+</blockquote>
+<hr>
+<h2>Parte B — Psicólogo voluntario</h2>
+<h3>B.1 Registrarse</h3>
+<ol>
+<li>En el inicio → <strong>&quot;Registrarme como psicólogo&quot;</strong> (<code>/registro</code>).</li>
+<li>Completa: nombre, documento (V/E/P), <strong>nº FPV</strong>, correo, teléfono, universidad, año de egreso,
+colegio, modalidad (presencial / a distancia), <strong>disponibilidad horaria</strong>, formación en PAP, y
+<strong>acepta el consentimiento informado</strong> (obligatorio).</li>
+<li>Al enviar:<ul>
+<li>Si el nº FPV se <strong>valida automáticamente</strong> → cuenta aprobada y llegan las <strong>credenciales por correo</strong>.</li>
+<li>Si no se puede validar → queda <strong>pendiente de revisión</strong> por un coordinador/administrador.</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>⚠️ En pruebas, si el padrón FPV no está conectado, los registros quedan <strong>pendientes</strong> y un admin
+los aprueba a mano (ver <a href="#d1-excepciones-de-registro-admin">D.1</a>). Alternativa: que el equipo
+técnico cree la cuenta directamente.</p>
+</blockquote>
+<h3>B.2 Entrar y ponerse disponible</h3>
+<ol>
+<li>Inicio → <strong>&quot;Ingresar como profesional&quot;</strong> (<code>/login</code>) → correo + contraseña.</li>
+<li>Entras al <strong>portal del psicólogo</strong>.</li>
+<li>Arriba a la derecha, pon el interruptor en <strong>&quot;Disponible&quot;</strong> 🟢 para <strong>recibir casos</strong> (déjalo así
+con la pestaña abierta; en &quot;En pausa&quot; no se te asignan casos).</li>
+</ol>
+<figure class="fig"><img src="img/06-login.png" alt="Inicio de sesión" width="320"><figcaption>Inicio de sesión del personal (psicólogos y coordinadores).</figcaption></figure>
+<h3>B.3 Tus casos</h3>
+<p><strong>Inicio</strong> (<code>/psicologo</code>): saludo, indicadores (nuevos / en curso / atendidos este mes) y tus casos activos.</p>
+<figure class="fig"><img src="img/10-psicologo-inicio.png" alt="Portal del psicólogo — inicio" width="320"><figcaption>Portal del psicólogo: indicadores y casos activos.</figcaption></figure>
+<p><strong>Mis casos</strong> (<code>/psicologo/casos</code>): lista completa con <strong>filtros</strong> (Estado: Activos / Cerrados / Todos ·
+Riesgo · Rama) y un botón <strong>&quot;Limpiar filtros&quot;</strong>.</p>
+<figure class="fig"><img src="img/11-psicologo-casos.png" alt="Mis casos" width="320"><figcaption>&quot;Mis casos&quot;: por defecto muestra los activos; los cerrados quedan en su propio filtro.</figcaption></figure>
+<h3>B.4 Atender un caso</h3>
+<ol>
+<li>Abre un caso de tu lista.</li>
+<li>Si está <strong>asignado</strong> (nuevo), toca <strong>&quot;Aceptar caso&quot;</strong> → verás los datos de contacto del solicitante.</li>
+<li>Con el caso <strong>aceptado</strong> puedes:<ul>
+<li><strong>Registrar notas clínicas</strong> (con reglas de seguridad, p. ej. el TEPT no se registra antes de 4
+semanas del evento).</li>
+<li><strong>Cerrar el caso</strong> con el formulario de cierre estructurado (contactabilidad, síntomas, técnicas,
+motivo, derivación, horas). El cierre es <strong>definitivo</strong>.</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Qué probar:</strong> ponte disponible, recibe un caso, acéptalo, agrega una nota y ciérralo. Verifica
+que sale de &quot;Activos&quot; y aparece en &quot;Cerrados&quot;.</p>
+</blockquote>
+<hr>
+<h2>Parte C — Coordinador</h2>
+<h3>C.1 Activar la cuenta (por invitación)</h3>
+<ol>
+<li>Un administrador te <strong>invita por correo</strong> (ver <a href="#d5-coordinadores-admincoordinadores">D.5</a>). El
+correo trae un enlace a <code>/registro-coordinador?token=…</code>.</li>
+<li>Abre el enlace, completa tus datos y <strong>define una contraseña</strong> (mín. 12 caracteres, con mayúsculas,
+números y símbolo) → cuenta activada.</li>
+<li>Entra por <strong>&quot;Ingresar como profesional&quot;</strong> (<code>/login</code>) o <code>/login-coordinador</code>.</li>
+</ol>
+<h3>C.2 Cola de casos en vivo (<code>/coordinador</code>)</h3>
+<p>Indicadores (riesgo alto, en cola, psicólogos en atención, espera promedio), alertas de <strong>SLA vencido</strong>,
+y la tabla de casos que <strong>se actualiza sola</strong>. Desde cada caso puedes <strong>Reasignar</strong> (a otro psicólogo) o
+<strong>Cerrar</strong> administrativamente.</p>
+<figure class="fig"><img src="img/20-coordinador-cola.png" alt="Cola de casos en vivo" width="900"><figcaption>Cola en vivo: casos priorizados por urgencia, con alertas de SLA.</figcaption></figure>
+<h3>C.3 Psicólogos en atención (<code>/coordinador/psicologos</code>)</h3>
+<p>Quién tiene casos activos asignados ahora mismo y cuántos.</p>
+<figure class="fig"><img src="img/21-coordinador-psicologos.png" alt="Psicólogos en atención" width="900"><figcaption>Carga de trabajo por psicólogo.</figcaption></figure>
+<h3>C.4 Voluntarios (<code>/coordinador/voluntarios</code>)</h3>
+<p><strong>Aprobar / suspender</strong> psicólogos y dejar <strong>notas confidenciales</strong>. Con búsqueda y filtros por estado.</p>
+<figure class="fig"><img src="img/22-coordinador-voluntarios.png" alt="Voluntarios" width="900"><figcaption>Gestión de voluntarios: aprobar, suspender y notas confidenciales.</figcaption></figure>
+<h3>C.5 Reportes (<code>/coordinador/reportes</code>)</h3>
+<p>Estado operativo de la cola por categoría de riesgo.</p>
+<figure class="fig"><img src="img/23-coordinador-reportes.png" alt="Reportes" width="900"><figcaption>Reportes: cola por categoría de riesgo.</figcaption></figure>
+<blockquote>
+<p>💡 <strong>Qué probar:</strong> con un caso en cola, reasígnalo a un psicólogo; suspende y reactiva un
+voluntario; revisa que los indicadores cuadren.</p>
+</blockquote>
+<hr>
+<h2>Parte D — Administrador</h2>
+<p>Entra por <code>/login</code> → panel <strong><code>/admin</code></strong>. En escritorio hay un menú lateral; en móvil, el <strong>ícono de
+hamburguesa</strong> ☰ arriba a la derecha.</p>
+<h3>D.1 Excepciones de registro (<code>/admin</code>)</h3>
+<p>Psicólogos que <strong>no se validaron automáticamente</strong>. Puedes <strong>Aprobar</strong> (se activan y reciben
+credenciales por correo) o <strong>Rechazar</strong> cada uno.</p>
+<figure class="fig"><img src="img/30-admin-excepciones.png" alt="Excepciones de registro" width="900"><figcaption>Excepciones de registro pendientes de revisión.</figcaption></figure>
+<h3>D.2 Padrón de psicólogos (<code>/admin/padron</code>)</h3>
+<p>Listado de <strong>todas</strong> las personas registradas, con búsqueda y filtro por estado. Solo lectura.</p>
+<figure class="fig"><img src="img/31-admin-padron.png" alt="Padrón de psicólogos" width="900"><figcaption>Padrón completo de psicólogos registrados.</figcaption></figure>
+<h3>D.3 Líneas de crisis (<code>/admin/lineas</code>)</h3>
+<p><strong>Crear / editar / activar / desactivar / eliminar</strong> las líneas de crisis que ve el público (nombre,
+teléfono, cobertura, prioridad y franja horaria opcional para el ruteo).</p>
+<figure class="fig"><img src="img/32-admin-lineas.png" alt="Líneas de crisis" width="900"><figcaption>Administración de las líneas de crisis.</figcaption></figure>
+<h3>D.4 Asignación de casos (<code>/admin/asignacion</code>)</h3>
+<p>Define el <strong>tope de casos activos por psicólogo</strong> (balanceo de carga). Los casos de <strong>alto riesgo</strong>
+pueden exceder el tope para no quedar sin atención.</p>
+<figure class="fig"><img src="img/33-admin-asignacion.png" alt="Asignación de casos" width="900"><figcaption>Tope de casos activos por psicólogo.</figcaption></figure>
+<h3>D.5 Coordinadores (<code>/admin/coordinadores</code>)</h3>
+<p><strong>Invitar coordinadores</strong> por correo (el token también se muestra una vez por si hay que compartirlo a
+mano) y <strong>revocar</strong> invitaciones pendientes.</p>
+<figure class="fig"><img src="img/34-admin-coordinadores.png" alt="Coordinadores" width="900"><figcaption>Invitación y gestión de coordinadores.</figcaption></figure>
+<h3>D.6 Auditoría (<code>/admin/auditoria</code>)</h3>
+<p>Registro <strong>inmutable</strong> de las acciones sensibles (quién hizo qué y cuándo), con filtro y paginación. No
+se puede editar ni borrar (por diseño).</p>
+<figure class="fig"><img src="img/35-admin-auditoria.png" alt="Auditoría" width="900"><figcaption>Registro de auditoría (append-only).</figcaption></figure>
+<blockquote>
+<p>💡 <strong>Qué probar:</strong> aprueba un registro pendiente; crea una línea de crisis y compruébala en el
+intake; cambia el tope de asignación; invita a un coordinador; revisa que todo quede en Auditoría.</p>
+</blockquote>
+<hr>
+<h2>Guion de pruebas sugerido (recorrido end-to-end)</h2>
+<p>Un recorrido que ejercita todo el sistema, en orden:</p>
+<ol>
+<li><strong>Admin</strong> → crea/verifica una <strong>línea de crisis</strong> → ajusta el <strong>tope de asignación</strong> → <strong>invita a un
+coordinador</strong>.</li>
+<li><strong>Coordinador</strong> activa su cuenta desde el correo de invitación e inicia sesión.</li>
+<li><strong>Psicólogo</strong> se registra (o el admin lo crea) → el <strong>admin lo aprueba</strong> en Excepciones → el
+psicólogo inicia sesión y se pone <strong>&quot;Disponible&quot;</strong>.</li>
+<li><strong>Solicitante</strong> (sin cuenta) crea <strong>dos casos</strong>: uno <strong>rojo</strong> (emergencia) y uno <strong>verde</strong> (seguimiento).</li>
+<li>El caso <strong>se auto-asigna</strong> al psicólogo en línea → el psicólogo lo <strong>acepta</strong>, agrega una <strong>nota</strong> y
+lo <strong>cierra</strong>.</li>
+<li><strong>Coordinador</strong> revisa la <strong>cola en vivo</strong>, <strong>reasigna</strong> o cierra un caso, y mira <strong>Reportes</strong>.</li>
+<li><strong>Admin</strong> revisa la <strong>Auditoría</strong> para ver el rastro de todas esas acciones.</li>
+</ol>
+<hr>
+<h2>Notas para las pruebas</h2>
+<ul>
+<li>Es un <strong>entorno de pruebas</strong>: los datos son ficticios y se pueden borrar. El equipo técnico puede
+<strong>limpiar la base</strong> entre rondas (deja la configuración y los admins).</li>
+<li><strong>Teléfonos</strong>: solo móviles venezolanos (<code>0414/0424/0412/0416/0426</code> + 7 dígitos).</li>
+<li><strong>Cédulas</strong>: hasta 8 dígitos (V/E); pasaporte (P) alfanumérico.</li>
+<li><strong>Correos reales</strong>: si el envío SMTP está activo, las aprobaciones/invitaciones llegan a la bandeja
+(revisen también <strong>spam</strong>). Si no, el equipo técnico comparte las credenciales/tokens.</li>
+<li><strong>Disponibilidad del psicólogo</strong>: para recibir casos debe estar <strong>&quot;Disponible&quot;</strong> con la pestaña
+abierta. Si se desconecta, deja de recibir casos nuevos (pero conserva los que ya aceptó).</li>
+<li><strong>En móvil</strong>: el menú de cada portal está en el <strong>ícono de hamburguesa</strong> ☰ arriba a la derecha.</li>
+</ul>
+<hr>
+<p><em>Cualquier duda o hallazgo durante las pruebas, anótenlo con la pantalla (rol), lo que hicieron y lo
+que esperaban vs. lo que pasó — así el equipo lo reproduce y corrige rápido.</em></p>
+
+  </main>
+
+</body>
+</html>
