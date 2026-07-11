@@ -22,6 +22,6 @@ test('a mild answer routes to the green branch', async ({ page }) => {
 
 test('the landing offers staff access', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: /psicólogo o coordinador/i }).click();
+  await page.getByRole('link', { name: /ingresar como profesional/i }).click();
   await expect(page).toHaveURL(/\/login/);
 });
