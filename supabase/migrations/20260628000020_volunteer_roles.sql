@@ -6,9 +6,11 @@
 --
 -- `role` is kept as the PRIMARY role (used for the default post-login redirect and
 -- back-compat); `roles` is the authoritative set that authorization checks against.
+--
+-- Written idempotently so it is safe to re-run.
 
 alter table volunteers
-  add column roles volunteer_role[] not null default array[]::volunteer_role[];
+  add column if not exists roles volunteer_role[] not null default array[]::volunteer_role[];
 
 -- Backfill existing rows: everyone starts with exactly their current single role.
 update volunteers set roles = array[role] where cardinality(roles) = 0;
@@ -24,6 +26,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists trg_volunteers_default_roles on volunteers;
 create trigger trg_volunteers_default_roles
   before insert or update on volunteers
   for each row execute function volunteers_default_roles();
