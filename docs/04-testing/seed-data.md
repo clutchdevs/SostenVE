@@ -17,6 +17,7 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 | Coordinador | `coordinador@ppv.test` | `Coordinador123!` | `/coordinador` |
 | Psicólogo (infantil) | `psicologo@ppv.test` | `Psicologo123!` | `/psicologo` |
 | Psicólogo (adultos) | `psicologo.adultos@ppv.test` | `Psicologo123!` | `/psicologo` |
+| **Doble rol** (coordinador + psicólogo) | `dual@ppv.test` | `Coordinador123!` | `/coordinador` |
 | Administrador | `admin@ppv.test` | `Admin123!` | `/admin` |
 
 - Hay **dos psicólogos activos** para probar la asignación: uno con especialidad **"psicología infantil"**
