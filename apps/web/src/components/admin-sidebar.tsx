@@ -80,9 +80,8 @@ export function AdminSidebar() {
             </Link>
           );
         })}
+        <PortalSwitcher current="admin" />
       </nav>
-
-      <PortalSwitcher current="admin" />
 
       <div className="px-3 pb-5">
         <div className="rounded-2xl bg-white/5 p-3">

@@ -62,9 +62,8 @@ export function CoordinatorSidebar() {
             </Link>
           );
         })}
+        <PortalSwitcher current="coordinator" />
       </nav>
-
-      <PortalSwitcher current="coordinator" />
 
       <div className="px-3 pb-5">
         <div className="rounded-2xl bg-white/5 p-3">

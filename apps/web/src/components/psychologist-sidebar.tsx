@@ -76,9 +76,8 @@ export function PsychologistSidebar() {
             </Link>
           );
         })}
+        <PortalSwitcher current="psychologist" />
       </nav>
-
-      <PortalSwitcher current="psychologist" />
 
       <div className="px-3 pb-5">
         <div className="rounded-2xl bg-white/5 p-3">

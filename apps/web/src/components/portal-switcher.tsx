@@ -25,9 +25,11 @@ export function PortalSwitcher({ current }: { current: string }) {
 
   if (others.length === 0) return null;
 
+  // Rendered inside the sidebar <nav> (which supplies px-3 + spacing), right
+  // below the current portal's links, with a subtle divider to set it apart.
   return (
-    <div className="mt-2 px-3">
-      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-white/40">
+    <div className="mt-2 border-t border-white/10 pt-2">
+      <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">
         Cambiar de portal
       </p>
       {others.map((r) => (
