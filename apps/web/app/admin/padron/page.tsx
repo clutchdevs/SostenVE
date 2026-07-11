@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, SearchX } from 'lucide-react';
+import { Search, SearchX, X } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { ListSkeleton } from '../../../src/components/skeleton';
+import { Pagination } from '../../../src/components/pagination';
 import {
   filterVolunteers,
   initialsOf,
@@ -25,6 +26,8 @@ const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrador/a',
 };
 
+const PAGE_SIZE = 20;
+
 export default function PadronPage() {
   const [roster, setRoster] = useState<VolunteerView[]>([]);
   const [search, setSearch] = useState('');
@@ -32,6 +35,7 @@ export default function PadronPage() {
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch<VolunteerView[]>('/volunteers?status=all')
@@ -47,6 +51,21 @@ export default function PadronPage() {
     () => filterVolunteers(roster, search, status),
     [roster, search, status],
   );
+
+  // Reset to the first page whenever the filters change.
+  useEffect(() => {
+    setPage(1);
+  }, [search, status]);
+
+  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const filtersActive = search !== '' || status !== 'all';
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatus('all');
+  };
 
   if (needsAuth) return <AuthRequired />;
 
@@ -71,24 +90,36 @@ export default function PadronPage() {
             aria-label="Buscar en el padrón"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {STATUS_TABS.map((tab) => {
-            const active = tab.key === status;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setStatus(tab.key)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  active
-                    ? 'border-navy bg-navy text-white'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {STATUS_TABS.map((tab) => {
+              const active = tab.key === status;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setStatus(tab.key)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active
+                      ? 'border-navy bg-navy text-white'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+          {filtersActive && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              <X className="h-4 w-4" aria-hidden />
+              Limpiar filtros
+            </button>
+          )}
         </div>
       </div>
 
@@ -107,7 +138,7 @@ export default function PadronPage() {
         {!loaded ? (
           <ListSkeleton rows={5} />
         ) : results.length > 0 ? (
-          results.map((v) => {
+          pageItems.map((v) => {
             const style = STATUS_STYLE[v.estado];
             return (
               <article
@@ -143,6 +174,9 @@ export default function PadronPage() {
               <p className="mt-1 text-sm text-slate-500">Ajusta la búsqueda o el filtro de estado.</p>
             </div>
           )
+        )}
+        {loaded && results.length > 0 && (
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         )}
       </section>
     </div>
