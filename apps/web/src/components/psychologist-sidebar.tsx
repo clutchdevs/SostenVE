@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ClipboardList, HeartHandshake, KeyRound, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 import { clearSession, getRole } from '../lib/session';
+import { PortalSwitcher } from './portal-switcher';
 
 const ROLE_LABEL: Record<string, string> = {
   psychologist: 'Psicólogo/a',
@@ -76,6 +77,8 @@ export function PsychologistSidebar() {
           );
         })}
       </nav>
+
+      <PortalSwitcher current="psychologist" />
 
       <div className="px-3 pb-5">
         <div className="rounded-2xl bg-white/5 p-3">

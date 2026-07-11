@@ -15,7 +15,10 @@ export type TokenType = 'access' | 'refresh';
 
 export interface TokenClaims {
   sub: string;
+  /** Primary role (default redirect / back-compat). */
   role: string;
+  /** All roles the account holds (#133); defaults to `[role]` when omitted. */
+  roles?: string[];
   tokenVersion: number;
 }
 
@@ -39,7 +42,12 @@ function getSecret(): Uint8Array {
 }
 
 export async function signToken(claims: TokenClaims, options: SignOptions): Promise<string> {
-  return new SignJWT({ role: claims.role, tokenVersion: claims.tokenVersion, type: options.type })
+  return new SignJWT({
+    role: claims.role,
+    roles: claims.roles ?? [claims.role],
+    tokenVersion: claims.tokenVersion,
+    type: options.type,
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(claims.sub)
     .setJti(randomUUID())
@@ -49,6 +57,8 @@ export async function signToken(claims: TokenClaims, options: SignOptions): Prom
 }
 
 export interface VerifiedToken extends TokenClaims {
+  /** Always populated on a verified token (falls back to `[role]`). */
+  roles: string[];
   jti: string;
   type: TokenType;
   expiresAtMs: number;
@@ -58,17 +68,28 @@ export async function verifyToken(
   token: string,
   options: VerifyOptions = {},
 ): Promise<VerifiedToken> {
-  let payload: JWTPayload & { role?: unknown; tokenVersion?: unknown; type?: unknown };
+  let payload: JWTPayload & {
+    role?: unknown;
+    roles?: unknown;
+    tokenVersion?: unknown;
+    type?: unknown;
+  };
   try {
     ({ payload } = await jwtVerify(token, getSecret()));
   } catch {
     throw new UnauthorizedError('Invalid or expired token');
   }
 
-  const { sub, jti, exp, role, tokenVersion, type } = payload;
+  const { sub, jti, exp, role, roles, tokenVersion, type } = payload;
   if (!sub || !jti || typeof role !== 'string' || typeof tokenVersion !== 'number') {
     throw new UnauthorizedError('Malformed token');
   }
+  // Back-compat: tokens issued before multi-role carry no `roles` — fall back to
+  // the single primary role so existing sessions keep working across the rollout.
+  const roleSet =
+    Array.isArray(roles) && roles.every((r) => typeof r === 'string')
+      ? (roles as string[])
+      : [role];
   if (options.expectedType && type !== options.expectedType) {
     throw new UnauthorizedError('Unexpected token type');
   }
@@ -85,6 +106,7 @@ export async function verifyToken(
   return {
     sub,
     role,
+    roles: roleSet,
     tokenVersion,
     jti,
     type: type as TokenType,

@@ -62,8 +62,12 @@ function invitationRepo(invitation: CoordinatorInvitation | null) {
   return { repo, calls };
 }
 
-function volunteerRepo() {
+/** Fake volunteer repo. Pass `existing` to simulate the invited email already
+ *  having an account (#133) — then accept adds a role instead of creating one. */
+function volunteerRepo(existing: Volunteer | null = null) {
   const created: NewVolunteer[] = [];
+  const roleAdds: { id: string; role: string }[] = [];
+  const statusSets: { id: string; status: string }[] = [];
   const repo: VolunteerRepository = {
     async create(input) {
       created.push(input);
@@ -73,14 +77,18 @@ function volunteerRepo() {
         professionalId: input.professionalId,
         email: input.email,
         role: input.role ?? 'coordinator',
+        roles: input.roles ?? [input.role ?? 'coordinator'],
         tokenVersion: 1,
         status: input.status ?? 'active',
         createdAt: new Date(),
       };
       return volunteer;
     },
+    async addRole(id, role) {
+      roleAdds.push({ id, role });
+    },
     async findById() {
-      return null;
+      return existing;
     },
     async getDetailById() {
       return null;
@@ -89,19 +97,21 @@ function volunteerRepo() {
       return null;
     },
     async findByEmail() {
-      return null;
+      return existing;
     },
     async listByStatus() {
-      return [];
+      return existing ? [existing] : [];
     },
     async listAll() {
-      return [];
+      return existing ? [existing] : [];
     },
     async getPasswordHash() {
       return null;
     },
     async updatePasswordHash() {},
-    async setStatus() {},
+    async setStatus(id, status) {
+      statusSets.push({ id, status });
+    },
     async getTokenVersion() {
       return 1;
     },
@@ -109,7 +119,22 @@ function volunteerRepo() {
       return 2;
     },
   };
-  return { repo, created };
+  return { repo, created, roleAdds, statusSets };
+}
+
+function existingPsychologist(overrides: Partial<Volunteer> = {}): Volunteer {
+  return {
+    id: 'psy-existing',
+    fullName: 'Ana Psicóloga',
+    professionalId: 'FPV-PSY',
+    email: 'coord@example.com',
+    role: 'psychologist',
+    roles: ['psychologist'],
+    tokenVersion: 1,
+    status: 'active',
+    createdAt: new Date(),
+    ...overrides,
+  };
 }
 
 function recordingAudit(): AuditLogRepository & { actions: string[] } {
@@ -147,6 +172,8 @@ describe('acceptInvitation', () => {
     );
 
     expect(result.volunteerId).toBe('vol-new');
+    expect(result.roleAdded).toBe(false);
+    expect(volunteers.roleAdds).toHaveLength(0);
     const created = volunteers.created[0]!;
     expect(created.role).toBe('coordinator');
     expect(created.status).toBe('active');
@@ -161,6 +188,50 @@ describe('acceptInvitation', () => {
     expect(await verifyPassword('Str0ng-P4ssw0rd!!', created.passwordHash)).toBe(true);
     expect(invitations.calls.accepted).toEqual([{ id: 'inv-1', volunteerId: 'vol-new' }]);
     expect(audit.actions).toContain('coordinator_invitation_accepted');
+  });
+
+  it('adds the coordinator role to an account that already has the invited email (#133)', async () => {
+    const invitations = invitationRepo(invitationFixture());
+    const volunteers = volunteerRepo(existingPsychologist());
+    const audit = recordingAudit();
+
+    // No sign-up profile is needed: the account already exists.
+    const result = await acceptInvitation(
+      { token: TOKEN },
+      { invitations: invitations.repo, volunteers: volunteers.repo, audit },
+    );
+
+    expect(result).toEqual({ volunteerId: 'psy-existing', roleAdded: true });
+    expect(volunteers.roleAdds).toEqual([{ id: 'psy-existing', role: 'coordinator' }]);
+    // No duplicate account is created (the previous bug).
+    expect(volunteers.created).toHaveLength(0);
+    expect(invitations.calls.accepted).toEqual([{ id: 'inv-1', volunteerId: 'psy-existing' }]);
+    expect(audit.actions).toContain('coordinator_invitation_accepted');
+  });
+
+  it('reactivates an inactive existing account when granting the coordinator role', async () => {
+    const invitations = invitationRepo(invitationFixture());
+    const volunteers = volunteerRepo(existingPsychologist({ status: 'inactive' }));
+
+    await acceptInvitation(
+      { token: TOKEN },
+      { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
+    );
+
+    expect(volunteers.statusSets).toEqual([{ id: 'psy-existing', status: 'active' }]);
+    expect(volunteers.roleAdds).toEqual([{ id: 'psy-existing', role: 'coordinator' }]);
+  });
+
+  it('requires the full sign-up profile when creating a brand-new account', async () => {
+    const invitations = invitationRepo(invitationFixture());
+    const volunteers = volunteerRepo(); // no existing account for the email
+    await expect(
+      acceptInvitation(
+        { token: TOKEN }, // missing nombres/apellidos/documento/telefono/contraseña
+        { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
+      ),
+    ).rejects.toThrow();
+    expect(volunteers.created).toHaveLength(0);
   });
 
   it('rejects an unknown token without creating a volunteer', async () => {

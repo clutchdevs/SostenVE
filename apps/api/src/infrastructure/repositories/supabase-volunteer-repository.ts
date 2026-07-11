@@ -22,6 +22,7 @@ interface VolunteerRow {
   colegio: string | null;
   phone: string | null;
   role: string;
+  roles: string[] | null;
   token_version: number;
   status: string;
   pending_reason: string | null;
@@ -53,6 +54,8 @@ function toDomain(row: VolunteerRow): Volunteer {
     colegio: row.colegio ?? undefined,
     phone: row.phone ?? undefined,
     role: row.role as VolunteerRole,
+    // Fall back to the primary role for any row read before the roles column existed.
+    roles: (row.roles as VolunteerRole[] | null) ?? [row.role as VolunteerRole],
     tokenVersion: row.token_version,
     status: row.status as VolunteerStatus,
     pendingReason: (row.pending_reason as PendingReason | null) ?? undefined,
@@ -98,6 +101,7 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
         specialty: input.specialty ?? null,
         availability: input.availability ?? null,
         role: input.role ?? 'psychologist',
+        roles: input.roles ?? [input.role ?? 'psychologist'],
         password_hash: input.passwordHash,
         status: input.status ?? 'pending_approval',
         pending_reason: input.pendingReason ?? null,
@@ -158,6 +162,17 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
       .maybeSingle();
     if (error) throw new Error(`Failed to load volunteer: ${error.message}`);
     return data ? toDomain(data as VolunteerRow) : null;
+  }
+
+  async addRole(id: string, role: VolunteerRole): Promise<void> {
+    const current = await this.findById(id);
+    if (!current) throw new Error('Volunteer not found');
+    if (current.roles.includes(role)) return; // idempotent — already has the role
+    const { error } = await this.client
+      .from('volunteers')
+      .update({ roles: [...current.roles, role], updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw new Error(`Failed to add role: ${error.message}`);
   }
 
   async listByStatus(status: VolunteerStatus): Promise<Volunteer[]> {

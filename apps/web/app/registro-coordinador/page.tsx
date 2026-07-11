@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
 import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
@@ -16,10 +16,10 @@ import {
 
 /**
  * Coordinator self-activation page (RF-2.6). Opened from the invitation email
- * link, which carries the single-use token as `?token=…`. The coordinator fills
- * the structured sign-up fields (RF-2.6.2) and sets a robust password (≥12,
- * mixed) to activate; on success they are sent to the login screen. The token is
- * read from the URL on the client to avoid a Suspense boundary.
+ * link, which carries the single-use token as `?token=…`. The page first resolves
+ * the token: if the invited email ALREADY has an account (#133), the person only
+ * confirms and the coordinator role is added to it (no new password); otherwise
+ * they fill the structured sign-up fields (RF-2.6.2) and set a robust password.
  */
 function isStrongPassword(p: string): boolean {
   return (
@@ -27,9 +27,20 @@ function isStrongPassword(p: string): boolean {
   );
 }
 
+interface InvitationInfo {
+  email: string;
+  nombre: string;
+  cuenta_existente: boolean;
+}
+
 export default function CoordinatorOnboardingPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
+  const [info, setInfo] = useState<InvitationInfo | null>(null);
+  const [lookupError, setLookupError] = useState('');
+  const [lookingUp, setLookingUp] = useState(false);
+
+  // New-account sign-up fields (only used when the email has no account yet).
   const [nombres, setNombres] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [tipoDocumento, setTipoDocumento] = useState<'V' | 'E' | 'P'>('V');
@@ -38,16 +49,59 @@ export default function CoordinatorOnboardingPage() {
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get('token');
-    if (fromUrl) setToken(fromUrl);
+  const lookup = useCallback(async (raw: string) => {
+    const t = raw.trim();
+    if (!t) return;
+    setLookupError('');
+    setLookingUp(true);
+    try {
+      const res = await apiFetch<InvitationInfo>('/coordinators/invitation-info', {
+        method: 'POST',
+        auth: false,
+        body: { token: t },
+      });
+      setInfo(res);
+    } catch {
+      setInfo(null);
+      setLookupError('La invitación es inválida o ha expirado. Revisa el enlace o pide una nueva.');
+    } finally {
+      setLookingUp(false);
+    }
   }, []);
 
-  async function submit() {
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('token');
+    if (fromUrl) {
+      setToken(fromUrl);
+      void lookup(fromUrl);
+    }
+  }, [lookup]);
+
+  // Existing account: token alone adds the coordinator role.
+  async function confirmExisting() {
+    setBusy(true);
+    setError('');
+    try {
+      await apiFetch('/coordinators/accept-invitation', {
+        method: 'POST',
+        auth: false,
+        body: { token: token.trim() },
+      });
+      setDone(true);
+      setTimeout(() => router.replace('/login-coordinador'), 1500);
+    } catch {
+      setError('No se pudo completar. Intenta de nuevo.');
+      setBusy(false);
+    }
+  }
+
+  // New account: full sign-up profile + password.
+  async function submitNew() {
     setError('');
     if (!nombres.trim() || !apellidos.trim() || !numeroDocumento.trim() || !telefono.trim()) {
       setError('Completa nombres, apellidos, cédula y teléfono.');
@@ -77,7 +131,7 @@ export default function CoordinatorOnboardingPage() {
         method: 'POST',
         auth: false,
         body: {
-          token,
+          token: token.trim(),
           nombres: nombres.trim(),
           apellidos: apellidos.trim(),
           tipo_documento: tipoDocumento,
@@ -95,14 +149,13 @@ export default function CoordinatorOnboardingPage() {
           ? 'La invitación es inválida o ha expirado, o los datos no cumplen los requisitos. Revisa e intenta de nuevo.'
           : 'No se pudo completar el registro. Intenta de nuevo.',
       );
-    } finally {
       setBusy(false);
     }
   }
 
   if (done) {
     return (
-      <AuthShell title="¡Cuenta activada!">
+      <AuthShell title={info?.cuenta_existente ? '¡Rol de coordinador añadido!' : '¡Cuenta activada!'}>
         <p className={ui.muted}>Redirigiendo al inicio de sesión…</p>
       </AuthShell>
     );
@@ -110,6 +163,64 @@ export default function CoordinatorOnboardingPage() {
 
   const inputClass = ui.field;
 
+  // Step 1 — resolve the token before showing the right flow.
+  if (!info) {
+    return (
+      <AuthShell
+        title="Registro de coordinador"
+        subtitle="Ingresa el token de tu invitación para continuar."
+        backHref="/"
+      >
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void lookup(token);
+          }}
+        >
+          <input
+            className={inputClass}
+            placeholder="Token de invitación"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          {lookupError && <p className={ui.error}>{lookupError}</p>}
+          <SubmitButton pending={lookingUp} disabled={!token.trim()} pendingText="Verificando…" className="w-full">
+            Continuar
+          </SubmitButton>
+        </form>
+      </AuthShell>
+    );
+  }
+
+  // Step 2a — the email already has an account: only confirm to add the role.
+  if (info.cuenta_existente) {
+    return (
+      <AuthShell
+        title="Añadir rol de coordinador"
+        subtitle="Este correo ya tiene una cuenta en PPV."
+        backHref="/"
+      >
+        <div className="space-y-4">
+          <p className={ui.muted}>
+            La cuenta <strong>{info.email}</strong> ya existe. Al continuar se le añadirá el rol de{' '}
+            <strong>coordinador</strong> y podrás iniciar sesión con tu contraseña actual.
+          </p>
+          {error && <p className={ui.error}>{error}</p>}
+          <SubmitButton
+            pending={busy}
+            pendingText="Añadiendo…"
+            className="w-full"
+            onClick={() => void confirmExisting()}
+          >
+            Añadir rol de coordinador
+          </SubmitButton>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  // Step 2b — brand-new account: full sign-up form.
   return (
     <AuthShell
       title="Registro de coordinador"
@@ -120,15 +231,9 @@ export default function CoordinatorOnboardingPage() {
         className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
-          void submit();
+          void submitNew();
         }}
       >
-        <input
-          className={inputClass}
-          placeholder="Token de invitación"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-        />
         <input
           className={inputClass}
           placeholder="Nombres"

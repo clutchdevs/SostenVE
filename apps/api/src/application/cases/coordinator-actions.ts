@@ -43,7 +43,7 @@ export async function reassignCase(
   }
 
   const volunteer = await deps.volunteers.findById(volunteerId);
-  if (!volunteer || volunteer.role !== 'psychologist' || volunteer.status !== 'active') {
+  if (!volunteer || !volunteer.roles.includes('psychologist') || volunteer.status !== 'active') {
     throw new ApiError(400, 'INVALID_TARGET', 'Target must be an active psychologist');
   }
 

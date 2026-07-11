@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { clearSession, getRole } from '../lib/session';
+import { clearSession, getRoles } from '../lib/session';
 
 const ROLE_LABEL: Record<string, string> = {
   psychologist: 'Psicólogo',
@@ -52,11 +52,11 @@ const ROLE_NAV: Record<string, NavItem[]> = {
 export function StaffHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setRole(getRole());
+    setRoles(getRoles());
   }, []);
 
   // Close the menu on navigation.
@@ -69,7 +69,9 @@ export function StaffHeader() {
     router.push('/login');
   }
 
-  const nav = role ? (ROLE_NAV[role] ?? []) : [];
+  // A role's nav is only listed if we know its destinations; keeps unknown roles
+  // (e.g. admin-only future roles) from rendering an empty group.
+  const navRoles = roles.filter((r) => (ROLE_NAV[r] ?? []).length > 0);
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -93,23 +95,28 @@ export function StaffHeader() {
 
       {open && (
         <nav id="staff-mobile-menu" className="border-t border-slate-200 px-4 py-2">
-          {role && (
-            <span className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-              {ROLE_LABEL[role] ?? role}
-            </span>
-          )}
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive(item) ? 'page' : undefined}
-              className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
-                isActive(item) ? 'bg-slate-100 text-brand' : 'text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              {item.label}
-            </Link>
+          {/* One group per role the account holds (#133), so a psychologist who is
+              also a coordinator can reach both portals from the same menu. */}
+          {navRoles.map((r, i) => (
+            <div key={r} className={i > 0 ? 'mt-2 border-t border-slate-100 pt-2' : undefined}>
+              <span className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                {ROLE_LABEL[r] ?? r}
+              </span>
+              {(ROLE_NAV[r] ?? []).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive(item) ? 'page' : undefined}
+                  className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                    isActive(item) ? 'bg-slate-100 text-brand' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           ))}
+          <div className="mt-2 border-t border-slate-100 pt-2" />
           <Link
             href="/cambiar-contrasena"
             aria-current={pathname === '/cambiar-contrasena' ? 'page' : undefined}

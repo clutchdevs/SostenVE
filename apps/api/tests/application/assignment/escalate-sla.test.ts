@@ -24,6 +24,7 @@ function coordinator(): Volunteer {
     fullName: 'Coord',
     professionalId: 'FPV-C',
     role: 'coordinator',
+    roles: ['coordinator'],
     tokenVersion: 1,
     status: 'active',
     createdAt: new Date(),

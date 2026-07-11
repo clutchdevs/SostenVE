@@ -209,22 +209,36 @@ export const coordinatorInviteSchema = z.object({
 });
 
 // Coordinator sign-up (RF-2.6.2): structured identity + robust password + token.
+// The profile fields are optional because an invitation for an email that ALREADY
+// has an account only adds the coordinator role (#133) — token alone is enough;
+// they are still required (enforced in the use case) when creating a new account.
 export const acceptInvitationSchema = z
   .object({
     token: z.string().min(1),
-    nombres: z.string().min(1),
-    apellidos: z.string().min(1),
-    tipo_documento: z.enum(['V', 'E', 'P']),
-    numero_documento: z.string().min(1),
+    nombres: z.string().min(1).optional(),
+    apellidos: z.string().min(1).optional(),
+    tipo_documento: z.enum(['V', 'E', 'P']).optional(),
+    numero_documento: z.string().min(1).optional(),
     // FPV is optional for support/logistics coordinators.
     numero_fpv: z.string().min(1).optional(),
-    telefono: venezuelanPhoneSchema,
-    contrasena: strongPasswordSchema,
+    telefono: venezuelanPhoneSchema.optional(),
+    contrasena: strongPasswordSchema.optional(),
   })
-  .refine((v) => isValidDocumentNumber(v.tipo_documento, v.numero_documento), {
-    message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
-    path: ['numero_documento'],
-  });
+  .refine(
+    (v) =>
+      !v.tipo_documento ||
+      !v.numero_documento ||
+      isValidDocumentNumber(v.tipo_documento, v.numero_documento),
+    {
+      message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
+      path: ['numero_documento'],
+    },
+  );
+
+// Public preview of an invitation (token only) so onboarding can adapt the flow.
+export const invitationInfoSchema = z.object({
+  token: z.string().min(1),
+});
 
 export const auditQuerySchema = z.object({
   accion: z.string().min(1).optional(),
@@ -279,6 +293,7 @@ export type ReassignCaseBody = z.infer<typeof reassignCaseSchema>;
 export type CoordinatorCloseBody = z.infer<typeof coordinatorCloseSchema>;
 export type CoordinatorInviteBody = z.infer<typeof coordinatorInviteSchema>;
 export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
+export type InvitationInfoBody = z.infer<typeof invitationInfoSchema>;
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;

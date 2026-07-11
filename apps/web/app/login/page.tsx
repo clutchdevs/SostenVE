@@ -31,12 +31,12 @@ export default function LoginPage() {
     setError('');
     setSubmitting(true);
     try {
-      const res = await apiFetch<{ token: string; rol: string }>('/auth/login', {
+      const res = await apiFetch<{ token: string; rol: string; roles?: string[] }>('/auth/login', {
         method: 'POST',
         auth: false,
         body: { email, contrasena: password },
       });
-      saveSession(res.token, res.rol);
+      saveSession(res.token, res.rol, res.roles ?? [res.rol]);
       router.replace(homePathForRole(res.rol));
       // Keep the button disabled through the redirect; the page unmounts.
     } catch {

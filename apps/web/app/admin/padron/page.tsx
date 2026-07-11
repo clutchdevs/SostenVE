@@ -152,7 +152,12 @@ export default function PadronPage() {
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-navy">{v.nombre}</p>
                     <p className="truncate text-sm text-slate-500">
-                      {[v.cedula_profesional, v.especialidad, ROLE_LABEL[v.rol] ?? v.rol]
+                      {[
+                        v.cedula_profesional,
+                        v.especialidad,
+                        // All roles the account holds (#133), e.g. "Psicólogo/a · Coordinador/a".
+                        (v.roles ?? [v.rol]).map((r) => ROLE_LABEL[r] ?? r).join(' · '),
+                      ]
                         .filter(Boolean)
                         .join(' · ')}
                     </p>
