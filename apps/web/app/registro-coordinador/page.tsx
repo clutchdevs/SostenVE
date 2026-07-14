@@ -13,10 +13,10 @@ import { ui } from '../../src/lib/ui';
  * link, which carries the single-use token as `?token=…`.
  *
  * Every coordinator is a registered psychologist first (canonical order): this
- * page never collects a profile or password. It resolves the token and, if the
- * invited email already has an account, the person confirms and the coordinator
- * role is added to it. If the email has no account yet, the invitation cannot be
- * accepted and the page points them to register as a psychologist first.
+ * page never collects a profile or password. Opening the link with a valid token
+ * for an existing account activates the coordinator role automatically; the person
+ * just acknowledges and continues to the coordinator portal. If the email has no
+ * account yet, it points them to register as a psychologist first.
  */
 interface InvitationInfo {
   email: string;
@@ -28,17 +28,16 @@ export default function CoordinatorOnboardingPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
   const [info, setInfo] = useState<InvitationInfo | null>(null);
-  const [lookupError, setLookupError] = useState('');
-  const [lookingUp, setLookingUp] = useState(false);
-  const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [granted, setGranted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [working, setWorking] = useState(false);
 
-  const lookup = useCallback(async (raw: string) => {
+  // Resolve the token and, for an existing account, activate the role right away.
+  const resolve = useCallback(async (raw: string) => {
     const t = raw.trim();
     if (!t) return;
-    setLookupError('');
-    setLookingUp(true);
+    setErrorMsg('');
+    setWorking(true);
     try {
       const res = await apiFetch<InvitationInfo>('/coordinators/invitation-info', {
         method: 'POST',
@@ -46,11 +45,20 @@ export default function CoordinatorOnboardingPage() {
         body: { token: t },
       });
       setInfo(res);
+      if (res.cuenta_existente) {
+        // Assign the coordinator role automatically — no extra confirmation.
+        await apiFetch('/coordinators/accept-invitation', {
+          method: 'POST',
+          auth: false,
+          body: { token: t },
+        });
+        setGranted(true);
+      }
     } catch {
       setInfo(null);
-      setLookupError('La invitación es inválida o ha expirado. Revisa el enlace o pide una nueva.');
+      setErrorMsg('La invitación es inválida, ya fue usada o ha expirado. Revisa el enlace o pide una nueva.');
     } finally {
-      setLookingUp(false);
+      setWorking(false);
     }
   }, []);
 
@@ -58,68 +66,34 @@ export default function CoordinatorOnboardingPage() {
     const fromUrl = new URLSearchParams(window.location.search).get('token');
     if (fromUrl) {
       setToken(fromUrl);
-      void lookup(fromUrl);
+      void resolve(fromUrl);
     }
-  }, [lookup]);
+  }, [resolve]);
 
-  // The token alone adds the coordinator role to the existing account.
-  async function confirm() {
-    setBusy(true);
-    setError('');
-    try {
-      await apiFetch('/coordinators/accept-invitation', {
-        method: 'POST',
-        auth: false,
-        body: { token: token.trim() },
-      });
-      setDone(true);
-      setTimeout(() => router.replace('/login-coordinador'), 1500);
-    } catch {
-      setError('No se pudo completar. Intenta de nuevo.');
-      setBusy(false);
-    }
-  }
-
-  if (done) {
+  // Success — the role was assigned via the link. Acknowledge and go to the portal.
+  if (granted) {
     return (
-      <AuthShell title="¡Rol de coordinador añadido!">
-        <p className={ui.muted}>Redirigiendo al inicio de sesión…</p>
+      <AuthShell title="¡Ya eres coordinador!" backHref="/">
+        <div className="space-y-4">
+          <p className={ui.muted}>
+            Mediante tu enlace de invitación se activó el rol de <strong>coordinador</strong> en tu
+            cuenta{info?.email ? ` (${info.email})` : ''}. Inicia sesión con tu contraseña actual
+            para entrar al portal de coordinador.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.replace('/login-coordinador')}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-ppv-blue px-4 py-2.5 font-medium text-white transition-colors hover:bg-ppv-blue-dark"
+          >
+            Aceptar
+          </button>
+        </div>
       </AuthShell>
     );
   }
 
-  // Step 1 — resolve the token before showing the right flow.
-  if (!info) {
-    return (
-      <AuthShell
-        title="Activar rol de coordinador"
-        subtitle="Ingresa el token de tu invitación para continuar."
-        backHref="/"
-      >
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void lookup(token);
-          }}
-        >
-          <input
-            className={ui.field}
-            placeholder="Token de invitación"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
-          {lookupError && <p className={ui.error}>{lookupError}</p>}
-          <SubmitButton pending={lookingUp} disabled={!token.trim()} pendingText="Verificando…" className="w-full">
-            Continuar
-          </SubmitButton>
-        </form>
-      </AuthShell>
-    );
-  }
-
-  // Step 2a — the email has no account: coordinators must be psychologists first.
-  if (!info.cuenta_existente) {
+  // The email has no account: coordinators must be psychologists first.
+  if (info && !info.cuenta_existente) {
     return (
       <AuthShell
         title="Primero regístrate como psicólogo"
@@ -143,28 +117,31 @@ export default function CoordinatorOnboardingPage() {
     );
   }
 
-  // Step 2b — the email already has an account: confirm to add the role.
+  // Initial state — activating from the URL token, or awaiting a manual token.
   return (
     <AuthShell
-      title="Añadir rol de coordinador"
-      subtitle="Este correo ya tiene una cuenta en PPV."
+      title="Activar rol de coordinador"
+      subtitle="Abre el enlace de tu invitación para activar el rol automáticamente."
       backHref="/"
     >
-      <div className="space-y-4">
-        <p className={ui.muted}>
-          La cuenta <strong>{info.email}</strong> ya existe. Al continuar se le añadirá el rol de{' '}
-          <strong>coordinador</strong> y podrás iniciar sesión con tu contraseña actual.
-        </p>
-        {error && <p className={ui.error}>{error}</p>}
-        <SubmitButton
-          pending={busy}
-          pendingText="Añadiendo…"
-          className="w-full"
-          onClick={() => void confirm()}
-        >
-          Añadir rol de coordinador
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void resolve(token);
+        }}
+      >
+        <input
+          className={ui.field}
+          placeholder="Token de invitación"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+        />
+        {errorMsg && <p className={ui.error}>{errorMsg}</p>}
+        <SubmitButton pending={working} disabled={!token.trim()} pendingText="Activando…" className="w-full">
+          Activar
         </SubmitButton>
-      </div>
+      </form>
     </AuthShell>
   );
 }

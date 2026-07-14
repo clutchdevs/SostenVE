@@ -39,8 +39,11 @@ export default function CoordinatorLoginPage() {
         auth: false,
         body: { email, contrasena: password },
       });
-      saveSession(res.token, res.rol, res.roles ?? [res.rol]);
-      router.replace(homePathForRole(res.rol));
+      const roles = res.roles ?? [res.rol];
+      saveSession(res.token, res.rol, roles);
+      // This is the coordinator-branded entry point: land on the coordinator
+      // portal when the account holds that role, even if its primary role differs.
+      router.replace(roles.includes('coordinator') ? '/coordinador' : homePathForRole(res.rol));
     } catch {
       setError('Credenciales inválidas');
       setSubmitting(false);
