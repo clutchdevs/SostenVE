@@ -179,6 +179,8 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
               <Field label="Universidad" value={detail.universidad} />
               <Field label="Año de egreso" value={detail.anio_egreso?.toString()} />
               <Field label="Colegio" value={detail.colegio} />
+              <Field label="País de residencia" value={detail.pais_residencia} />
+              <Field label="Ciudad de residencia" value={detail.ciudad_residencia} />
               <Field label="Especialidad" value={detail.especialidad} />
               <Field label="Modalidad" value={detail.modalidad?.join(', ')} />
               <Field

@@ -30,6 +30,19 @@ export const venezuelanPhoneSchema = z
   });
 
 /**
+ * International phone (#128): optional leading `+` and 7–15 digits (E.164-ish).
+ * Used for psychologist registration, where volunteers may live abroad; intake
+ * stays Venezuelan-only (venezuelanPhoneSchema).
+ */
+const INTL_PHONE_RE = /^\+?\d{7,15}$/;
+export const internationalPhoneSchema = z
+  .string()
+  .trim()
+  .refine((v) => INTL_PHONE_RE.test(v.replace(/[\s().-]/g, '')), {
+    message: 'Teléfono inválido (usa formato internacional, ej. +58 414 1234567)',
+  });
+
+/**
  * Identity document number: a V/E cédula is up to 8 digits; a passport (P) is
  * alphanumeric (5–20). Used via a refine so the rule can see `tipo_documento`.
  */
@@ -103,8 +116,9 @@ export const registerVolunteerSchema = z
     // FPV professional registration number (persisted as professional_id).
     numero_fpv: z.string().min(1),
     email: z.string().email(),
-    // Contact phone (RF-2.1.2) — required so a coordinator can reach the volunteer.
-    telefono: venezuelanPhoneSchema,
+    // Contact phone (RF-2.1.2). International-friendly: psychologists may live
+    // abroad, so this accepts any valid international number (#128).
+    telefono: internationalPhoneSchema,
     universidad: z.string().min(1),
     anio_egreso: z
       .number()
@@ -112,6 +126,9 @@ export const registerVolunteerSchema = z
       .min(1950)
       .max(new Date().getFullYear()),
     colegio: z.string().min(1),
+    // Country and city of residence (#128).
+    pais_residencia: z.string().min(1),
+    ciudad_residencia: z.string().min(1),
     especialidad: z.string().min(1).optional(),
     modalidad: z.array(modalidadEnum).min(1),
     disponibilidad_horaria: z.array(availabilitySlotSchema).min(1),
