@@ -23,11 +23,13 @@ function fakeVolunteers(): VolunteerRepository & { lastCreated?: NewVolunteer } 
         professionalId: input.professionalId,
         email: input.email,
         role: input.role ?? 'psychologist',
+        roles: input.roles ?? [input.role ?? 'psychologist'],
         tokenVersion: 1,
         status: input.status ?? 'pending_approval',
         createdAt: new Date(),
       };
     },
+    async addRole() {},
     async findById() {
       return null;
     },

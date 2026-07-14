@@ -163,6 +163,7 @@ export function getAdminContainer(): AdminContainer {
       audit: { reader: audit },
       invitations: {
         invitations: new SupabaseCoordinatorInvitationRepository(client),
+        volunteers: new SupabaseVolunteerRepository(client),
         notifier: createNotifier(config),
         audit,
         config,

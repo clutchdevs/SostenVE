@@ -41,7 +41,10 @@ export interface Volunteer {
   colegio?: string;
   /** Contact phone (coordinator sign-up, RF-2.6.2). */
   phone?: string;
+  /** Primary role — used for the default post-login redirect and back-compat. */
   role: VolunteerRole;
+  /** All roles the account holds (#133). Authorization checks against this set. */
+  roles: VolunteerRole[];
   tokenVersion: number;
   status: VolunteerStatus;
   /** Set only while `pending_approval` to explain the manual-review reason. */
@@ -70,6 +73,8 @@ export interface NewVolunteer {
   specialty?: string;
   availability?: string;
   role?: VolunteerRole;
+  /** Initial role set; defaults to `[role]` when omitted. */
+  roles?: VolunteerRole[];
   passwordHash: string;
   status?: VolunteerStatus;
   /** Manual-review reason recorded when status is `pending_approval` (RF-2.2). */
@@ -96,6 +101,8 @@ export interface VolunteerRepository {
   getDetailById(id: string): Promise<VolunteerDetail | null>;
   findByProfessionalId(professionalId: string): Promise<Volunteer | null>;
   findByEmail(email: string): Promise<Volunteer | null>;
+  /** Adds a role to an account if it doesn't already have it (idempotent, #133). */
+  addRole(id: string, role: VolunteerRole): Promise<void>;
   listByStatus(status: VolunteerStatus): Promise<Volunteer[]>;
   /** All volunteers regardless of status (admin roster / "padrón"). */
   listAll(): Promise<Volunteer[]>;

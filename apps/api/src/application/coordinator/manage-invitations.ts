@@ -7,10 +7,12 @@ import type {
   CoordinatorInvitationRepository,
 } from '../../domain/coordinator/invitation.js';
 import type { Notifier } from '../volunteer/ports.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 
 /** Dependencies for issuing and managing coordinator invitations (RF-2.6). */
 export interface InvitationDeps {
   invitations: CoordinatorInvitationRepository;
+  volunteers: VolunteerRepository;
   notifier: Notifier;
   audit: AuditLogRepository;
   config: AppConfig;
@@ -38,6 +40,17 @@ export async function inviteCoordinator(
   adminId: string,
   deps: InvitationDeps,
 ): Promise<InviteCoordinatorResult> {
+  // Canonical order (#133): a coordinator is always an already-registered
+  // psychologist, so the invited email must belong to an existing account.
+  const account = await deps.volunteers.findByEmail(input.email);
+  if (!account) {
+    throw new ApiError(
+      409,
+      'NO_ACCOUNT',
+      'Solo puedes invitar como coordinador a un psicólogo ya registrado con este correo.',
+    );
+  }
+
   const token = generateInvitationToken();
   const ttlDays = deps.config.security.session.invitation_ttl_days;
   const expiresAt = new Date(Date.now() + ttlDays * 86_400_000);

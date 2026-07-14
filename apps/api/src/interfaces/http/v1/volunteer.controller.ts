@@ -38,6 +38,7 @@ function presentVolunteer(volunteer: Volunteer, online = false) {
     email: volunteer.email,
     especialidad: volunteer.specialty,
     rol: volunteer.role,
+    roles: volunteer.roles,
     estado: volunteer.status,
     motivo_excepcion: volunteer.pendingReason ?? null,
     // Real-time presence for the coordinator console (RF-2.5.4).

@@ -42,6 +42,7 @@ export function createAuthRouter(): Hono {
       token: result.accessToken,
       refresh_token: result.refreshToken,
       rol: result.role,
+      roles: result.roles,
     });
   });
 

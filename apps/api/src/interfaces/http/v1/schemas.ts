@@ -208,23 +208,17 @@ export const coordinatorInviteSchema = z.object({
   email: z.string().email(),
 });
 
-// Coordinator sign-up (RF-2.6.2): structured identity + robust password + token.
-export const acceptInvitationSchema = z
-  .object({
-    token: z.string().min(1),
-    nombres: z.string().min(1),
-    apellidos: z.string().min(1),
-    tipo_documento: z.enum(['V', 'E', 'P']),
-    numero_documento: z.string().min(1),
-    // FPV is optional for support/logistics coordinators.
-    numero_fpv: z.string().min(1).optional(),
-    telefono: venezuelanPhoneSchema,
-    contrasena: strongPasswordSchema,
-  })
-  .refine((v) => isValidDocumentNumber(v.tipo_documento, v.numero_documento), {
-    message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
-    path: ['numero_documento'],
-  });
+// Coordinator activation (RF-2.6 / #133): every coordinator is a registered
+// psychologist first, so accepting an invitation only adds the coordinator role
+// to the account that owns the invited email — the token alone is enough.
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1),
+});
+
+// Public preview of an invitation (token only) so onboarding can adapt the flow.
+export const invitationInfoSchema = z.object({
+  token: z.string().min(1),
+});
 
 export const auditQuerySchema = z.object({
   accion: z.string().min(1).optional(),
@@ -279,6 +273,7 @@ export type ReassignCaseBody = z.infer<typeof reassignCaseSchema>;
 export type CoordinatorCloseBody = z.infer<typeof coordinatorCloseSchema>;
 export type CoordinatorInviteBody = z.infer<typeof coordinatorInviteSchema>;
 export type AcceptInvitationBody = z.infer<typeof acceptInvitationSchema>;
+export type InvitationInfoBody = z.infer<typeof invitationInfoSchema>;
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;

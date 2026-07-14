@@ -13,6 +13,7 @@ function volunteer(): Volunteer {
     professionalId: 'V-123',
     email: 'ana@example.com',
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status: 'active',
     createdAt: new Date(),
@@ -32,6 +33,7 @@ function deps(state: FakeState): { volunteers: VolunteerRepository; audit: Audit
     async create() {
       return v;
     },
+    async addRole() {},
     async findById() {
       return v;
     },

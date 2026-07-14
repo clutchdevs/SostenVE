@@ -23,6 +23,7 @@ function makeVolunteer(id: string): Volunteer {
     fullName: `Psy ${id}`,
     professionalId: `FPV-${id}`,
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status: 'active',
     createdAt: new Date(),

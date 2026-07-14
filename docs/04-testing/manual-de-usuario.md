@@ -155,10 +155,12 @@ Riesgo · Rama) y un botón **"Limpiar filtros"**.
 ### C.1 Activar la cuenta (por invitación)
 
 1. Un administrador te **invita por correo** (ver [D.5](#d5-coordinadores-admincoordinadores)). El
-   correo trae un enlace a `/registro-coordinador?token=…`.
-2. Abre el enlace, completa tus datos y **define una contraseña** (mín. 12 caracteres, con mayúsculas,
-   números y símbolo) → cuenta activada.
-3. Entra por **"Ingresar como profesional"** (`/login`) o `/login-coordinador`.
+   correo trae un enlace a `/registro-coordinador?token=…`. Todo coordinador es primero un
+   psicólogo registrado, así que la invitación se envía al correo de un psicólogo existente.
+2. Abre el enlace: se **activa automáticamente** el rol de coordinador en tu cuenta (no pide datos
+   ni contraseña).
+3. Entra por **"Ingresar como profesional"** (`/login`) con tu contraseña de psicólogo; tendrás
+   acceso a **ambos portales** (psicólogo y coordinador).
 
 ### C.2 Cola de casos en vivo (`/coordinador`)
 

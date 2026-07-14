@@ -10,7 +10,7 @@ import { getCaseForCoordinator } from '../../../application/cases/get-case-for-c
 import { getCaseForVolunteer } from '../../../application/cases/get-case.js';
 import { listAllCasesDetailed, listAssignedCasesDetailed } from '../../../application/cases/list-cases.js';
 import { recordCaseClosure } from '../../../application/cases/record-case-closure.js';
-import { getAuthUser, requireAuth } from '../middleware/auth.js';
+import { activeRoleOf, getAuthUser, requireAuth } from '../middleware/auth.js';
 import { getValidated, validateBody } from '../middleware/validate.js';
 import { getAssignmentDeps, getCaseDeps } from './dependencies.js';
 import {
@@ -45,7 +45,7 @@ export function createCasesRouter(): Hono {
   router.get('/', requireAuth({ roles: STAFF_ROLES }), async (c) => {
     const user = getAuthUser(c);
     const deps = getCaseDeps();
-    if (user.role === 'psychologist') {
+    if (activeRoleOf(c, user) === 'psychologist') {
       const assigned = await listAssignedCasesDetailed(user.sub, deps);
       return c.json(assigned.map(({ case: cs, contact }) => presentAssignedCaseSummary(cs, contact)));
     }
@@ -64,10 +64,11 @@ export function createCasesRouter(): Hono {
   router.get('/:id', requireAuth({ roles: STAFF_ROLES }), async (c) => {
     const user = getAuthUser(c);
     const deps = getCaseDeps();
+    const acting = activeRoleOf(c, user);
     const detail =
-      user.role === 'psychologist'
+      acting === 'psychologist'
         ? await getCaseForVolunteer(c.req.param('id'), user.sub, deps)
-        : await getCaseForCoordinator(c.req.param('id'), { id: user.sub, role: user.role }, deps);
+        : await getCaseForCoordinator(c.req.param('id'), { id: user.sub, role: acting }, deps);
     return c.json({
       caso: presentCaseSummary(detail.case),
       contacto: presentCaseContact(detail.contact),

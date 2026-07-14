@@ -14,6 +14,7 @@ const volunteer: Volunteer = {
   professionalId: 'FPV-1',
   email: 'ana@example.com',
   role: 'psychologist',
+  roles: ['psychologist'],
   tokenVersion: 1,
   status: 'pending_approval',
   createdAt: new Date(),
@@ -27,6 +28,7 @@ function fakeRepo(): VolunteerRepository & { status?: string; passwordHash?: str
     async create() {
       throw new Error('not used');
     },
+    async addRole() {},
     async getDetailById() {
       return null;
     },

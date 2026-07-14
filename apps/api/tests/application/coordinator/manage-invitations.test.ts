@@ -12,6 +12,60 @@ import type {
   CoordinatorInvitationRepository,
   NewCoordinatorInvitation,
 } from '../../../src/domain/coordinator/invitation.js';
+import type { Volunteer, VolunteerRepository } from '../../../src/domain/volunteer/volunteer.js';
+
+function existingAccount(): Volunteer {
+  return {
+    id: 'psy-1',
+    fullName: 'Ana',
+    professionalId: 'FPV-1',
+    email: 'coord@example.com',
+    role: 'psychologist',
+    roles: ['psychologist'],
+    tokenVersion: 1,
+    status: 'active',
+    createdAt: new Date(),
+  };
+}
+
+/** Minimal volunteer repo whose only meaningful method is findByEmail. */
+function fakeVolunteers(account: Volunteer | null): VolunteerRepository {
+  return {
+    async create() {
+      throw new Error('not used');
+    },
+    async addRole() {},
+    async findById() {
+      return account;
+    },
+    async getDetailById() {
+      return null;
+    },
+    async findByProfessionalId() {
+      return null;
+    },
+    async findByEmail() {
+      return account;
+    },
+    async listByStatus() {
+      return [];
+    },
+    async listAll() {
+      return [];
+    },
+    async getPasswordHash() {
+      return null;
+    },
+    async updatePasswordHash() {},
+    async setStatus() {},
+    async getTokenVersion() {
+      return 1;
+    },
+    async bumpTokenVersion() {
+      return 2;
+    },
+  };
+}
 
 function fixture(overrides: Partial<CoordinatorInvitation> = {}): CoordinatorInvitation {
   return {
@@ -81,7 +135,7 @@ describe('inviteCoordinator', () => {
     const { token } = await inviteCoordinator(
       { email: 'coord@example.com', fullName: 'Coral' },
       'admin-1',
-      { invitations: repo.repo, notifier, audit, config: getConfig() },
+      { invitations: repo.repo, volunteers: fakeVolunteers(existingAccount()), notifier, audit, config: getConfig() },
     );
 
     expect(token).toBeTruthy();
@@ -93,6 +147,19 @@ describe('inviteCoordinator', () => {
     expect(notifier.invitations[0]!.acceptUrl).toContain(token);
     expect(audit.actions).toContain('coordinator_invited');
   });
+
+  it('refuses to invite an email that has no account (coordinators are psychologists first, #133)', async () => {
+    const repo = repoWith(null);
+    await expect(
+      inviteCoordinator(
+        { email: 'unknown@example.com', fullName: 'Nadie' },
+        'admin-1',
+        { invitations: repo.repo, volunteers: fakeVolunteers(null), notifier: recordingNotifier(), audit: recordingAudit(), config: getConfig() },
+      ),
+    ).rejects.toThrow();
+    // No invitation is created for a non-existent account.
+    expect(repo.created).toHaveLength(0);
+  });
 });
 
 describe('revokeInvitation', () => {
@@ -101,6 +168,7 @@ describe('revokeInvitation', () => {
     const audit = recordingAudit();
     const result = await revokeInvitation('inv-1', 'admin-1', {
       invitations: repo.repo,
+      volunteers: fakeVolunteers(existingAccount()),
       notifier: recordingNotifier(),
       audit,
       config: getConfig(),
@@ -114,6 +182,7 @@ describe('revokeInvitation', () => {
     await expect(
       revokeInvitation('inv-1', 'admin-1', {
         invitations: repo.repo,
+        volunteers: fakeVolunteers(existingAccount()),
         notifier: recordingNotifier(),
         audit: recordingAudit(),
         config: getConfig(),
@@ -126,6 +195,7 @@ describe('revokeInvitation', () => {
     await expect(
       revokeInvitation('missing', 'admin-1', {
         invitations: repo.repo,
+        volunteers: fakeVolunteers(existingAccount()),
         notifier: recordingNotifier(),
         audit: recordingAudit(),
         config: getConfig(),

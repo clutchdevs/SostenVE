@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SubmitButton } from '../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { clearSession } from '../../src/lib/session';
 import { ui } from '../../src/lib/ui';
 import {
   CEDULA_ERROR,
@@ -53,6 +55,7 @@ const inputClass = ui.field;
  * the consent checkbox is accepted.
  */
 export default function RegistroPage() {
+  const router = useRouter();
   const [nombre, setNombre] = useState('');
   const [tipoDocumento, setTipoDocumento] = useState('V');
   const [numeroDocumento, setNumeroDocumento] = useState('');
@@ -173,9 +176,18 @@ export default function RegistroPage() {
             ? 'Tu cuenta quedó pendiente de validación por la FPV. Cuando sea aprobada, te enviaremos por correo tu usuario y una contraseña temporal de acceso.'
             : 'Tu cuenta fue validada. Te enviamos a tu correo tu usuario y una contraseña temporal para iniciar sesión (revisa también la carpeta de spam).'}
         </p>
-        <Link href="/login" className={`mt-6 block text-center ${ui.primaryBtn}`}>
+        <button
+          type="button"
+          onClick={() => {
+            // A brand-new applicant should log in as themselves; drop any stale
+            // session so /login shows the form instead of bouncing to a portal.
+            clearSession();
+            router.push('/login');
+          }}
+          className={`mt-6 block w-full text-center ${ui.primaryBtn}`}
+        >
           Ir a iniciar sesión
-        </Link>
+        </button>
       </main>
     );
   }
