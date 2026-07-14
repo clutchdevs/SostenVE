@@ -3,13 +3,19 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
-import { clearSession, getRoles } from '../lib/session';
+import { ArrowLeftRight, Menu, X } from 'lucide-react';
+import { clearSession, getRoles, homePathForRole } from '../lib/session';
 
 const ROLE_LABEL: Record<string, string> = {
   psychologist: 'Psicólogo',
   coordinator: 'Coordinador',
   admin: 'Administrador',
+};
+
+const PORTAL_LABEL: Record<string, string> = {
+  psychologist: 'Portal de psicólogo',
+  coordinator: 'Portal de coordinador',
+  admin: 'Portal de administrador',
 };
 
 interface NavItem {
@@ -44,10 +50,17 @@ const ROLE_NAV: Record<string, NavItem[]> = {
   ],
 };
 
+/** Which portal the current route belongs to. */
+function activeRoleFromPath(pathname: string): string {
+  if (pathname.startsWith('/coordinador')) return 'coordinator';
+  if (pathname.startsWith('/admin')) return 'admin';
+  return 'psychologist';
+}
+
 /**
  * Top bar for staff areas (shown below `lg`, where the sidebar is hidden). The
- * full role navigation lives behind a hamburger menu so the bar never overflows
- * on phones/tablets and offers the same destinations as the desktop sidebar.
+ * current portal's navigation lives behind a hamburger menu, plus a "switch
+ * portal" section for accounts that hold more than one role (#133).
  */
 export function StaffHeader() {
   const router = useRouter();
@@ -69,9 +82,10 @@ export function StaffHeader() {
     router.push('/login');
   }
 
-  // A role's nav is only listed if we know its destinations; keeps unknown roles
-  // (e.g. admin-only future roles) from rendering an empty group.
-  const navRoles = roles.filter((r) => (ROLE_NAV[r] ?? []).length > 0);
+  const activeRole = activeRoleFromPath(pathname);
+  const nav = ROLE_NAV[activeRole] ?? [];
+  // Other portals this account can switch to (multi-role, #133).
+  const otherPortals = roles.filter((r) => r !== activeRole && PORTAL_LABEL[r] && ROLE_NAV[r]);
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -95,46 +109,60 @@ export function StaffHeader() {
 
       {open && (
         <nav id="staff-mobile-menu" className="border-t border-slate-200 px-4 py-2">
-          {/* One group per role the account holds (#133), so a psychologist who is
-              also a coordinator can reach both portals from the same menu. */}
-          {navRoles.map((r, i) => (
-            <div key={r} className={i > 0 ? 'mt-2 border-t border-slate-100 pt-2' : undefined}>
-              <span className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                {ROLE_LABEL[r] ?? r}
-              </span>
-              {(ROLE_NAV[r] ?? []).map((item) => (
+          <span className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {ROLE_LABEL[activeRole] ?? activeRole}
+          </span>
+          {nav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(item) ? 'page' : undefined}
+              className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                isActive(item) ? 'bg-slate-100 text-brand' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {otherPortals.length > 0 && (
+            <div className="mt-2 border-t border-slate-100 pt-2">
+              <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Cambiar de portal
+              </p>
+              {otherPortals.map((r) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={isActive(item) ? 'page' : undefined}
-                  className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
-                    isActive(item) ? 'bg-slate-100 text-brand' : 'text-slate-700 hover:bg-slate-50'
-                  }`}
+                  key={r}
+                  href={homePathForRole(r)}
+                  className="flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  {item.label}
+                  <ArrowLeftRight className="h-4 w-4" aria-hidden />
+                  {PORTAL_LABEL[r]}
                 </Link>
               ))}
             </div>
-          ))}
-          <div className="mt-2 border-t border-slate-100 pt-2" />
-          <Link
-            href="/cambiar-contrasena"
-            aria-current={pathname === '/cambiar-contrasena' ? 'page' : undefined}
-            className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
-              pathname === '/cambiar-contrasena'
-                ? 'bg-slate-100 text-brand'
-                : 'text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            Contraseña
-          </Link>
-          <button
-            type="button"
-            onClick={signOut}
-            className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Cerrar sesión
-          </button>
+          )}
+
+          <div className="mt-2 border-t border-slate-100 pt-2">
+            <Link
+              href="/cambiar-contrasena"
+              aria-current={pathname === '/cambiar-contrasena' ? 'page' : undefined}
+              className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                pathname === '/cambiar-contrasena'
+                  ? 'bg-slate-100 text-brand'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Contraseña
+            </Link>
+            <button
+              type="button"
+              onClick={signOut}
+              className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </nav>
       )}
     </header>
