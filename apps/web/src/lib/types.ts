@@ -114,6 +114,8 @@ export interface VolunteerDetailView extends VolunteerView {
   universidad?: string | null;
   anio_egreso?: number | null;
   colegio?: string | null;
+  pais_residencia?: string | null;
+  ciudad_residencia?: string | null;
   modalidad?: string[];
   disponibilidad_horaria?: { dia: string; bloque: string }[];
   pap?: boolean | null;

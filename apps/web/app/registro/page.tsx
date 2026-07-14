@@ -9,11 +9,12 @@ import { clearSession } from '../../src/lib/session';
 import { ui } from '../../src/lib/ui';
 import {
   CEDULA_ERROR,
+  INTL_PHONE_ERROR,
   isValidDocumentNumber,
-  isValidVePhone,
-  PHONE_ERROR,
+  isValidIntlPhone,
   PHONE_MAX_LENGTH,
 } from '../../src/lib/validation';
+import { COLEGIO_OTRO, VE_ESTADOS } from '../../src/lib/venezuela';
 
 interface ConsentText {
   version: string;
@@ -65,6 +66,9 @@ export default function RegistroPage() {
   const [universidad, setUniversidad] = useState('');
   const [anioEgreso, setAnioEgreso] = useState('');
   const [colegio, setColegio] = useState('');
+  const [colegioOtro, setColegioOtro] = useState('');
+  const [paisResidencia, setPaisResidencia] = useState('');
+  const [ciudadResidencia, setCiudadResidencia] = useState('');
   const [especialidad, setEspecialidad] = useState('');
   const [modalidad, setModalidad] = useState<string[]>([]);
   const [slots, setSlots] = useState<Set<string>>(new Set());
@@ -102,6 +106,8 @@ export default function RegistroPage() {
   async function submit() {
     if (!consent) return;
     setError('');
+    // "Otro" colegio resolves to the free-text value; a listed state uses its name.
+    const colegioValue = colegio === COLEGIO_OTRO ? colegioOtro.trim() : colegio.trim();
     // Required-field guard (enforced regardless of native `required`).
     if (
       !nombre.trim() ||
@@ -109,7 +115,9 @@ export default function RegistroPage() {
       !email.trim() ||
       !universidad.trim() ||
       !anioEgreso.trim() ||
-      !colegio.trim()
+      !colegioValue ||
+      !paisResidencia.trim() ||
+      !ciudadResidencia.trim()
     ) {
       setError('Completa todos los campos obligatorios.');
       return;
@@ -120,8 +128,8 @@ export default function RegistroPage() {
       setError(CEDULA_ERROR);
       return;
     }
-    if (!isValidVePhone(telefono)) {
-      setError(PHONE_ERROR);
+    if (!isValidIntlPhone(telefono)) {
+      setError(INTL_PHONE_ERROR);
       return;
     }
     setSubmitting(true);
@@ -142,7 +150,9 @@ export default function RegistroPage() {
           telefono,
           universidad,
           anio_egreso: Number(anioEgreso),
-          colegio,
+          colegio: colegioValue,
+          pais_residencia: paisResidencia,
+          ciudad_residencia: ciudadResidencia,
           especialidad: especialidad || undefined,
           modalidad,
           disponibilidad_horaria,
@@ -271,7 +281,7 @@ export default function RegistroPage() {
           type="tel"
           inputMode="tel"
           maxLength={PHONE_MAX_LENGTH}
-          placeholder="Teléfono (ej. 0414-1234567)"
+          placeholder="Teléfono (ej. +58 414 1234567)"
           value={telefono}
           // Allow only phone characters so letters can't be entered.
           onChange={(e) => setTelefono(e.target.value.replace(/[^\d+\s().-]/g, ''))}
@@ -299,12 +309,47 @@ export default function RegistroPage() {
           onChange={(e) => setAnioEgreso(e.target.value)}
           required
         />
+        <select
+          className={inputClass}
+          value={colegio}
+          onChange={(e) => setColegio(e.target.value)}
+          aria-label="Colegio de psicólogos"
+          required
+        >
+          <option value="" disabled>
+            Colegio de psicólogos (estado)
+          </option>
+          {VE_ESTADOS.map((estado) => (
+            <option key={estado} value={estado}>
+              {estado}
+            </option>
+          ))}
+          <option value={COLEGIO_OTRO}>Otro…</option>
+        </select>
+        {colegio === COLEGIO_OTRO && (
+          <input
+            className={inputClass}
+            type="text"
+            placeholder="Especifica el colegio"
+            value={colegioOtro}
+            onChange={(e) => setColegioOtro(e.target.value)}
+            required
+          />
+        )}
         <input
           className={inputClass}
           type="text"
-          placeholder="Colegio de psicólogos"
-          value={colegio}
-          onChange={(e) => setColegio(e.target.value)}
+          placeholder="País de residencia"
+          value={paisResidencia}
+          onChange={(e) => setPaisResidencia(e.target.value)}
+          required
+        />
+        <input
+          className={inputClass}
+          type="text"
+          placeholder="Ciudad de residencia"
+          value={ciudadResidencia}
+          onChange={(e) => setCiudadResidencia(e.target.value)}
           required
         />
         <input
