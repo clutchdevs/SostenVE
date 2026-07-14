@@ -205,7 +205,7 @@ on conflict (id) do nothing;
 -- CRUD admin. Las que tienen ventana horaria enrutan por hora; las demás son respaldo.
 insert into crisis_lines (id, name, phone, coverage, start_hour, end_hour, priority, active)
 values
-  ('66666666-6666-6666-6666-666666666666', 'LAPSI', '+584242907338', '8:00–2:00', 8, 26, 10, true),
+  ('66666666-6666-6666-6666-666666666666', 'LAPSI', '+584242907338', '8:00–2:00', 8, 2, 10, true),
   ('77777777-7777-7777-7777-777777777777', 'Colegio de Psicólogos de Miranda', '04127840112', '2:00–8:00', 2, 8, 9, true),
   ('88888888-8888-8888-8888-888888888888', 'VEN-911', '911', 'Emergencias', null, null, 1, true)
 on conflict (id) do nothing;

@@ -5,11 +5,7 @@ import { CrisisLinesPanel } from '../../../src/components/crisis-lines-panel';
 import { ConsentNotice } from '../../../src/components/consent-notice';
 import { SubmitButton } from '../../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
-import {
-  FALLBACK_CRISIS_LINES,
-  getCrisisLines,
-  type CrisisLines,
-} from '../../../src/lib/crisis-lines';
+import { getCrisisLines, type CrisisLines } from '../../../src/lib/crisis-lines';
 import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 import { ui } from '../../../src/lib/ui';
@@ -25,9 +21,10 @@ interface RedDraft {
 }
 
 export default function RedBranchPage() {
-  // Start from the embedded fallback so numbers render immediately, even before
-  // (or without) any network — the crisis lines are never blank.
-  const [lines, setLines] = useState<CrisisLines>(FALLBACK_CRISIS_LINES);
+  // The FPV-configured lines are the source of truth. Load them cleanly (a brief
+  // loading state, never the imposed embedded defaults) so nothing misleading
+  // flashes before the real lines. `null` = still loading.
+  const [lines, setLines] = useState<CrisisLines | null>(null);
   const [sub, setSub] = useState<SubChannel | null>(null);
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
@@ -92,15 +89,32 @@ export default function RedBranchPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-8 space-y-6">
-      <CrisisLinesPanel lines={lines} />
+      {lines ? (
+        <>
+          <CrisisLinesPanel lines={lines} />
 
-      {lines.active && (
-        <a
-          href={`tel:${lines.active.phone.replace(/\s+/g, '')}`}
-          className="block rounded-lg bg-risk-high px-4 py-3 text-center font-semibold text-white"
+          {lines.active && (
+            <a
+              href={`tel:${lines.active.phone.replace(/\s+/g, '')}`}
+              className="block rounded-lg bg-risk-high px-4 py-3 text-center font-semibold text-white"
+            >
+              Llamar ahora a {lines.active.name}
+            </a>
+          )}
+        </>
+      ) : (
+        <section
+          aria-label="Líneas de crisis"
+          aria-busy="true"
+          className="rounded-lg border border-risk-high/40 bg-red-50 p-4"
         >
-          Llamar ahora a {lines.active.name}
-        </a>
+          <h2 className="text-lg font-semibold text-risk-high">Si estás en peligro, llama ahora</h2>
+          <div className="mt-3 space-y-2">
+            <div className="h-10 animate-pulse rounded-md bg-white/70" />
+            <div className="h-10 animate-pulse rounded-md bg-white/70" />
+          </div>
+          <p className="mt-3 text-sm text-slate-600">Cargando líneas de crisis…</p>
+        </section>
       )}
 
       {!done ? (

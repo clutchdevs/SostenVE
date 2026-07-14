@@ -10,8 +10,9 @@ const config = {
   },
 } as unknown as AppConfig;
 
+// UTC instant whose America/Caracas (UTC-4) hour is `hour` (TZ-independent test).
 function at(hour: number): Date {
-  return new Date(2026, 5, 24, hour, 0, 0);
+  return new Date(Date.UTC(2026, 5, 24, hour + 4, 0, 0));
 }
 
 function repoWith(lines: CrisisLine[]): CrisisLineRepository {
@@ -20,12 +21,12 @@ function repoWith(lines: CrisisLine[]): CrisisLineRepository {
     listAll: async () => lines,
     create: async () => lines[0]!,
     update: async () => lines[0]!,
-    deactivate: async () => lines[0]!,
+    delete: async () => true,
   };
 }
 
 const dbLines: CrisisLine[] = [
-  { id: '1', name: 'LAPSI', phone: '+58', startHour: 8, endHour: 26, priority: 10, active: true },
+  { id: '1', name: 'LAPSI', phone: '+58', startHour: 8, endHour: 2, priority: 10, active: true },
   { id: '2', name: 'Miranda', phone: '04', startHour: 2, endHour: 8, priority: 9, active: true },
   { id: '3', name: 'VEN-911', phone: '911', priority: 1, active: true },
 ];

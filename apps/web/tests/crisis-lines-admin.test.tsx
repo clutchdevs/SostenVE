@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetch = vi.fn(async (..._args: unknown[]) => ({}));
@@ -16,7 +16,8 @@ const line: CrisisLineAdmin = {
   telefono: '+58',
   cobertura: null,
   hora_inicio: 8,
-  hora_fin: 26,
+  hora_fin: 2,
+  dias_semana: null,
   prioridad: 10,
   activa: true,
 };
@@ -37,7 +38,8 @@ describe('CrisisLinesAdmin', () => {
     expect(onChange).toHaveBeenCalled();
   });
 
-  it('soft-deletes an active line via DELETE', async () => {
+  it('permanently deletes a line via DELETE after confirmation', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const onChange = vi.fn();
     render(<CrisisLinesAdmin lines={[line]} onChange={onChange} />);
 
@@ -46,5 +48,65 @@ describe('CrisisLinesAdmin', () => {
     await waitFor(() =>
       expect(apiFetch).toHaveBeenCalledWith('/admin/crisis-lines/cl-1', { method: 'DELETE' }),
     );
+    confirmSpy.mockRestore();
+  });
+
+  it('does not delete when the confirmation is cancelled', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<CrisisLinesAdmin lines={[line]} onChange={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  // Regression test for issue #127: Fields used to be re-declared inside the
+  // component body, so React remounted the inputs (and dropped focus) on every
+  // keystroke. Typing several characters without re-querying the input at all
+  // only succeeds if the same DOM node survives across renders.
+  it('keeps focus on the name input across keystrokes when creating a line', () => {
+    render(<CrisisLinesAdmin lines={[]} onChange={vi.fn()} />);
+
+    const nombre = screen.getByPlaceholderText('Nombre');
+    nombre.focus();
+    fireEvent.change(nombre, { target: { value: 'L' } });
+    fireEvent.change(nombre, { target: { value: 'LA' } });
+    fireEvent.change(nombre, { target: { value: 'LAP' } });
+
+    expect(document.activeElement).toBe(nombre);
+    expect((nombre as HTMLInputElement).value).toBe('LAP');
+  });
+
+  it('sends selected days and omits the field on create when none are picked', async () => {
+    render(<CrisisLinesAdmin lines={[]} onChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByPlaceholderText('Nombre'), { target: { value: 'Nueva' } });
+    fireEvent.change(screen.getByPlaceholderText('Teléfono'), { target: { value: '123' } });
+    fireEvent.click(screen.getByLabelText('Lun'));
+    fireEvent.click(screen.getByLabelText('Mar'));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear línea' }));
+
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith(
+        '/admin/crisis-lines',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.objectContaining({ dias_semana: ['lunes', 'martes'] }),
+        }),
+      ),
+    );
+  });
+
+  it('pre-fills the day checkboxes when editing an existing line', () => {
+    render(
+      <CrisisLinesAdmin lines={[{ ...line, dias_semana: ['viernes'] }]} onChange={vi.fn()} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+
+    const editSection = within(screen.getByText('Editar “LAPSI”').closest('li')!);
+    expect((editSection.getByLabelText('Vie') as HTMLInputElement).checked).toBe(true);
+    expect((editSection.getByLabelText('Lun') as HTMLInputElement).checked).toBe(false);
   });
 });

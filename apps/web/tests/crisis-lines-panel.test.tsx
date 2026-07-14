@@ -7,7 +7,8 @@ describe('CrisisLinesPanel', () => {
   it('renders the active and backup crisis numbers', () => {
     const { container } = render(<CrisisLinesPanel lines={FALLBACK_CRISIS_LINES} />);
     const text = container.textContent ?? '';
-    expect(text).toContain('+584242907338');
+    // Numbers are shown in a standardized display format.
+    expect(text).toContain('+58 424-2907338');
     expect(text).toContain('911');
   });
 

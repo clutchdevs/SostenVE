@@ -75,7 +75,7 @@ describe.skipIf(!dbAvailable)('admin endpoints (e2e)', () => {
     });
   }
 
-  it('lets an admin create, list, update and soft-delete a crisis line (audited)', async () => {
+  it('lets an admin create, list, update and permanently delete a crisis line (audited)', async () => {
     const adminId = await seedVolunteer('admin');
     const token = await tokenFor(adminId, 'admin');
 
@@ -100,8 +100,10 @@ describe.skipIf(!dbAvailable)('admin endpoints (e2e)', () => {
     expect(((await patched.json()) as { telefono: string }).telefono).toBe('0800-NEW');
 
     const deleted = await authed(`/api/v1/admin/crisis-lines/${line.id}`, token, { method: 'DELETE' });
-    expect(deleted.status).toBe(200);
-    expect(((await deleted.json()) as { activa: boolean }).activa).toBe(false);
+    expect(deleted.status).toBe(204);
+    // Hard delete: the row is gone (Desactivar is the reversible soft-delete).
+    const remaining = await pg.query('select id from crisis_lines where id = $1', [line.id]);
+    expect(remaining.rowCount).toBe(0);
 
     const audit = await authed('/api/v1/admin/audit?accion=crisis_line_created', token);
     const body = (await audit.json()) as {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isValidDocumentNumber, isValidVePhone, normalizePhone } from '../src/lib/validation';
+import {
+  formatPhoneDisplay,
+  isValidDocumentNumber,
+  isValidVePhone,
+  normalizePhone,
+} from '../src/lib/validation';
 
 describe('isValidVePhone', () => {
   it('accepts every mobile carrier prefix, with or without +58 and separators', () => {
@@ -38,6 +43,28 @@ describe('isValidVePhone', () => {
 
   it('normalizePhone strips separators but keeps a leading +', () => {
     expect(normalizePhone(' +58 (414) 123-45.67 ')).toBe('+584141234567');
+  });
+});
+
+describe('formatPhoneDisplay', () => {
+  it('standardizes Venezuelan national numbers regardless of input', () => {
+    for (const input of ['04149247715', '0414-924-7715', '0414 9247715', '(0414) 924.7715']) {
+      expect(formatPhoneDisplay(input), input).toBe('0414-9247715');
+    }
+  });
+
+  it('standardizes Venezuelan international (+58) numbers', () => {
+    for (const input of ['+584242907338', '+58 424 290 7338', '58 424-2907338']) {
+      expect(formatPhoneDisplay(input), input).toBe('+58 424-2907338');
+    }
+  });
+
+  it('leaves short service/emergency codes as-is', () => {
+    expect(formatPhoneDisplay('911')).toBe('911');
+  });
+
+  it('keeps other international numbers clean with their country code', () => {
+    expect(formatPhoneDisplay('+593 99-081 3326')).toBe('+593990813326');
   });
 });
 

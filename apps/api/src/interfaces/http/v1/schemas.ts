@@ -181,7 +181,9 @@ export const caseClosureSchema = z.object({
   comentario: z.string().max(1500).optional(),
 });
 
-const hour = z.number().int().min(0).max(26); // up to 26 to express ranges past midnight
+// Real clock hours 0–24. An overnight window is expressed with hora_fin <= hora_inicio
+// (e.g. 20 -> 2), not with hours past 24.
+const hour = z.number().int().min(0).max(24);
 
 export const crisisLineCreateSchema = z.object({
   nombre: z.string().min(1),
@@ -189,6 +191,8 @@ export const crisisLineCreateSchema = z.object({
   cobertura: z.string().min(1).optional(),
   hora_inicio: hour.optional(),
   hora_fin: hour.optional(),
+  // Days the line operates; omitted/undefined = every day.
+  dias_semana: z.array(diaSemanaEnum).min(1).optional(),
   prioridad: z.number().int().optional(),
   activa: z.boolean().optional(),
 });
@@ -200,6 +204,8 @@ export const crisisLineUpdateSchema = z
     cobertura: z.string().min(1).nullable(),
     hora_inicio: hour.nullable(),
     hora_fin: hour.nullable(),
+    // null clears back to "every day".
+    dias_semana: z.array(diaSemanaEnum).min(1).nullable(),
     prioridad: z.number().int(),
     activa: z.boolean(),
   })
