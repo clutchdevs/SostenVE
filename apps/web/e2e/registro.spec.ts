@@ -25,9 +25,12 @@ test('full registration requires consent, modality and availability', async ({ p
   await page.getByPlaceholder('Número de documento (cédula)').fill('12345678');
   await page.getByPlaceholder('Número de inscripción FPV').fill('FPV-9000');
   await page.getByPlaceholder('Correo').fill('ana@example.com');
+  await page.getByPlaceholder('Teléfono (ej. +58 414 1234567)').fill('04140000000');
   await page.getByPlaceholder('Universidad de egreso').fill('UCV');
   await page.getByPlaceholder('Año de egreso').fill('2015');
-  await page.getByPlaceholder('Colegio de psicólogos').fill('Colegio de Miranda');
+  await page.getByLabel('Colegio de psicólogos').selectOption('Miranda');
+  await page.getByPlaceholder('País de residencia').fill('Venezuela');
+  await page.getByPlaceholder('Ciudad de residencia').fill('Caracas');
 
   const submit = page.getByRole('button', { name: /registrarme/i });
 

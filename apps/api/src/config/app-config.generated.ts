@@ -19,7 +19,7 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         {
           "name": "LAPSI",
           "start_hour": 8,
-          "end_hour": 26,
+          "end_hour": 2,
           "phone": "+584242907338"
         },
         {
@@ -207,7 +207,7 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         {
           "name": "LAPSI",
           "start_hour": 8,
-          "end_hour": 26,
+          "end_hour": 2,
           "phone": "+584242907338"
         },
         {
@@ -395,7 +395,7 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         {
           "name": "LAPSI",
           "start_hour": 8,
-          "end_hour": 26,
+          "end_hour": 2,
           "phone": "+584242907338"
         },
         {
@@ -583,7 +583,7 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         {
           "name": "LAPSI",
           "start_hour": 8,
-          "end_hour": 26,
+          "end_hour": 2,
           "phone": "+584242907338"
         },
         {

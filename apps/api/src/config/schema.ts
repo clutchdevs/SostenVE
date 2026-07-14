@@ -8,8 +8,9 @@ import { z } from 'zod';
 
 const crisisLineRoutingSchema = z.object({
   name: z.string().min(1),
-  start_hour: z.number().int().min(0),
-  end_hour: z.number().int().min(0),
+  // Real clock hours 0–24; an overnight window uses end_hour <= start_hour (e.g. 20 -> 2).
+  start_hour: z.number().int().min(0).max(24),
+  end_hour: z.number().int().min(0).max(24),
   phone: z.string().min(1),
 });
 

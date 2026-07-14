@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Check, Lock, Ban, IdCard } from 'lucide-react';
 import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
+import { formatPhoneDisplay } from '../../lib/validation';
 import { initialsOf, STATUS_STYLE } from '../admin/volunteers';
 import type { VolunteerDetailView, VolunteerNoteView, VolunteerView } from '../../lib/types';
 
@@ -173,12 +174,14 @@ export function VolunteerCard({ volunteer, onChange }: Props) {
           ) : (
             <>
               <Field label="Correo" value={detail.email} />
-              <Field label="Teléfono" value={detail.telefono} />
+              <Field label="Teléfono" value={detail.telefono ? formatPhoneDisplay(detail.telefono) : detail.telefono} />
               <Field label="Documento" value={detail.documento} />
               <Field label="Nº FPV" value={detail.cedula_profesional} />
               <Field label="Universidad" value={detail.universidad} />
               <Field label="Año de egreso" value={detail.anio_egreso?.toString()} />
               <Field label="Colegio" value={detail.colegio} />
+              <Field label="País de residencia" value={detail.pais_residencia} />
+              <Field label="Ciudad de residencia" value={detail.ciudad_residencia} />
               <Field label="Especialidad" value={detail.especialidad} />
               <Field label="Modalidad" value={detail.modalidad?.join(', ')} />
               <Field

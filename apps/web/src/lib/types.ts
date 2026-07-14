@@ -66,6 +66,7 @@ export interface CrisisLineAdmin {
   cobertura: string | null;
   hora_inicio: number | null;
   hora_fin: number | null;
+  dias_semana: string[] | null;
   prioridad: number;
   activa: boolean;
 }
@@ -114,6 +115,8 @@ export interface VolunteerDetailView extends VolunteerView {
   universidad?: string | null;
   anio_egreso?: number | null;
   colegio?: string | null;
+  pais_residencia?: string | null;
+  ciudad_residencia?: string | null;
   modalidad?: string[];
   disponibilidad_horaria?: { dia: string; bloque: string }[];
   pap?: boolean | null;

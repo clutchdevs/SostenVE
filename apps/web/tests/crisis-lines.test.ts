@@ -34,6 +34,22 @@ describe('getCrisisLines (fail-safe)', () => {
     expect(window.localStorage.getItem('ppv.crisisLines')).toContain('+58000');
   });
 
+  it('respects an empty API response (FPV is the source of truth; no injected fallback)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ activa: null, respaldo: [] }),
+      }),
+    );
+    const lines = await getCrisisLines();
+    // Show exactly what the FPV configured — even if that is nothing right now.
+    expect(lines).toEqual({ active: null, backups: [] });
+    // an empty response is not cached over a previously good set
+    expect(window.localStorage.getItem('ppv.crisisLines')).toBeNull();
+  });
+
   it('uses the cache when the API later fails', async () => {
     window.localStorage.setItem(
       'ppv.crisisLines',

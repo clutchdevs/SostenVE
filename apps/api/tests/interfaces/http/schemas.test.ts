@@ -8,21 +8,23 @@ import {
 } from '../../../src/interfaces/http/v1/schemas.js';
 
 describe('venezuelanPhoneSchema', () => {
-  it('accepts mobile carrier prefixes (tolerant of separators / +58)', () => {
-    for (const ok of ['0412-1234567', '0414-1234567', '0426 1234567', '+584241234567']) {
+  it('accepts mobile carrier prefixes when the +58 country code is present (issue #129)', () => {
+    for (const ok of ['+584121234567', '+584141234567', '58 426 1234567', '+58 424-1234567']) {
       expect(venezuelanPhoneSchema.safeParse(ok).success, ok).toBe(true);
     }
   });
 
-  it('rejects letters, wrong length, landlines and non-mobile prefixes', () => {
+  it('rejects the national leading-0 form, letters, wrong length, landlines and non-mobile prefixes', () => {
     for (const bad of [
       '',
       'abc',
+      '0414-1234567', // national leading-0 form — must include +58 (issue #129)
+      '0426 1234567', // national leading-0 form
       '0414123456a',
       '123',
       '041412345678889999999', // absurdly long
-      '02121234567', // landline
-      '0410-1234567', // not a carrier prefix
+      '+582121234567', // landline
+      '+584101234567', // not a carrier prefix
     ]) {
       expect(venezuelanPhoneSchema.safeParse(bad).success, bad).toBe(false);
     }
@@ -49,6 +51,8 @@ describe('registerVolunteerSchema', () => {
     universidad: 'UCV',
     anio_egreso: 2015,
     colegio: 'Colegio de Psicólogos de Miranda',
+    pais_residencia: 'Venezuela',
+    ciudad_residencia: 'Caracas',
     modalidad: ['presencial' as const],
     disponibilidad_horaria: [{ dia: 'lunes' as const, bloque: 'manana' as const }],
     pap: false,
@@ -90,7 +94,7 @@ describe('assignmentSettingsSchema', () => {
 
 describe('greenBranchSchema', () => {
   it('requires a valid Venezuelan contact phone', () => {
-    expect(greenBranchSchema.safeParse({ contacto: '0414-1234567', tags: [] }).success).toBe(true);
+    expect(greenBranchSchema.safeParse({ contacto: '+584141234567', tags: [] }).success).toBe(true);
     expect(greenBranchSchema.safeParse({ contacto: 'no-soy-un-telefono', tags: [] }).success).toBe(
       false,
     );

@@ -15,18 +15,33 @@ export const strongPasswordSchema = z
   .regex(/[^A-Za-z0-9]/, 'Debe incluir un carácter especial');
 
 /**
- * Venezuelan MOBILE number: a carrier prefix (0412/0414/0416/0424/0426) followed
- * by exactly 7 digits, optionally written with the +58 country code instead of
- * the leading 0. Tolerant of spaces, dashes, dots and parentheses. Landlines are
+ * Venezuelan MOBILE number for the REQUESTER intake (issue #129): must carry the
+ * +58 country code, a carrier prefix (412/414/416/424/426) and 7 digits. The
+ * leading-0 national form (0414…) is intentionally REJECTED so the stored contact
+ * always has the country code the assigned psychologist's WhatsApp (wa.me) deep
+ * link needs. Tolerant of spaces, dashes, dots and parentheses. Landlines are
  * rejected (the app reaches people by call/WhatsApp). Source of truth mirrored by
  * the web `isValidVePhone`. NOT used for crisis-line numbers (short/service codes).
  */
-const VE_PHONE_RE = /^(\+?58|0)?(412|414|416|424|426)\d{7}$/;
+const VE_PHONE_RE = /^\+?58(412|414|416|424|426)\d{7}$/;
 export const venezuelanPhoneSchema = z
   .string()
   .trim()
   .refine((v) => VE_PHONE_RE.test(v.replace(/[\s().-]/g, '')), {
-    message: 'Teléfono venezolano inválido (ej. 0414-1234567)',
+    message: 'Incluye el código de país +58 (ej. +58 414 1234567)',
+  });
+
+/**
+ * International phone (#128): optional leading `+` and 7–15 digits (E.164-ish).
+ * Used for psychologist registration, where volunteers may live abroad; intake
+ * stays Venezuelan-only (venezuelanPhoneSchema).
+ */
+const INTL_PHONE_RE = /^\+?\d{7,15}$/;
+export const internationalPhoneSchema = z
+  .string()
+  .trim()
+  .refine((v) => INTL_PHONE_RE.test(v.replace(/[\s().-]/g, '')), {
+    message: 'Teléfono inválido (usa formato internacional, ej. +58 414 1234567)',
   });
 
 /**
@@ -103,8 +118,9 @@ export const registerVolunteerSchema = z
     // FPV professional registration number (persisted as professional_id).
     numero_fpv: z.string().min(1),
     email: z.string().email(),
-    // Contact phone (RF-2.1.2) — required so a coordinator can reach the volunteer.
-    telefono: venezuelanPhoneSchema,
+    // Contact phone (RF-2.1.2). International-friendly: psychologists may live
+    // abroad, so this accepts any valid international number (#128).
+    telefono: internationalPhoneSchema,
     universidad: z.string().min(1),
     anio_egreso: z
       .number()
@@ -112,6 +128,9 @@ export const registerVolunteerSchema = z
       .min(1950)
       .max(new Date().getFullYear()),
     colegio: z.string().min(1),
+    // Country and city of residence (#128).
+    pais_residencia: z.string().min(1),
+    ciudad_residencia: z.string().min(1),
     especialidad: z.string().min(1).optional(),
     modalidad: z.array(modalidadEnum).min(1),
     disponibilidad_horaria: z.array(availabilitySlotSchema).min(1),
@@ -164,7 +183,9 @@ export const caseClosureSchema = z.object({
   comentario: z.string().max(1500).optional(),
 });
 
-const hour = z.number().int().min(0).max(26); // up to 26 to express ranges past midnight
+// Real clock hours 0–24. An overnight window is expressed with hora_fin <= hora_inicio
+// (e.g. 20 -> 2), not with hours past 24.
+const hour = z.number().int().min(0).max(24);
 
 export const crisisLineCreateSchema = z.object({
   nombre: z.string().min(1),
@@ -172,6 +193,8 @@ export const crisisLineCreateSchema = z.object({
   cobertura: z.string().min(1).optional(),
   hora_inicio: hour.optional(),
   hora_fin: hour.optional(),
+  // Days the line operates; omitted/undefined = every day.
+  dias_semana: z.array(diaSemanaEnum).min(1).optional(),
   prioridad: z.number().int().optional(),
   activa: z.boolean().optional(),
 });
@@ -183,6 +206,8 @@ export const crisisLineUpdateSchema = z
     cobertura: z.string().min(1).nullable(),
     hora_inicio: hour.nullable(),
     hora_fin: hour.nullable(),
+    // null clears back to "every day".
+    dias_semana: z.array(diaSemanaEnum).min(1).nullable(),
     prioridad: z.number().int(),
     activa: z.boolean(),
   })

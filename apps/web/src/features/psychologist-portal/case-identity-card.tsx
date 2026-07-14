@@ -1,5 +1,5 @@
 import type { CaseContactView, CaseSummary } from '../../lib/types';
-import { toInternationalVePhone } from '../../lib/validation';
+import { formatPhoneDisplay, toInternationalVePhone } from '../../lib/validation';
 import { HABIT_CHANGES } from '../intake/green-form';
 
 const RISK_LABEL: Record<string, string> = {
@@ -52,7 +52,7 @@ export function CaseIdentityCard({
       {contacto?.contacto && (
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           <a href={`tel:+${toInternationalVePhone(contacto.contacto)}`} className="rounded-md border px-3 py-1 font-medium text-brand">
-            Llamar {contacto.contacto}
+            Llamar {formatPhoneDisplay(contacto.contacto)}
           </a>
           <a href={waLink(contacto.contacto)} target="_blank" rel="noreferrer" className="rounded-md border px-3 py-1 font-medium text-brand">
             WhatsApp

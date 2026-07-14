@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { queryAuditLog } from '../../../application/audit/query-audit-log.js';
 import {
   createCrisisLine,
-  deactivateCrisisLine,
+  deleteCrisisLine,
   listCrisisLines,
   updateCrisisLine,
 } from '../../../application/crisis-line/manage-crisis-lines.js';
@@ -37,6 +37,7 @@ function toUpdate(body: CrisisLineUpdateBody): CrisisLineUpdate {
   if (body.cobertura !== undefined) patch.coverage = body.cobertura;
   if (body.hora_inicio !== undefined) patch.startHour = body.hora_inicio;
   if (body.hora_fin !== undefined) patch.endHour = body.hora_fin;
+  if (body.dias_semana !== undefined) patch.daysOfWeek = body.dias_semana;
   if (body.prioridad !== undefined) patch.priority = body.prioridad;
   if (body.activa !== undefined) patch.active = body.activa;
   return patch;
@@ -86,6 +87,7 @@ export function createAdminRouter(): Hono {
         coverage: body.cobertura,
         startHour: body.hora_inicio,
         endHour: body.hora_fin,
+        daysOfWeek: body.dias_semana,
         priority: body.prioridad,
         active: body.activa,
       },
@@ -109,12 +111,8 @@ export function createAdminRouter(): Hono {
 
   router.delete('/crisis-lines/:id', async (c) => {
     const admin = getAuthUser(c);
-    const line = await deactivateCrisisLine(
-      c.req.param('id'),
-      admin.sub,
-      getAdminContainer().crisisLines,
-    );
-    return c.json(presentCrisisLineAdmin(line));
+    await deleteCrisisLine(c.req.param('id'), admin.sub, getAdminContainer().crisisLines);
+    return c.body(null, 204);
   });
 
   // Coordinator invitations (RF-2.6): issue, list and revoke. The raw token is

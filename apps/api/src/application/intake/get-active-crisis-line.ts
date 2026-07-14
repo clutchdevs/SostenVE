@@ -31,9 +31,10 @@ function splitLines(lines: readonly CrisisLine[]): { routing: RoutingLine[]; bac
         start_hour: line.startHour,
         end_hour: line.endHour,
         phone: line.phone,
+        days: line.daysOfWeek,
       });
     } else {
-      backups.push({ name: line.name, phone: line.phone });
+      backups.push({ name: line.name, phone: line.phone, days: line.daysOfWeek });
     }
   }
   return { routing, backups };
