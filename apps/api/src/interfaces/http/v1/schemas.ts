@@ -208,32 +208,12 @@ export const coordinatorInviteSchema = z.object({
   email: z.string().email(),
 });
 
-// Coordinator sign-up (RF-2.6.2): structured identity + robust password + token.
-// The profile fields are optional because an invitation for an email that ALREADY
-// has an account only adds the coordinator role (#133) — token alone is enough;
-// they are still required (enforced in the use case) when creating a new account.
-export const acceptInvitationSchema = z
-  .object({
-    token: z.string().min(1),
-    nombres: z.string().min(1).optional(),
-    apellidos: z.string().min(1).optional(),
-    tipo_documento: z.enum(['V', 'E', 'P']).optional(),
-    numero_documento: z.string().min(1).optional(),
-    // FPV is optional for support/logistics coordinators.
-    numero_fpv: z.string().min(1).optional(),
-    telefono: venezuelanPhoneSchema.optional(),
-    contrasena: strongPasswordSchema.optional(),
-  })
-  .refine(
-    (v) =>
-      !v.tipo_documento ||
-      !v.numero_documento ||
-      isValidDocumentNumber(v.tipo_documento, v.numero_documento),
-    {
-      message: 'Documento inválido: la cédula (V/E) debe tener hasta 8 dígitos',
-      path: ['numero_documento'],
-    },
-  );
+// Coordinator activation (RF-2.6 / #133): every coordinator is a registered
+// psychologist first, so accepting an invitation only adds the coordinator role
+// to the account that owns the invited email — the token alone is enough.
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1),
+});
 
 // Public preview of an invitation (token only) so onboarding can adapt the flow.
 export const invitationInfoSchema = z.object({

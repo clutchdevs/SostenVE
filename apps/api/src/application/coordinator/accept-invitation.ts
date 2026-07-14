@@ -1,10 +1,9 @@
 import { ApiError } from '../../shared/errors/api-error.js';
-import { hashPassword } from '../../shared/security/password.js';
 import { hashToken } from '../../shared/security/invitation-token.js';
 import { isAcceptable } from '../../domain/coordinator/invitation.js';
 import type { AuditLogRepository } from '../../domain/audit/audit.js';
 import type { CoordinatorInvitationRepository } from '../../domain/coordinator/invitation.js';
-import type { DocumentType, VolunteerRepository } from '../../domain/volunteer/volunteer.js';
+import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 
 /** Dependencies for the public coordinator self-activation flow (RF-2.6). */
 export interface AcceptInvitationDeps {
@@ -15,36 +14,22 @@ export interface AcceptInvitationDeps {
 
 export interface AcceptInvitationInput {
   token: string;
-  /** Structured sign-up fields (RF-2.6.2). Required only when creating a NEW
-   *  account; ignored when the invited email already has one (#133). */
-  password?: string;
-  firstName?: string;
-  lastName?: string;
-  documentType?: DocumentType;
-  documentNumber?: string;
-  /** FPV number — optional for support/logistics coordinators. */
-  fpv?: string;
-  phone?: string;
 }
 
 export interface AcceptInvitationResult {
   volunteerId: string;
-  /** True when an existing account was granted the role rather than a new one created. */
-  roleAdded: boolean;
 }
 
 /**
- * Consumes a coordinator invitation: validates the token (pending and not
- * expired), then either
- *  - grants the `coordinator` role to the account that already owns the invited
- *    email (#133 multi-role — e.g. a psychologist who is also a coordinator),
- *    WITHOUT touching their existing password/identity; or
- *  - creates a new `active` coordinator with the submitted sign-up profile.
- * Finally it marks the invitation accepted. A generic error is used for any
- * invalid/expired token so a caller cannot probe which tokens exist.
+ * Consumes a coordinator invitation by adding the `coordinator` role to the
+ * account that already owns the invited email (#133 multi-role). Every coordinator
+ * is a registered psychologist first (canonical order): there is no separate
+ * coordinator sign-up, so if the email has no account yet the invitation cannot be
+ * accepted — the person must register (and be validated) as a psychologist first.
  *
- * The invitation is the trust anchor (an admin vetted the coordinator), so no FPV
- * verification is required — unlike psychologist self-registration (RF-2.2).
+ * The existing credentials/identity are untouched (no password or profile is
+ * collected here). A generic error is used for any invalid/expired token so a
+ * caller cannot probe which tokens exist.
  */
 export async function acceptInvitation(
   input: AcceptInvitationInput,
@@ -57,64 +42,31 @@ export async function acceptInvitation(
     throw invalid;
   }
 
-  // Multi-role (#133): if the invited email already has an account, add the
-  // coordinator role to it instead of creating a duplicate (which would violate
-  // the unique-email index). The existing credentials/identity are untouched.
   const existing = await deps.volunteers.findByEmail(invitation.email);
-  if (existing) {
-    await deps.volunteers.addRole(existing.id, 'coordinator');
-    if (existing.status !== 'active') {
-      await deps.volunteers.setStatus(existing.id, 'active');
-    }
-    await deps.invitations.markAccepted(invitation.id, existing.id);
-    await deps.audit.append({
-      userId: existing.id,
-      role: 'coordinator',
-      affectedRecordId: invitation.id,
-      actionType: 'coordinator_invitation_accepted',
-    });
-    return { volunteerId: existing.id, roleAdded: true };
+  if (!existing) {
+    throw new ApiError(
+      409,
+      'NO_ACCOUNT',
+      'Este correo no tiene una cuenta. Regístrate y valídate como psicólogo antes de activar el rol de coordinador.',
+    );
   }
 
-  // New account: the full sign-up profile is required.
-  if (
-    !input.firstName?.trim() ||
-    !input.lastName?.trim() ||
-    !input.documentType ||
-    !input.documentNumber?.trim() ||
-    !input.phone?.trim() ||
-    !input.password
-  ) {
-    throw new ApiError(400, 'MISSING_FIELDS', 'Missing required sign-up fields');
+  await deps.volunteers.addRole(existing.id, 'coordinator');
+  // A previously deactivated account is reactivated when it takes on coordination.
+  if (existing.status !== 'active') {
+    await deps.volunteers.setStatus(existing.id, 'active');
   }
 
-  const passwordHash = await hashPassword(input.password);
-  const fpv = input.fpv?.trim();
-  const volunteer = await deps.volunteers.create({
-    fullName: `${input.firstName.trim()} ${input.lastName.trim()}`.trim(),
-    // Identify by FPV when provided; otherwise the (unique) cédula. The email
-    // still comes from the invitation, which is address-targeted.
-    professionalId: fpv && fpv.length > 0 ? fpv : `coord:${input.documentNumber.trim()}`,
-    email: invitation.email,
-    role: 'coordinator',
-    roles: ['coordinator'],
-    documentType: input.documentType,
-    documentNumber: input.documentNumber.trim(),
-    phone: input.phone.trim(),
-    passwordHash,
-    status: 'active',
-  });
-
-  await deps.invitations.markAccepted(invitation.id, volunteer.id);
+  await deps.invitations.markAccepted(invitation.id, existing.id);
 
   await deps.audit.append({
-    userId: volunteer.id,
+    userId: existing.id,
     role: 'coordinator',
     affectedRecordId: invitation.id,
     actionType: 'coordinator_invitation_accepted',
   });
 
-  return { volunteerId: volunteer.id, roleAdded: false };
+  return { volunteerId: existing.id };
 }
 
 export interface InvitationInfo {

@@ -1,32 +1,23 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
 import { SubmitButton } from '../../src/components/submit-button';
-import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
-import {
-  CEDULA_ERROR,
-  isValidDocumentNumber,
-  isValidVePhone,
-  PHONE_ERROR,
-  PHONE_MAX_LENGTH,
-} from '../../src/lib/validation';
 
 /**
- * Coordinator self-activation page (RF-2.6). Opened from the invitation email
- * link, which carries the single-use token as `?token=…`. The page first resolves
- * the token: if the invited email ALREADY has an account (#133), the person only
- * confirms and the coordinator role is added to it (no new password); otherwise
- * they fill the structured sign-up fields (RF-2.6.2) and set a robust password.
+ * Coordinator activation page (RF-2.6 / #133). Opened from the invitation email
+ * link, which carries the single-use token as `?token=…`.
+ *
+ * Every coordinator is a registered psychologist first (canonical order): this
+ * page never collects a profile or password. It resolves the token and, if the
+ * invited email already has an account, the person confirms and the coordinator
+ * role is added to it. If the email has no account yet, the invitation cannot be
+ * accepted and the page points them to register as a psychologist first.
  */
-function isStrongPassword(p: string): boolean {
-  return (
-    p.length >= 12 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p)
-  );
-}
-
 interface InvitationInfo {
   email: string;
   nombre: string;
@@ -39,17 +30,6 @@ export default function CoordinatorOnboardingPage() {
   const [info, setInfo] = useState<InvitationInfo | null>(null);
   const [lookupError, setLookupError] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
-
-  // New-account sign-up fields (only used when the email has no account yet).
-  const [nombres, setNombres] = useState('');
-  const [apellidos, setApellidos] = useState('');
-  const [tipoDocumento, setTipoDocumento] = useState<'V' | 'E' | 'P'>('V');
-  const [numeroDocumento, setNumeroDocumento] = useState('');
-  const [numeroFpv, setNumeroFpv] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -82,8 +62,8 @@ export default function CoordinatorOnboardingPage() {
     }
   }, [lookup]);
 
-  // Existing account: token alone adds the coordinator role.
-  async function confirmExisting() {
+  // The token alone adds the coordinator role to the existing account.
+  async function confirm() {
     setBusy(true);
     setError('');
     try {
@@ -100,74 +80,19 @@ export default function CoordinatorOnboardingPage() {
     }
   }
 
-  // New account: full sign-up profile + password.
-  async function submitNew() {
-    setError('');
-    if (!nombres.trim() || !apellidos.trim() || !numeroDocumento.trim() || !telefono.trim()) {
-      setError('Completa nombres, apellidos, cédula y teléfono.');
-      return;
-    }
-    if (!isValidDocumentNumber(numeroDocumento, tipoDocumento)) {
-      setError(CEDULA_ERROR);
-      return;
-    }
-    if (!isValidVePhone(telefono)) {
-      setError(PHONE_ERROR);
-      return;
-    }
-    if (!isStrongPassword(password)) {
-      setError(
-        'La contraseña debe tener al menos 12 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial.',
-      );
-      return;
-    }
-    if (password !== confirm) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
-    setBusy(true);
-    try {
-      await apiFetch('/coordinators/accept-invitation', {
-        method: 'POST',
-        auth: false,
-        body: {
-          token: token.trim(),
-          nombres: nombres.trim(),
-          apellidos: apellidos.trim(),
-          tipo_documento: tipoDocumento,
-          numero_documento: numeroDocumento.trim(),
-          numero_fpv: numeroFpv.trim() || undefined,
-          telefono: telefono.trim(),
-          contrasena: password,
-        },
-      });
-      setDone(true);
-      setTimeout(() => router.replace('/login-coordinador'), 1500);
-    } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 400
-          ? 'La invitación es inválida o ha expirado, o los datos no cumplen los requisitos. Revisa e intenta de nuevo.'
-          : 'No se pudo completar el registro. Intenta de nuevo.',
-      );
-      setBusy(false);
-    }
-  }
-
   if (done) {
     return (
-      <AuthShell title={info?.cuenta_existente ? '¡Rol de coordinador añadido!' : '¡Cuenta activada!'}>
+      <AuthShell title="¡Rol de coordinador añadido!">
         <p className={ui.muted}>Redirigiendo al inicio de sesión…</p>
       </AuthShell>
     );
   }
 
-  const inputClass = ui.field;
-
   // Step 1 — resolve the token before showing the right flow.
   if (!info) {
     return (
       <AuthShell
-        title="Registro de coordinador"
+        title="Activar rol de coordinador"
         subtitle="Ingresa el token de tu invitación para continuar."
         backHref="/"
       >
@@ -179,7 +104,7 @@ export default function CoordinatorOnboardingPage() {
           }}
         >
           <input
-            className={inputClass}
+            className={ui.field}
             placeholder="Token de invitación"
             value={token}
             onChange={(e) => setToken(e.target.value)}
@@ -193,121 +118,53 @@ export default function CoordinatorOnboardingPage() {
     );
   }
 
-  // Step 2a — the email already has an account: only confirm to add the role.
-  if (info.cuenta_existente) {
+  // Step 2a — the email has no account: coordinators must be psychologists first.
+  if (!info.cuenta_existente) {
     return (
       <AuthShell
-        title="Añadir rol de coordinador"
-        subtitle="Este correo ya tiene una cuenta en PPV."
+        title="Primero regístrate como psicólogo"
+        subtitle="El rol de coordinador se añade a una cuenta existente."
         backHref="/"
       >
         <div className="space-y-4">
           <p className={ui.muted}>
-            La cuenta <strong>{info.email}</strong> ya existe. Al continuar se le añadirá el rol de{' '}
-            <strong>coordinador</strong> y podrás iniciar sesión con tu contraseña actual.
+            El correo <strong>{info.email}</strong> aún no tiene una cuenta en PPV. Todo coordinador
+            es primero un psicólogo registrado y validado. Regístrate como psicólogo y, una vez
+            activa tu cuenta, vuelve a abrir este enlace para activar el rol de coordinador.
           </p>
-          {error && <p className={ui.error}>{error}</p>}
-          <SubmitButton
-            pending={busy}
-            pendingText="Añadiendo…"
-            className="w-full"
-            onClick={() => void confirmExisting()}
+          <Link
+            href="/registro"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-ppv-blue px-4 py-2.5 font-medium text-white transition-colors hover:bg-ppv-blue-dark"
           >
-            Añadir rol de coordinador
-          </SubmitButton>
+            Registrarme como psicólogo
+          </Link>
         </div>
       </AuthShell>
     );
   }
 
-  // Step 2b — brand-new account: full sign-up form.
+  // Step 2b — the email already has an account: confirm to add the role.
   return (
     <AuthShell
-      title="Registro de coordinador"
-      subtitle="Completa tus datos y define una contraseña para activar tu cuenta de coordinador de la FPV."
+      title="Añadir rol de coordinador"
+      subtitle="Este correo ya tiene una cuenta en PPV."
       backHref="/"
     >
-      <form
-        className="space-y-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void submitNew();
-        }}
-      >
-        <input
-          className={inputClass}
-          placeholder="Nombres"
-          value={nombres}
-          onChange={(e) => setNombres(e.target.value)}
-        />
-        <input
-          className={inputClass}
-          placeholder="Apellidos"
-          value={apellidos}
-          onChange={(e) => setApellidos(e.target.value)}
-        />
-        <div className="flex gap-2">
-          <select
-            className="rounded-xl border border-slate-300 bg-white px-2 py-2 text-ink"
-            value={tipoDocumento}
-            onChange={(e) => setTipoDocumento(e.target.value as 'V' | 'E' | 'P')}
-            aria-label="Tipo de documento"
-          >
-            <option value="V">V</option>
-            <option value="E">E</option>
-            <option value="P">P</option>
-          </select>
-          <input
-            className={inputClass}
-            inputMode={tipoDocumento === 'P' ? 'text' : 'numeric'}
-            maxLength={tipoDocumento === 'P' ? 20 : 8}
-            placeholder={tipoDocumento === 'P' ? 'Número de pasaporte' : 'Cédula (hasta 8 dígitos)'}
-            value={numeroDocumento}
-            onChange={(e) =>
-              setNumeroDocumento(
-                tipoDocumento === 'P'
-                  ? e.target.value
-                  : e.target.value.replace(/\D/g, '').slice(0, 8),
-              )
-            }
-          />
-        </div>
-        <input
-          className={inputClass}
-          placeholder="Número FPV (opcional)"
-          value={numeroFpv}
-          onChange={(e) => setNumeroFpv(e.target.value)}
-        />
-        <input
-          className={inputClass}
-          type="tel"
-          inputMode="tel"
-          maxLength={PHONE_MAX_LENGTH}
-          placeholder="Teléfono (ej. 0414-1234567)"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value.replace(/[^\d+\s().-]/g, ''))}
-        />
-        <input
-          className={inputClass}
-          type="password"
-          placeholder="Contraseña (mín. 12, con mayúsculas, números y símbolo)"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <input
-          className={inputClass}
-          type="password"
-          placeholder="Confirmar contraseña"
-          autoComplete="new-password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
+      <div className="space-y-4">
+        <p className={ui.muted}>
+          La cuenta <strong>{info.email}</strong> ya existe. Al continuar se le añadirá el rol de{' '}
+          <strong>coordinador</strong> y podrás iniciar sesión con tu contraseña actual.
+        </p>
         {error && <p className={ui.error}>{error}</p>}
-        <SubmitButton pending={busy} disabled={!token} pendingText="Activando…" className="w-full">
-          Activar cuenta
+        <SubmitButton
+          pending={busy}
+          pendingText="Añadiendo…"
+          className="w-full"
+          onClick={() => void confirm()}
+        >
+          Añadir rol de coordinador
         </SubmitButton>
-      </form>
+      </div>
     </AuthShell>
   );
 }

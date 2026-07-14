@@ -42,20 +42,8 @@ export function createCoordinatorOnboardingRouter(): Hono {
 
   router.post('/accept-invitation', onboardingLimit, validateBody(acceptInvitationSchema), async (c) => {
     const body = getValidated<AcceptInvitationBody>(c, 'body');
-    const result = await acceptInvitation(
-      {
-        token: body.token,
-        password: body.contrasena,
-        firstName: body.nombres,
-        lastName: body.apellidos,
-        documentType: body.tipo_documento,
-        documentNumber: body.numero_documento,
-        fpv: body.numero_fpv,
-        phone: body.telefono,
-      },
-      getAcceptInvitationDeps(),
-    );
-    return c.json({ voluntario_id: result.volunteerId, rol_agregado: result.roleAdded }, 201);
+    const result = await acceptInvitation({ token: body.token }, getAcceptInvitationDeps());
+    return c.json({ voluntario_id: result.volunteerId }, 201);
   });
 
   return router;

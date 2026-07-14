@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { acceptInvitation } from '../../../src/application/coordinator/accept-invitation.js';
 import { hashToken } from '../../../src/shared/security/invitation-token.js';
-import { verifyPassword } from '../../../src/shared/security/password.js';
 import type { AuditLogRepository } from '../../../src/domain/audit/audit.js';
 import type {
   CoordinatorInvitation,
@@ -15,15 +14,6 @@ import type {
 } from '../../../src/domain/volunteer/volunteer.js';
 
 const TOKEN = 'a-raw-invitation-token';
-
-/** Structured sign-up fields (RF-2.6.2) reused by the error-path cases. */
-const SIGNUP = {
-  firstName: 'Coral',
-  lastName: 'Coordinadora',
-  documentType: 'V' as const,
-  documentNumber: '12345678',
-  phone: '0414-1234567',
-};
 
 function invitationFixture(overrides: Partial<CoordinatorInvitation> = {}): CoordinatorInvitation {
   return {
@@ -152,56 +142,18 @@ beforeAll(() => {
 });
 
 describe('acceptInvitation', () => {
-  it('activates a coordinator from a valid token and consumes the invitation', async () => {
-    const invitations = invitationRepo(invitationFixture());
-    const volunteers = volunteerRepo();
-    const audit = recordingAudit();
-
-    const result = await acceptInvitation(
-      {
-        token: TOKEN,
-        password: 'Str0ng-P4ssw0rd!!',
-        firstName: 'Coral',
-        lastName: 'Coordinadora',
-        documentType: 'V',
-        documentNumber: '12345678',
-        fpv: 'FPV-999',
-        phone: '0414-1234567',
-      },
-      { invitations: invitations.repo, volunteers: volunteers.repo, audit },
-    );
-
-    expect(result.volunteerId).toBe('vol-new');
-    expect(result.roleAdded).toBe(false);
-    expect(volunteers.roleAdds).toHaveLength(0);
-    const created = volunteers.created[0]!;
-    expect(created.role).toBe('coordinator');
-    expect(created.status).toBe('active');
-    expect(created.email).toBe('coord@example.com');
-    // Structured sign-up fields (RF-2.6.2) are captured on the volunteer.
-    expect(created.fullName).toBe('Coral Coordinadora');
-    expect(created.professionalId).toBe('FPV-999');
-    expect(created.documentNumber).toBe('12345678');
-    expect(created.phone).toBe('0414-1234567');
-    // Password is hashed, not stored in clear.
-    expect(created.passwordHash).not.toBe('Str0ng-P4ssw0rd!!');
-    expect(await verifyPassword('Str0ng-P4ssw0rd!!', created.passwordHash)).toBe(true);
-    expect(invitations.calls.accepted).toEqual([{ id: 'inv-1', volunteerId: 'vol-new' }]);
-    expect(audit.actions).toContain('coordinator_invitation_accepted');
-  });
-
-  it('adds the coordinator role to an account that already has the invited email (#133)', async () => {
+  it('adds the coordinator role to the account that already has the invited email (#133)', async () => {
     const invitations = invitationRepo(invitationFixture());
     const volunteers = volunteerRepo(existingPsychologist());
     const audit = recordingAudit();
 
-    // No sign-up profile is needed: the account already exists.
+    // No profile/password: every coordinator is a registered psychologist first.
     const result = await acceptInvitation(
       { token: TOKEN },
       { invitations: invitations.repo, volunteers: volunteers.repo, audit },
     );
 
-    expect(result).toEqual({ volunteerId: 'psy-existing', roleAdded: true });
+    expect(result).toEqual({ volunteerId: 'psy-existing' });
     expect(volunteers.roleAdds).toEqual([{ id: 'psy-existing', role: 'coordinator' }]);
     // No duplicate account is created (the previous bug).
     expect(volunteers.created).toHaveLength(0);
@@ -222,53 +174,54 @@ describe('acceptInvitation', () => {
     expect(volunteers.roleAdds).toEqual([{ id: 'psy-existing', role: 'coordinator' }]);
   });
 
-  it('requires the full sign-up profile when creating a brand-new account', async () => {
+  it('rejects the invitation when the invited email has no account yet', async () => {
     const invitations = invitationRepo(invitationFixture());
     const volunteers = volunteerRepo(); // no existing account for the email
     await expect(
       acceptInvitation(
-        { token: TOKEN }, // missing nombres/apellidos/documento/telefono/contraseña
+        { token: TOKEN },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
-    expect(volunteers.created).toHaveLength(0);
+    expect(volunteers.roleAdds).toHaveLength(0);
+    expect(invitations.calls.accepted).toHaveLength(0);
   });
 
-  it('rejects an unknown token without creating a volunteer', async () => {
+  it('rejects an unknown token', async () => {
     const invitations = invitationRepo(invitationFixture());
-    const volunteers = volunteerRepo();
+    const volunteers = volunteerRepo(existingPsychologist());
     await expect(
       acceptInvitation(
-        { token: 'wrong-token', password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
+        { token: 'wrong-token' },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
-    expect(volunteers.created).toHaveLength(0);
+    expect(volunteers.roleAdds).toHaveLength(0);
   });
 
   it('rejects an expired invitation', async () => {
     const invitations = invitationRepo(
       invitationFixture({ expiresAt: new Date(Date.now() - 1000) }),
     );
-    const volunteers = volunteerRepo();
+    const volunteers = volunteerRepo(existingPsychologist());
     await expect(
       acceptInvitation(
-        { token: TOKEN, password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
+        { token: TOKEN },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
-    expect(volunteers.created).toHaveLength(0);
+    expect(volunteers.roleAdds).toHaveLength(0);
   });
 
   it('rejects an already-accepted invitation', async () => {
     const invitations = invitationRepo(invitationFixture({ status: 'accepted' }));
-    const volunteers = volunteerRepo();
+    const volunteers = volunteerRepo(existingPsychologist());
     await expect(
       acceptInvitation(
-        { token: TOKEN, password: 'Str0ng-P4ssw0rd!!', ...SIGNUP },
+        { token: TOKEN },
         { invitations: invitations.repo, volunteers: volunteers.repo, audit: recordingAudit() },
       ),
     ).rejects.toThrow();
-    expect(volunteers.created).toHaveLength(0);
+    expect(volunteers.roleAdds).toHaveLength(0);
   });
 });

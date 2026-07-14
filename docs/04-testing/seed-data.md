@@ -29,12 +29,17 @@ Login en **`/login`** (la web enruta por rol). Las contraseñas se guardan con h
 > corre en el **cron** (`GET/POST /cron/check-sla`), no al crear el caso. Ver ["Cómo funciona la
 > asignación"](#cómo-funciona-la-asignación-automática).
 
-### Alta de coordinador por invitación (RF-2.6, issue #23)
-Además del coordinador sembrado, se puede dar de alta uno nuevo por **token de invitación**:
-1. Como admin, en `/admin` → **Coordinadores** → "Invitar coordinador" (o `POST /admin/coordinators/invitations`).
+### Alta de coordinador por invitación (RF-2.6 / #133)
+**Todo coordinador es primero un psicólogo registrado** (orden canónico). La invitación
+**añade el rol** de coordinador a la cuenta existente; no crea cuenta ni pide contraseña.
+1. Como admin, en `/admin` → **Coordinadores** → "Invitar coordinador" (o `POST /admin/coordinators/invitations`),
+   usando el **correo de un psicólogo ya registrado** (si el correo no tiene cuenta, la invitación se rechaza `409`).
    La respuesta muestra el **token una sola vez** (en local `email.provider: log` no envía correo real).
-2. Abre `/registro-coordinador?token=<token>` y define una contraseña (≥ 8) para activar la cuenta.
-3. Inicia sesión en `/login-coordinador` (o `/login`).
+2. Abre `/registro-coordinador?token=<token>` → pantalla **"Añadir rol de coordinador"** → confirmar
+   (sin datos ni contraseña; se usa la contraseña de psicólogo).
+3. Inicia sesión en `/login` con las credenciales del psicólogo: ahora tiene **ambos portales**.
+
+> Para probar rápido hay una cuenta sembrada con doble rol: `dual@ppv.test` / `Coordinador123!`.
 
 ## Casos de ejemplo
 | Caso | Estado | Riesgo | Edad | Notas |
