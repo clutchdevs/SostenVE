@@ -2,6 +2,7 @@ import { ValidationError } from '../../shared/errors/api-error.js';
 import { generatePseudonymId } from '../../domain/identity/pseudonym.js';
 import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/triage/index.js';
 import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog.js';
+import { toInternationalVePhone } from '../../shared/phone.js';
 import type { ContactMethod, Modality, RequesterType } from '../../domain/case/case.js';
 import { getActiveCrisisLine } from './get-active-crisis-line.js';
 import type { IntakeCaseResult, IntakeDeps } from './types.js';
@@ -52,7 +53,10 @@ export async function submitGreenBranch(
   });
   const high = isHighRisk(riskLevel);
 
-  const pseudonymId = generatePseudonymId(input.contact, deps.pseudonymSalt);
+  // International format (issue #129) so the assigned psychologist's WhatsApp
+  // link (wa.me) resolves correctly regardless of how the requester typed it.
+  const contact = toInternationalVePhone(input.contact);
+  const pseudonymId = generatePseudonymId(contact, deps.pseudonymSalt);
   const slaMs = deps.config.sla.high_risk_assignment_minutes * 60_000;
 
   const created = await deps.cases.create({
@@ -73,7 +77,7 @@ export async function submitGreenBranch(
     slaExpiresAt: high ? new Date(now.getTime() + slaMs) : undefined,
   });
 
-  await deps.contacts.upsert({ pseudonymId, name: input.name, contact: input.contact });
+  await deps.contacts.upsert({ pseudonymId, name: input.name, contact });
 
   return {
     caseId: created.id,

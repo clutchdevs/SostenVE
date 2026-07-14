@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isValidDocumentNumber, isValidVePhone, normalizePhone } from '../src/lib/validation';
+import {
+  isValidDocumentNumber,
+  isValidVePhone,
+  normalizePhone,
+  toInternationalVePhone,
+} from '../src/lib/validation';
 
 describe('isValidVePhone', () => {
   it('accepts every mobile carrier prefix, with or without +58 and separators', () => {
@@ -38,6 +43,23 @@ describe('isValidVePhone', () => {
 
   it('normalizePhone strips separators but keeps a leading +', () => {
     expect(normalizePhone(' +58 (414) 123-45.67 ')).toBe('+584141234567');
+  });
+});
+
+// Issue #129: the psychologist's wa.me link only works with 58 + 10 digits,
+// no leading 0 and no +.
+describe('toInternationalVePhone', () => {
+  it('converts national format (leading 0) to international', () => {
+    expect(toInternationalVePhone('0414-1234567')).toBe('584141234567');
+  });
+
+  it('is idempotent for already-international numbers, with or without +', () => {
+    expect(toInternationalVePhone('584141234567')).toBe('584141234567');
+    expect(toInternationalVePhone('+58 414 123 4567')).toBe('584141234567');
+  });
+
+  it('falls back to the stripped input for a non-Venezuelan-mobile number', () => {
+    expect(toInternationalVePhone('911')).toBe('911');
   });
 });
 

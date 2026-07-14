@@ -1,4 +1,5 @@
 import type { CaseContactView, CaseSummary } from '../../lib/types';
+import { toInternationalVePhone } from '../../lib/validation';
 import { HABIT_CHANGES } from '../intake/green-form';
 
 const RISK_LABEL: Record<string, string> = {
@@ -23,8 +24,7 @@ const CONTACT_METHOD_LABEL: Record<string, string> = {
 };
 
 function waLink(phone: string): string {
-  const digits = phone.replace(/[^\d]/g, '');
-  return `https://wa.me/${digits}`;
+  return `https://wa.me/${toInternationalVePhone(phone)}`;
 }
 
 /** Identity + key data of the case for the assigned psychologist (PII allowed). */
@@ -51,7 +51,7 @@ export function CaseIdentityCard({
 
       {contacto?.contacto && (
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <a href={`tel:${contacto.contacto.replace(/\s+/g, '')}`} className="rounded-md border px-3 py-1 font-medium text-brand">
+          <a href={`tel:+${toInternationalVePhone(contacto.contacto)}`} className="rounded-md border px-3 py-1 font-medium text-brand">
             Llamar {contacto.contacto}
           </a>
           <a href={waLink(contacto.contacto)} target="_blank" rel="noreferrer" className="rounded-md border px-3 py-1 font-medium text-brand">

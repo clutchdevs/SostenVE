@@ -24,6 +24,19 @@ export function isValidVePhone(raw: string): boolean {
 }
 
 /**
+ * Normalizes a Venezuelan mobile number to international format (58 + 10
+ * digits, no leading +) regardless of whether it was entered/stored with a
+ * leading 0 or a +58/58 country code — what WhatsApp deep links (wa.me)
+ * require to resolve to the right chat (issue #129). Returns the stripped
+ * input unchanged if it doesn't match a Venezuelan mobile number.
+ */
+export function toInternationalVePhone(raw: string): string {
+  const digits = normalizePhone(raw).replace(/^\+/, '');
+  const match = digits.match(/^(?:58|0)?(412|414|416|424|426)(\d{7})$/);
+  return match ? `58${match[1]}${match[2]}` : digits;
+}
+
+/**
  * Identity document number: a V/E cédula is up to 8 digits; a passport (P) is
  * alphanumeric (5–20). `tipo` is the document-type code ('V' | 'E' | 'P').
  */
