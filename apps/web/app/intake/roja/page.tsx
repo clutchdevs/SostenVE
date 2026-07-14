@@ -152,10 +152,14 @@ export default function RedBranchPage() {
                 type="tel"
                 inputMode="tel"
                 maxLength={PHONE_MAX_LENGTH}
-                placeholder="Teléfono de contacto (ej. 0414-1234567)"
+                placeholder="Teléfono de contacto (ej. +58 414 1234567)"
                 value={contact}
                 onChange={(e) => setContact(e.target.value.replace(/[^\d+\s().-]/g, ''))}
               />
+              <p className="text-xs text-slate-500">
+                Empieza con el código de país <strong>+58</strong> para que el psicólogo pueda
+                escribirte directo por WhatsApp.
+              </p>
               <input
                 className={ui.field}
                 type="number"

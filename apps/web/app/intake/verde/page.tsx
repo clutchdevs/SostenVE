@@ -244,10 +244,14 @@ export default function GreenBranchPage() {
             type="tel"
             inputMode="tel"
             maxLength={PHONE_MAX_LENGTH}
-            placeholder="Teléfono de contacto (ej. 0414-1234567)"
+            placeholder="Teléfono de contacto (ej. +58 414 1234567)"
             value={form.contact}
             onChange={(e) => update({ contact: e.target.value.replace(/[^\d+\s().-]/g, '') })}
           />
+          <p className="text-xs text-slate-500">
+            Empieza con el código de país <strong>+58</strong> para que el psicólogo pueda
+            escribirte directo por WhatsApp.
+          </p>
           <div>
             <p className="mb-2 text-sm text-slate-600">¿Cómo prefieres que te contactemos?</p>
             <div className="flex gap-2">

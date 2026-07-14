@@ -4,12 +4,13 @@
  * immediate feedback and can't submit obviously-invalid data.
  */
 
-// Venezuelan MOBILE number: one of the carrier prefixes (0412/0414/0416/0424/
-// 0426) followed by exactly 7 digits, optionally written with the +58 country
-// code instead of the leading 0. Tolerant of spaces, dashes, dots and parentheses
-// (stripped before matching). Landlines are intentionally rejected — the app
-// contacts requesters/volunteers by call or WhatsApp.
-const VE_PHONE_RE = /^(\+?58|0)?(412|414|416|424|426)\d{7}$/;
+// Venezuelan MOBILE number for the REQUESTER intake (issue #129): must carry the
+// +58 country code, a carrier prefix (412/414/416/424/426) and 7 digits. The
+// leading-0 national form (0414…) is intentionally REJECTED so the stored contact
+// always has the country code the assigned psychologist's WhatsApp (wa.me) deep
+// link needs. Tolerant of spaces, dashes, dots and parentheses (stripped before
+// matching). Landlines are rejected — the app contacts people by call/WhatsApp.
+const VE_PHONE_RE = /^\+?58(412|414|416|424|426)\d{7}$/;
 
 /** Longest raw phone we let a field hold (e.g. "+58 414 123 4567"). */
 export const PHONE_MAX_LENGTH = 16;
@@ -30,6 +31,19 @@ const INTL_PHONE_RE = /^\+?\d{7,15}$/;
 
 export function isValidIntlPhone(raw: string): boolean {
   return INTL_PHONE_RE.test(normalizePhone(raw));
+}
+
+/**
+ * Normalizes a Venezuelan mobile number to international format (58 + 10
+ * digits, no leading +) regardless of whether it was entered/stored with a
+ * leading 0 or a +58/58 country code — what WhatsApp deep links (wa.me)
+ * require to resolve to the right chat (issue #129). Returns the stripped
+ * input unchanged if it doesn't match a Venezuelan mobile number.
+ */
+export function toInternationalVePhone(raw: string): string {
+  const digits = normalizePhone(raw).replace(/^\+/, '');
+  const match = digits.match(/^(?:58|0)?(412|414|416|424|426)(\d{7})$/);
+  return match ? `58${match[1]}${match[2]}` : digits;
 }
 
 /**
@@ -71,6 +85,6 @@ export function formatPhoneDisplay(raw: string): string {
   return hasPlus ? `+${digits}` : digits;
 }
 
-export const PHONE_ERROR = 'Ingresa un teléfono venezolano válido (ej. 0414-1234567).';
+export const PHONE_ERROR = 'Incluye el código de país +58 (ej. +58 414 1234567).';
 export const INTL_PHONE_ERROR = 'Ingresa un teléfono válido en formato internacional (ej. +58 414 1234567).';
 export const CEDULA_ERROR = 'La cédula debe tener hasta 8 dígitos (solo números).';
