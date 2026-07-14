@@ -43,6 +43,34 @@ export function isValidDocumentNumber(numero: string, tipo: string): boolean {
     : /^\d{1,8}$/.test(value);
 }
 
+/**
+ * Standardizes a phone number for DISPLAY, regardless of how it was entered
+ * (spaces, dashes, parentheses, with or without country code):
+ *   - Venezuela national (0 + 10 digits) → `0XXX-XXXXXXX` (e.g. 0414-9247715)
+ *   - Venezuela international (+58 + 10)  → `+58 XXX-XXXXXXX` (e.g. +58 424-2907338)
+ *   - Short service/emergency codes (911) → left as-is
+ *   - Any other international number       → `+<country><number>` (digits only)
+ * The stored value is untouched; this is presentation only.
+ */
+export function formatPhoneDisplay(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/\D/g, '');
+  if (!digits) return trimmed;
+
+  if (digits.startsWith('58') && digits.length === 12) {
+    const n = digits.slice(2);
+    return `+58 ${n.slice(0, 3)}-${n.slice(3)}`;
+  }
+  if (!hasPlus && digits.startsWith('0') && digits.length === 11) {
+    const n = digits.slice(1);
+    return `0${n.slice(0, 3)}-${n.slice(3)}`;
+  }
+  if (!hasPlus && digits.length <= 6) return digits; // short service/emergency code
+  return hasPlus ? `+${digits}` : digits;
+}
+
 export const PHONE_ERROR = 'Ingresa un teléfono venezolano válido (ej. 0414-1234567).';
 export const INTL_PHONE_ERROR = 'Ingresa un teléfono válido en formato internacional (ej. +58 414 1234567).';
 export const CEDULA_ERROR = 'La cédula debe tener hasta 8 dígitos (solo números).';

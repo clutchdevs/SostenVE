@@ -19,7 +19,7 @@ default: &default
     routing:
       - name: "LAPSI"
         start_hour: 8
-        end_hour: 26 # represents 2:00 AM next day, no overlap with start_hour
+        end_hour: 2 # overnight window (end <= start): 8:00 to 2:00 next day
         phone: "+584242907338"
       - name: "Colegio de Psicólogos de Miranda"
         start_hour: 2

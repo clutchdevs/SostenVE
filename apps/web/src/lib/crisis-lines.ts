@@ -57,9 +57,15 @@ export async function getCrisisLines(): Promise<CrisisLines> {
   try {
     const data = await apiFetch<ApiCrisisLines>('/crisis-lines/active', { auth: false });
     const lines: CrisisLines = { active: data.activa, backups: data.respaldo ?? [] };
-    writeCache(lines);
+    // The admin-managed API is the source of truth (the FPV controls the lines):
+    // return EXACTLY what it says, even if empty — we never inject our own lines
+    // over the FPV's decision. Only a non-empty set is cached, so an outage falls
+    // back to the last real lines rather than to nothing.
+    if (lines.active || lines.backups.length > 0) writeCache(lines);
     return lines;
   } catch {
+    // Genuine API/network failure only: use the last cached (FPV) lines, then the
+    // embedded verified numbers as a last resort so we can't reach a blank state.
     return readCache() ?? FALLBACK_CRISIS_LINES;
   }
 }

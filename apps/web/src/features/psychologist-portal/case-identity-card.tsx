@@ -1,5 +1,6 @@
 import type { CaseContactView, CaseSummary } from '../../lib/types';
 import { HABIT_CHANGES } from '../intake/green-form';
+import { formatPhoneDisplay } from '../../lib/validation';
 
 const RISK_LABEL: Record<string, string> = {
   riesgo_alto: 'Riesgo alto',
@@ -52,7 +53,7 @@ export function CaseIdentityCard({
       {contacto?.contacto && (
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           <a href={`tel:${contacto.contacto.replace(/\s+/g, '')}`} className="rounded-md border px-3 py-1 font-medium text-brand">
-            Llamar {contacto.contacto}
+            Llamar {formatPhoneDisplay(contacto.contacto)}
           </a>
           <a href={waLink(contacto.contacto)} target="_blank" rel="noreferrer" className="rounded-md border px-3 py-1 font-medium text-brand">
             WhatsApp

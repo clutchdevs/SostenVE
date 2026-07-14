@@ -10,6 +10,8 @@ export interface CrisisLine {
   coverage?: string;
   startHour?: number;
   endHour?: number;
+  /** Spanish day names (dia_semana enum) the line operates; undefined = every day. */
+  daysOfWeek?: string[];
   priority: number;
   active: boolean;
 }
@@ -20,6 +22,7 @@ export interface NewCrisisLine {
   coverage?: string;
   startHour?: number;
   endHour?: number;
+  daysOfWeek?: string[];
   priority?: number;
   active?: boolean;
 }
@@ -31,6 +34,7 @@ export interface CrisisLineUpdate {
   coverage?: string | null;
   startHour?: number | null;
   endHour?: number | null;
+  daysOfWeek?: string[] | null;
   priority?: number;
   active?: boolean;
 }
@@ -40,6 +44,7 @@ export interface CrisisLineRepository {
   listActive(): Promise<CrisisLine[]>;
   listAll(): Promise<CrisisLine[]>;
   update(id: string, patch: CrisisLineUpdate): Promise<CrisisLine | null>;
-  /** Soft-delete: marks the line inactive. Returns the updated line or null. */
-  deactivate(id: string): Promise<CrisisLine | null>;
+  /** Hard-delete: permanently removes the line. Returns true if a row was deleted.
+   *  (The reversible soft-delete is `update(id, { active: false })`.) */
+  delete(id: string): Promise<boolean>;
 }

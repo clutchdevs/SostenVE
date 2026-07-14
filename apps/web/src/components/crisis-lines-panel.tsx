@@ -1,4 +1,5 @@
 import type { CrisisLines } from '../lib/crisis-lines';
+import { formatPhoneDisplay } from '../lib/validation';
 
 /**
  * Always-visible crisis lines (non-negotiable principle). Presentational: it
@@ -23,7 +24,7 @@ export function CrisisLinesPanel({ lines }: { lines: CrisisLines }) {
               className="flex items-center justify-between rounded-md bg-white px-3 py-2 font-medium shadow-sm"
             >
               <span>{line.name}</span>
-              <span className="text-risk-high">{line.phone}</span>
+              <span className="text-risk-high">{formatPhoneDisplay(line.phone)}</span>
             </a>
           </li>
         ))}
