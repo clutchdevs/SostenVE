@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AuthShell } from '../../src/components/auth-shell';
 import { SubmitButton } from '../../src/components/submit-button';
+import { Spinner } from '../../src/components/spinner';
 import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 
@@ -31,6 +32,9 @@ export default function CoordinatorOnboardingPage() {
   const [granted, setGranted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [working, setWorking] = useState(false);
+  // True until we know whether a token came in the URL — avoids flashing the
+  // manual token form before the automatic activation kicks in.
+  const [checking, setChecking] = useState(true);
 
   // Resolve the token and, for an existing account, activate the role right away.
   const resolve = useCallback(async (raw: string) => {
@@ -59,6 +63,7 @@ export default function CoordinatorOnboardingPage() {
       setErrorMsg('La invitación es inválida, ya fue usada o ha expirado. Revisa el enlace o pide una nueva.');
     } finally {
       setWorking(false);
+      setChecking(false);
     }
   }, []);
 
@@ -67,8 +72,22 @@ export default function CoordinatorOnboardingPage() {
     if (fromUrl) {
       setToken(fromUrl);
       void resolve(fromUrl);
+    } else {
+      setChecking(false);
     }
   }, [resolve]);
+
+  // Activating from the URL token — show a spinner, never the empty form.
+  if (checking || working) {
+    return (
+      <AuthShell title="Activando rol de coordinador" backHref="/">
+        <p className={`inline-flex items-center gap-2 ${ui.muted}`}>
+          <Spinner />
+          Un momento…
+        </p>
+      </AuthShell>
+    );
+  }
 
   // Success — the role was assigned via the link. Acknowledge and go to the portal.
   if (granted) {
@@ -117,7 +136,7 @@ export default function CoordinatorOnboardingPage() {
     );
   }
 
-  // Initial state — activating from the URL token, or awaiting a manual token.
+  // No URL token (or the token failed): let the person paste it manually.
   return (
     <AuthShell
       title="Activar rol de coordinador"
