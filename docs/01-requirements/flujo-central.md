@@ -107,7 +107,7 @@ ponderado resultante define la prioridad.
 - **Signup cerrado por token (RF-2.6):** los coordinadores **no** se autorregistran. Un administrador de
   la FPV genera un **token de invitación** de un solo uso; el coordinador lo canjea para activarse. El
   backend persiste solo el **hash** del token, lo invalida al usarse y encripta la contraseña.
-- **Login (RF-2.7):** ruta dedicada `/login-coordinador`, **bloqueo de cuenta 15 min tras 5 fallos**, y
+- **Login (RF-2.7):** login unificado en `/login` (todo el personal), **bloqueo de cuenta 15 min tras 5 fallos**, y
   **cierre de sesión por inactividad** (el PRD fija **30 min**; ver desvíos en
   [`prd-cobertura-y-brechas.md`](prd-cobertura-y-brechas.md) §D).
 - **Presencia en tiempo real (RF-2.5):** al hacer login el voluntario queda `Online`; heartbeats cada 30 s

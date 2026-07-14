@@ -104,9 +104,10 @@ export default function CoordinatorOnboardingPage() {
             type="button"
             onClick={() => {
               // Force a fresh login so the new token includes the coordinator role
-              // (an existing stale session would otherwise bounce back to its portal).
+              // (an existing stale session would otherwise bounce back to its portal),
+              // then land straight on the coordinator portal.
               clearSession();
-              router.replace('/login-coordinador');
+              router.replace('/login?next=/coordinador');
             }}
             className="inline-flex w-full items-center justify-center rounded-xl bg-ppv-blue px-4 py-2.5 font-medium text-white transition-colors hover:bg-ppv-blue-dark"
           >

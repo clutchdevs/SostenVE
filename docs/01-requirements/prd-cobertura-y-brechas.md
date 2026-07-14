@@ -142,7 +142,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   (para que no se pueda degradar). El correo sigue tomándose de la invitación (address-targeted).
 - ✅ RF-2.7 Login con bloqueo por 5 intentos (rate-limit/lockout 15 min configurable) **+ expiración de
   sesión por inactividad de 30 min** (`security.session.idle_timeout_minutes: 30`, enforce en cliente sobre
-  el `exp` del JWT) **+ ruta separada `/login-coordinador`** (issue #23) **+ destrucción de sesiones
+  el `exp` del JWT) **+ login unificado en `/login`** (issue #23; la ruta `/login-coordinador` se consolidó, #133) **+ destrucción de sesiones
   duplicadas en caliente** (issue #54): cada login **bumpea `token_version`** y el middleware **valida la
   versión del token contra la BD en cada request**, así un login nuevo invalida las sesiones previas al
   instante.
@@ -242,7 +242,7 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
       `GET /pap` y página `/guias` enlazada desde el intake. Texto provisional pendiente de la FPV.
 - [x] **Registro/login de coordinador por token (issue #23):** invitación por token de un solo uso
       (hash en BD, TTL, auditada), canje en `/coordinators/accept-invitation` (RF-2.6); expiración de
-      sesión por inactividad y ruta `/login-coordinador` (RF-2.7). ⚠️ Desvíos del PRD abajo (sección D).
+      sesión por inactividad y login unificado en `/login` (RF-2.7). ⚠️ Desvíos del PRD abajo (sección D).
 - [x] **Índice de urgencia ponderado** completo (RF-1.5) y pantallas faltantes de Rama Verde
       (ubicación, cambio de hábitos) — issue #24. Pendiente: geolocalización por dispositivo.
 

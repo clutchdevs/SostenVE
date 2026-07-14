@@ -9,6 +9,17 @@ import { apiFetch } from '../../src/lib/api-client';
 import { ui } from '../../src/lib/ui';
 import { getRole, homePathForRole, isSessionActive, saveSession } from '../../src/lib/session';
 
+/**
+ * Optional post-login destination from `?next=…`. Only internal absolute paths
+ * are honored (guards against open redirects); anything else falls back to the
+ * role's home. Read from the URL directly so no Suspense boundary is required.
+ */
+function safeNext(): string | null {
+  if (typeof window === 'undefined') return null;
+  const next = new URLSearchParams(window.location.search).get('next');
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -18,10 +29,11 @@ export default function LoginPage() {
   const [checking, setChecking] = useState(true);
 
   // An active (non-expired) session shouldn't see the login form again; send the
-  // user to their portal. Only an expired or cleared session shows the form.
+  // user to their portal (or the requested `next`). Only an expired or cleared
+  // session shows the form.
   useEffect(() => {
     if (isSessionActive()) {
-      router.replace(homePathForRole(getRole()));
+      router.replace(safeNext() ?? homePathForRole(getRole()));
     } else {
       setChecking(false);
     }
@@ -36,8 +48,16 @@ export default function LoginPage() {
         auth: false,
         body: { email, contrasena: password },
       });
-      saveSession(res.token, res.rol, res.roles ?? [res.rol]);
-      router.replace(homePathForRole(res.rol));
+      const roles = res.roles ?? [res.rol];
+      saveSession(res.token, res.rol, roles);
+      // Honor an explicit `next` (e.g. landing on /coordinador after activating
+      // that role) only when the account actually holds it; else the role's home.
+      const next = safeNext();
+      const target =
+        next && (next.startsWith('/coordinador') ? roles.includes('coordinator') : true)
+          ? next
+          : homePathForRole(res.rol);
+      router.replace(target);
       // Keep the button disabled through the redirect; the page unmounts.
     } catch {
       setError('Credenciales inválidas');
