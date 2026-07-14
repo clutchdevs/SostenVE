@@ -49,19 +49,22 @@ export async function updateCrisisLine(
   return line;
 }
 
-/** Soft-delete: deactivates the line (active=false), preserving history. */
-export async function deactivateCrisisLine(
+/**
+ * Hard-delete: permanently removes the line (irreversible). The reversible
+ * soft-delete is `updateCrisisLine(id, { active: false })` (the "Desactivar"
+ * action), which just hides it from routing.
+ */
+export async function deleteCrisisLine(
   id: string,
   adminId: string,
   deps: CrisisLineDeps,
-): Promise<CrisisLine> {
-  const line = await deps.lines.deactivate(id);
-  if (!line) throw new ApiError(404, 'NOT_FOUND', 'Crisis line not found');
+): Promise<void> {
+  const deleted = await deps.lines.delete(id);
+  if (!deleted) throw new ApiError(404, 'NOT_FOUND', 'Crisis line not found');
   await deps.audit.append({
     userId: adminId,
     role: 'admin',
     affectedRecordId: id,
     actionType: 'crisis_line_deleted',
   });
-  return line;
 }

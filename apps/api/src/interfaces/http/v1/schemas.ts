@@ -164,7 +164,9 @@ export const caseClosureSchema = z.object({
   comentario: z.string().max(1500).optional(),
 });
 
-const hour = z.number().int().min(0).max(26); // up to 26 to express ranges past midnight
+// Real clock hours 0–24. An overnight window is expressed with hora_fin <= hora_inicio
+// (e.g. 20 -> 2), not with hours past 24.
+const hour = z.number().int().min(0).max(24);
 
 export const crisisLineCreateSchema = z.object({
   nombre: z.string().min(1),

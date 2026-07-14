@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { queryAuditLog } from '../../../application/audit/query-audit-log.js';
 import {
   createCrisisLine,
-  deactivateCrisisLine,
+  deleteCrisisLine,
   listCrisisLines,
   updateCrisisLine,
 } from '../../../application/crisis-line/manage-crisis-lines.js';
@@ -111,12 +111,8 @@ export function createAdminRouter(): Hono {
 
   router.delete('/crisis-lines/:id', async (c) => {
     const admin = getAuthUser(c);
-    const line = await deactivateCrisisLine(
-      c.req.param('id'),
-      admin.sub,
-      getAdminContainer().crisisLines,
-    );
-    return c.json(presentCrisisLineAdmin(line));
+    await deleteCrisisLine(c.req.param('id'), admin.sub, getAdminContainer().crisisLines);
+    return c.body(null, 204);
   });
 
   // Coordinator invitations (RF-2.6): issue, list and revoke. The raw token is

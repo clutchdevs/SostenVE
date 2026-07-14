@@ -44,6 +44,7 @@ export interface CrisisLineRepository {
   listActive(): Promise<CrisisLine[]>;
   listAll(): Promise<CrisisLine[]>;
   update(id: string, patch: CrisisLineUpdate): Promise<CrisisLine | null>;
-  /** Soft-delete: marks the line inactive. Returns the updated line or null. */
-  deactivate(id: string): Promise<CrisisLine | null>;
+  /** Hard-delete: permanently removes the line. Returns true if a row was deleted.
+   *  (The reversible soft-delete is `update(id, { active: false })`.) */
+  delete(id: string): Promise<boolean>;
 }

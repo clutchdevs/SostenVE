@@ -16,7 +16,7 @@ const line: CrisisLineAdmin = {
   telefono: '+58',
   cobertura: null,
   hora_inicio: 8,
-  hora_fin: 26,
+  hora_fin: 2,
   dias_semana: null,
   prioridad: 10,
   activa: true,
@@ -38,7 +38,8 @@ describe('CrisisLinesAdmin', () => {
     expect(onChange).toHaveBeenCalled();
   });
 
-  it('soft-deletes an active line via DELETE', async () => {
+  it('permanently deletes a line via DELETE after confirmation', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const onChange = vi.fn();
     render(<CrisisLinesAdmin lines={[line]} onChange={onChange} />);
 
@@ -47,6 +48,17 @@ describe('CrisisLinesAdmin', () => {
     await waitFor(() =>
       expect(apiFetch).toHaveBeenCalledWith('/admin/crisis-lines/cl-1', { method: 'DELETE' }),
     );
+    confirmSpy.mockRestore();
+  });
+
+  it('does not delete when the confirmation is cancelled', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<CrisisLinesAdmin lines={[line]} onChange={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 
   // Regression test for issue #127: Fields used to be re-declared inside the

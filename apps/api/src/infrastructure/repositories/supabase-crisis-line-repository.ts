@@ -94,7 +94,12 @@ export class SupabaseCrisisLineRepository implements CrisisLineRepository {
     return data ? toDomain(data as CrisisLineRow) : null;
   }
 
-  async deactivate(id: string): Promise<CrisisLine | null> {
-    return this.update(id, { active: false });
+  async delete(id: string): Promise<boolean> {
+    const { error, count } = await this.client
+      .from('crisis_lines')
+      .delete({ count: 'exact' })
+      .eq('id', id);
+    if (error) throw new Error(`Failed to delete crisis line: ${error.message}`);
+    return (count ?? 0) > 0;
   }
 }

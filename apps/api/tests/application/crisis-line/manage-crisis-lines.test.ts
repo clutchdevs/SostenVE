@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createCrisisLine,
-  deactivateCrisisLine,
+  deleteCrisisLine,
   updateCrisisLine,
 } from '../../../src/application/crisis-line/manage-crisis-lines.js';
 import type { CrisisLineDeps } from '../../../src/application/crisis-line/manage-crisis-lines.js';
@@ -27,7 +27,7 @@ function deps(overrides: Partial<CrisisLineDeps['lines']> = {}): {
       lines: {
         create: vi.fn(async () => line),
         update: vi.fn(async () => line),
-        deactivate: vi.fn(async () => line),
+        delete: vi.fn(async () => true),
         listActive: vi.fn(async () => [line]),
         listAll: vi.fn(async () => [line]),
         ...overrides,
@@ -53,12 +53,19 @@ describe('manage-crisis-lines (audited)', () => {
     );
   });
 
-  it('audits a soft-delete', async () => {
+  it('audits a hard-delete', async () => {
     const { deps: d, append } = deps();
-    await deactivateCrisisLine('cl-1', 'admin-1', d);
+    await deleteCrisisLine('cl-1', 'admin-1', d);
+    expect(d.lines.delete).toHaveBeenCalledWith('cl-1');
     expect(append).toHaveBeenCalledWith(
       expect.objectContaining({ actionType: 'crisis_line_deleted', affectedRecordId: 'cl-1' }),
     );
+  });
+
+  it('throws 404 when deleting a missing line and does not audit', async () => {
+    const { deps: d, append } = deps({ delete: vi.fn(async () => false) });
+    await expect(deleteCrisisLine('missing', 'admin-1', d)).rejects.toMatchObject({ status: 404 });
+    expect(append).not.toHaveBeenCalled();
   });
 
   it('throws 404 when updating a missing line and does not audit', async () => {

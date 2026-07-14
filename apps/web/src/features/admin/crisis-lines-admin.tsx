@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Spinner } from '../../components/spinner';
 import { apiFetch } from '../../lib/api-client';
+import { formatPhoneDisplay } from '../../lib/validation';
 import type { CrisisLineAdmin } from '../../lib/types';
 
 interface Props {
@@ -33,6 +34,27 @@ const DIAS = [
 
 function toggleDay(days: string[], day: string): string[] {
   return days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
+}
+
+// Whole clock hours 0–23 for the time selectors, always shown in unambiguous 24h
+// "HH:00" (no device-dependent 12h/AM-PM). A window that crosses midnight uses
+// end <= start; an hourless line (empty) is an always-visible backup.
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+const hourLabel = (h: number | string) => `${String(Number(h)).padStart(2, '0')}:00`;
+
+/**
+ * Validates the hour pair: both set or neither (a window needs both ends), and
+ * start != end (equal hours are ambiguous — "8 a 8"). Returns an error message,
+ * or null when valid.
+ */
+function hoursError(f: { hora_inicio: string; hora_fin: string }): string | null {
+  const startSet = f.hora_inicio !== '';
+  const endSet = f.hora_fin !== '';
+  if (startSet !== endSet) return 'Indica ambas horas (inicio y fin) o déjalas vacías.';
+  if (startSet && endSet && f.hora_inicio === f.hora_fin) {
+    return 'La hora de inicio y de fin no pueden ser iguales. Para 24 horas, usa 00:00 a 24:00.';
+  }
+  return null;
 }
 
 /** Shared field grid for the create form and the inline edit form. Defined at module
@@ -69,27 +91,42 @@ function Fields({ value, onField }: { value: LineForm; onField: (patch: Partial<
         value={value.prioridad}
         onChange={(e) => onField({ prioridad: e.target.value })}
       />
-      <input
-        type="number"
-        min={0}
-        max={26}
-        className="rounded-md border px-3 py-2"
-        placeholder="Hora inicio (0–26, opcional)"
-        value={value.hora_inicio}
-        onChange={(e) => onField({ hora_inicio: e.target.value })}
-      />
-      <input
-        type="number"
-        min={0}
-        max={26}
-        className="rounded-md border px-3 py-2"
-        placeholder="Hora fin (0–26, opcional)"
-        value={value.hora_fin}
-        onChange={(e) => onField({ hora_fin: e.target.value })}
-      />
+      <label className="flex flex-col gap-1 text-xs text-slate-500">
+        Hora de inicio (opcional)
+        <select
+          className="rounded-md border px-3 py-2 text-ink"
+          aria-label="Hora de inicio"
+          value={value.hora_inicio}
+          onChange={(e) => onField({ hora_inicio: e.target.value })}
+        >
+          <option value="">—</option>
+          {HOURS.map((h) => (
+            <option key={h} value={h}>
+              {hourLabel(h)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-xs text-slate-500">
+        Hora de fin (opcional)
+        <select
+          className="rounded-md border px-3 py-2 text-ink"
+          aria-label="Hora de fin"
+          value={value.hora_fin}
+          onChange={(e) => onField({ hora_fin: e.target.value })}
+        >
+          <option value="">—</option>
+          {HOURS.map((h) => (
+            <option key={h} value={h}>
+              {hourLabel(h)}
+            </option>
+          ))}
+        </select>
+      </label>
       <p className="col-span-full text-xs text-slate-500">
-        Horas 24–26 representan la madrugada del día siguiente (p. ej. 26 = 2:00 a. m.), para líneas
-        nocturnas que cruzan la medianoche.
+        Déjalas vacías para una línea de <strong>respaldo</strong> (siempre visible). Para una línea
+        que <strong>cruza la medianoche</strong>, pon la hora de fin <strong>menor</strong> que la de
+        inicio (p. ej. 20:00 a 02:00).
       </p>
       <fieldset className="col-span-full">
         <legend className="text-sm text-slate-700">Días de la semana (vacío = todos los días)</legend>
@@ -152,6 +189,11 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
   }
 
   function create() {
+    const he = hoursError(form);
+    if (he) {
+      setError(he);
+      return;
+    }
     const body = toBody(form);
     // Create omits null optionals (they carry no meaning on a brand-new line).
     for (const k of ['cobertura', 'hora_inicio', 'hora_fin', 'dias_semana'] as const) {
@@ -182,6 +224,11 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
       setError('El nombre y el teléfono son obligatorios.');
       return;
     }
+    const he = hoursError(editForm);
+    if (he) {
+      setError(he);
+      return;
+    }
     return run(`edit:${id}`, async () => {
       await apiFetch(`/admin/crisis-lines/${id}`, { method: 'PATCH', body: toBody(editForm) });
       setEditingId(null);
@@ -193,14 +240,24 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
       apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'PATCH', body: { activa: !line.activa } }),
     );
 
-  const remove = (line: CrisisLineAdmin) =>
+  function remove(line: CrisisLineAdmin) {
+    // Permanent, irreversible — confirm before deleting (use Desactivar to hide
+    // a line reversibly).
+    if (
+      !window.confirm(
+        `¿Eliminar definitivamente la línea "${line.nombre}"? Esta acción no se puede deshacer. Si solo quieres ocultarla del ruteo, usa "Desactivar".`,
+      )
+    ) {
+      return;
+    }
     run(`remove:${line.id}`, () => apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'DELETE' }));
+  }
 
   function windowLabel(line: CrisisLineAdmin): string {
     const hours =
       line.hora_inicio == null || line.hora_fin == null
         ? 'Respaldo'
-        : `${line.hora_inicio}:00–${line.hora_fin % 24}:00`;
+        : `${hourLabel(line.hora_inicio)}–${hourLabel(line.hora_fin)}`;
     if (!line.dias_semana || line.dias_semana.length === 0) return hours;
     const days = DIAS.filter(([dia]) => line.dias_semana?.includes(dia))
       .map(([, label]) => label)
@@ -211,14 +268,41 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
   return (
     <section>
       <h1 className="font-serif text-3xl font-semibold text-ink">Líneas de crisis</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Fuente del ruteo público. Editar cambia los datos en el momento; desactivar oculta la línea del
-        ruteo (soft-delete, auditado).
-      </p>
 
       {error && <p className="mt-3 text-sm text-risk-high">{error}</p>}
 
-      <ul className="mt-4 space-y-2">
+      {/* Create form kept ABOVE the list so it stays visible and doesn't get
+          pushed off-screen as more lines are added. */}
+      <form
+        className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void create();
+        }}
+      >
+        <h3 className="text-sm font-semibold">Nueva línea</h3>
+        <div className="mt-3">
+          <Fields value={form} onField={(patch) => setForm({ ...form, ...patch })} />
+        </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Con hora inicio y fin la línea enruta por hora; sin ellas es línea de respaldo.
+        </p>
+        <button
+          type="submit"
+          disabled={busy}
+          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {pending === 'create' && <Spinner />}
+          {pending === 'create' ? 'Creando…' : 'Crear línea'}
+        </button>
+      </form>
+
+      <h2 className="mt-8 text-sm font-semibold text-slate-600">Líneas registradas</h2>
+      <p className="mt-1 text-xs text-slate-500">
+        Fuente del ruteo público. <strong>Desactivar</strong> la oculta del ruteo pero la conserva
+        (reversible); <strong>eliminar</strong> la borra definitivamente. Todo queda auditado.
+      </p>
+      <ul className="mt-3 space-y-2">
         {lines.map((line) =>
           editingId === line.id ? (
             <li key={line.id} className="rounded-lg border border-brand/40 bg-brand/5 p-3">
@@ -255,7 +339,9 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
               <div>
                 <p className="font-medium">
                   {line.nombre}{' '}
-                  <span className="text-sm font-normal text-slate-500">· {line.telefono}</span>
+                  <span className="text-sm font-normal text-slate-500">
+                    · {formatPhoneDisplay(line.telefono)}
+                  </span>
                 </p>
                 <p className="text-xs text-slate-500">
                   {windowLabel(line)} · prioridad {line.prioridad}
@@ -287,47 +373,21 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
                   {pending === `toggle:${line.id}` && <Spinner />}
                   {line.activa ? 'Desactivar' : 'Activar'}
                 </button>
-                {line.activa && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => remove(line)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
-                  >
-                    {pending === `remove:${line.id}` && <Spinner />}
-                    {pending === `remove:${line.id}` ? 'Eliminando…' : 'Eliminar'}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => remove(line)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-risk-high px-3 py-1 text-sm font-medium text-risk-high hover:bg-red-50 disabled:opacity-50"
+                >
+                  {pending === `remove:${line.id}` && <Spinner />}
+                  {pending === `remove:${line.id}` ? 'Eliminando…' : 'Eliminar'}
+                </button>
               </div>
             </li>
           ),
         )}
         {lines.length === 0 && <li className="text-sm text-slate-500">No hay líneas registradas.</li>}
       </ul>
-
-      <form
-        className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void create();
-        }}
-      >
-        <h3 className="text-sm font-semibold">Nueva línea</h3>
-        <div className="mt-3">
-          <Fields value={form} onField={(patch) => setForm({ ...form, ...patch })} />
-        </div>
-        <p className="mt-2 text-xs text-slate-500">
-          Con hora inicio y fin la línea enruta por hora; sin ellas es línea de respaldo.
-        </p>
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {pending === 'create' && <Spinner />}
-          {pending === 'create' ? 'Creando…' : 'Crear línea'}
-        </button>
-      </form>
     </section>
   );
 }

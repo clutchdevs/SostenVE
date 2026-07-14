@@ -9,6 +9,7 @@ import {
   displayName,
   priorityStyle,
 } from './caseload';
+import { formatPhoneDisplay } from '../../lib/validation';
 
 interface Props {
   caso: CaseSummary;
@@ -81,7 +82,7 @@ export function PsychologistCaseCard({ caso, onOpen, now = new Date() }: Props) 
             {caso.contacto && (
               <span className="inline-flex items-center gap-1">
                 <Phone className="h-3.5 w-3.5" aria-hidden />
-                {caso.contacto}
+                {formatPhoneDisplay(caso.contacto)}
               </span>
             )}
           </div>
