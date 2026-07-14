@@ -13,6 +13,7 @@ interface CrisisLineRow {
   coverage: string | null;
   start_hour: number | null;
   end_hour: number | null;
+  days_of_week: string[] | null;
   priority: number;
   active: boolean;
 }
@@ -25,6 +26,7 @@ function toDomain(row: CrisisLineRow): CrisisLine {
     coverage: row.coverage ?? undefined,
     startHour: row.start_hour ?? undefined,
     endHour: row.end_hour ?? undefined,
+    daysOfWeek: row.days_of_week ?? undefined,
     priority: row.priority,
     active: row.active,
   };
@@ -42,6 +44,7 @@ export class SupabaseCrisisLineRepository implements CrisisLineRepository {
         coverage: input.coverage ?? null,
         start_hour: input.startHour ?? null,
         end_hour: input.endHour ?? null,
+        days_of_week: input.daysOfWeek ?? null,
         priority: input.priority ?? 0,
         active: input.active ?? true,
       })
@@ -77,6 +80,7 @@ export class SupabaseCrisisLineRepository implements CrisisLineRepository {
     if (patch.coverage !== undefined) row.coverage = patch.coverage;
     if (patch.startHour !== undefined) row.start_hour = patch.startHour;
     if (patch.endHour !== undefined) row.end_hour = patch.endHour;
+    if (patch.daysOfWeek !== undefined) row.days_of_week = patch.daysOfWeek;
     if (patch.priority !== undefined) row.priority = patch.priority;
     if (patch.active !== undefined) row.active = patch.active;
 

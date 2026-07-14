@@ -10,8 +10,108 @@ interface Props {
   onChange: () => void;
 }
 
-const EMPTY = { nombre: '', telefono: '', cobertura: '', hora_inicio: '', hora_fin: '', prioridad: '' };
+const EMPTY = {
+  nombre: '',
+  telefono: '',
+  cobertura: '',
+  hora_inicio: '',
+  hora_fin: '',
+  dias_semana: [] as string[],
+  prioridad: '',
+};
 type LineForm = typeof EMPTY;
+
+const DIAS = [
+  ['lunes', 'Lun'],
+  ['martes', 'Mar'],
+  ['miercoles', 'Mié'],
+  ['jueves', 'Jue'],
+  ['viernes', 'Vie'],
+  ['sabado', 'Sáb'],
+  ['domingo', 'Dom'],
+] as const;
+
+function toggleDay(days: string[], day: string): string[] {
+  return days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
+}
+
+/** Shared field grid for the create form and the inline edit form. Defined at module
+ * level (not inside CrisisLinesAdmin) so React doesn't remount the inputs — and drop
+ * focus — on every keystroke. */
+function Fields({ value, onField }: { value: LineForm; onField: (patch: Partial<LineForm>) => void }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <input
+        required
+        className="rounded-md border px-3 py-2"
+        placeholder="Nombre"
+        value={value.nombre}
+        onChange={(e) => onField({ nombre: e.target.value })}
+      />
+      <input
+        required
+        className="rounded-md border px-3 py-2"
+        placeholder="Teléfono"
+        value={value.telefono}
+        onChange={(e) => onField({ telefono: e.target.value })}
+      />
+      <input
+        className="rounded-md border px-3 py-2"
+        placeholder="Cobertura (opcional)"
+        value={value.cobertura}
+        onChange={(e) => onField({ cobertura: e.target.value })}
+      />
+      <input
+        type="number"
+        min={0}
+        className="rounded-md border px-3 py-2"
+        placeholder="Prioridad (opcional)"
+        value={value.prioridad}
+        onChange={(e) => onField({ prioridad: e.target.value })}
+      />
+      <input
+        type="number"
+        min={0}
+        max={26}
+        className="rounded-md border px-3 py-2"
+        placeholder="Hora inicio (0–26, opcional)"
+        value={value.hora_inicio}
+        onChange={(e) => onField({ hora_inicio: e.target.value })}
+      />
+      <input
+        type="number"
+        min={0}
+        max={26}
+        className="rounded-md border px-3 py-2"
+        placeholder="Hora fin (0–26, opcional)"
+        value={value.hora_fin}
+        onChange={(e) => onField({ hora_fin: e.target.value })}
+      />
+      <p className="col-span-full text-xs text-slate-500">
+        Horas 24–26 representan la madrugada del día siguiente (p. ej. 26 = 2:00 a. m.), para líneas
+        nocturnas que cruzan la medianoche.
+      </p>
+      <fieldset className="col-span-full">
+        <legend className="text-sm text-slate-700">Días de la semana (vacío = todos los días)</legend>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {DIAS.map(([dia, label]) => (
+            <label
+              key={dia}
+              className="flex items-center gap-1.5 rounded-md border border-slate-300 px-2 py-1 text-xs"
+            >
+              <input
+                type="checkbox"
+                checked={value.dias_semana.includes(dia)}
+                onChange={() => onField({ dias_semana: toggleDay(value.dias_semana, dia) })}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    </div>
+  );
+}
 
 /** Admin CRUD for crisis lines (create, edit in place, toggle active, soft-delete). */
 export function CrisisLinesAdmin({ lines, onChange }: Props) {
@@ -45,6 +145,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
       cobertura: f.cobertura.trim() || null,
       hora_inicio: f.hora_inicio === '' ? null : Number(f.hora_inicio),
       hora_fin: f.hora_fin === '' ? null : Number(f.hora_fin),
+      dias_semana: f.dias_semana.length === 0 ? null : f.dias_semana,
     };
     if (f.prioridad !== '') body.prioridad = Number(f.prioridad);
     return body;
@@ -53,7 +154,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
   function create() {
     const body = toBody(form);
     // Create omits null optionals (they carry no meaning on a brand-new line).
-    for (const k of ['cobertura', 'hora_inicio', 'hora_fin'] as const) {
+    for (const k of ['cobertura', 'hora_inicio', 'hora_fin', 'dias_semana'] as const) {
       if (body[k] === null) delete body[k];
     }
     return run('create', async () => {
@@ -71,6 +172,7 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
       cobertura: line.cobertura ?? '',
       hora_inicio: line.hora_inicio == null ? '' : String(line.hora_inicio),
       hora_fin: line.hora_fin == null ? '' : String(line.hora_fin),
+      dias_semana: line.dias_semana ?? [],
       prioridad: line.prioridad == null ? '' : String(line.prioridad),
     });
   }
@@ -95,62 +197,15 @@ export function CrisisLinesAdmin({ lines, onChange }: Props) {
     run(`remove:${line.id}`, () => apiFetch(`/admin/crisis-lines/${line.id}`, { method: 'DELETE' }));
 
   function windowLabel(line: CrisisLineAdmin): string {
-    if (line.hora_inicio == null || line.hora_fin == null) return 'Respaldo';
-    return `${line.hora_inicio}:00–${line.hora_fin % 24}:00`;
-  }
-
-  /** Shared field grid for the create form and the inline edit form. */
-  function Fields({ value, onField }: { value: LineForm; onField: (patch: Partial<LineForm>) => void }) {
-    return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <input
-          required
-          className="rounded-md border px-3 py-2"
-          placeholder="Nombre"
-          value={value.nombre}
-          onChange={(e) => onField({ nombre: e.target.value })}
-        />
-        <input
-          required
-          className="rounded-md border px-3 py-2"
-          placeholder="Teléfono"
-          value={value.telefono}
-          onChange={(e) => onField({ telefono: e.target.value })}
-        />
-        <input
-          className="rounded-md border px-3 py-2"
-          placeholder="Cobertura (opcional)"
-          value={value.cobertura}
-          onChange={(e) => onField({ cobertura: e.target.value })}
-        />
-        <input
-          type="number"
-          min={0}
-          className="rounded-md border px-3 py-2"
-          placeholder="Prioridad (opcional)"
-          value={value.prioridad}
-          onChange={(e) => onField({ prioridad: e.target.value })}
-        />
-        <input
-          type="number"
-          min={0}
-          max={26}
-          className="rounded-md border px-3 py-2"
-          placeholder="Hora inicio (0–26, opcional)"
-          value={value.hora_inicio}
-          onChange={(e) => onField({ hora_inicio: e.target.value })}
-        />
-        <input
-          type="number"
-          min={0}
-          max={26}
-          className="rounded-md border px-3 py-2"
-          placeholder="Hora fin (0–26, opcional)"
-          value={value.hora_fin}
-          onChange={(e) => onField({ hora_fin: e.target.value })}
-        />
-      </div>
-    );
+    const hours =
+      line.hora_inicio == null || line.hora_fin == null
+        ? 'Respaldo'
+        : `${line.hora_inicio}:00–${line.hora_fin % 24}:00`;
+    if (!line.dias_semana || line.dias_semana.length === 0) return hours;
+    const days = DIAS.filter(([dia]) => line.dias_semana?.includes(dia))
+      .map(([, label]) => label)
+      .join('/');
+    return `${hours} · ${days}`;
   }
 
   return (

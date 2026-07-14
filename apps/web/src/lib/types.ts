@@ -66,6 +66,7 @@ export interface CrisisLineAdmin {
   cobertura: string | null;
   hora_inicio: number | null;
   hora_fin: number | null;
+  dias_semana: string[] | null;
   prioridad: number;
   activa: boolean;
 }

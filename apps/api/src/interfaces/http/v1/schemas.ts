@@ -172,6 +172,8 @@ export const crisisLineCreateSchema = z.object({
   cobertura: z.string().min(1).optional(),
   hora_inicio: hour.optional(),
   hora_fin: hour.optional(),
+  // Days the line operates; omitted/undefined = every day.
+  dias_semana: z.array(diaSemanaEnum).min(1).optional(),
   prioridad: z.number().int().optional(),
   activa: z.boolean().optional(),
 });
@@ -183,6 +185,8 @@ export const crisisLineUpdateSchema = z
     cobertura: z.string().min(1).nullable(),
     hora_inicio: hour.nullable(),
     hora_fin: hour.nullable(),
+    // null clears back to "every day".
+    dias_semana: z.array(diaSemanaEnum).min(1).nullable(),
     prioridad: z.number().int(),
     activa: z.boolean(),
   })

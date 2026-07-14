@@ -37,6 +37,7 @@ function toUpdate(body: CrisisLineUpdateBody): CrisisLineUpdate {
   if (body.cobertura !== undefined) patch.coverage = body.cobertura;
   if (body.hora_inicio !== undefined) patch.startHour = body.hora_inicio;
   if (body.hora_fin !== undefined) patch.endHour = body.hora_fin;
+  if (body.dias_semana !== undefined) patch.daysOfWeek = body.dias_semana;
   if (body.prioridad !== undefined) patch.priority = body.prioridad;
   if (body.activa !== undefined) patch.active = body.activa;
   return patch;
@@ -86,6 +87,7 @@ export function createAdminRouter(): Hono {
         coverage: body.cobertura,
         startHour: body.hora_inicio,
         endHour: body.hora_fin,
+        daysOfWeek: body.dias_semana,
         priority: body.prioridad,
         active: body.activa,
       },

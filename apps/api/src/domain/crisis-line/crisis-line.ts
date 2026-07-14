@@ -10,6 +10,8 @@ export interface CrisisLine {
   coverage?: string;
   startHour?: number;
   endHour?: number;
+  /** Spanish day names (dia_semana enum) the line operates; undefined = every day. */
+  daysOfWeek?: string[];
   priority: number;
   active: boolean;
 }
@@ -20,6 +22,7 @@ export interface NewCrisisLine {
   coverage?: string;
   startHour?: number;
   endHour?: number;
+  daysOfWeek?: string[];
   priority?: number;
   active?: boolean;
 }
@@ -31,6 +34,7 @@ export interface CrisisLineUpdate {
   coverage?: string | null;
   startHour?: number | null;
   endHour?: number | null;
+  daysOfWeek?: string[] | null;
   priority?: number;
   active?: boolean;
 }

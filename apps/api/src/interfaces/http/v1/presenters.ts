@@ -29,6 +29,7 @@ export function presentCrisisLineAdmin(line: CrisisLine) {
     cobertura: line.coverage ?? null,
     hora_inicio: line.startHour ?? null,
     hora_fin: line.endHour ?? null,
+    dias_semana: line.daysOfWeek ?? null,
     prioridad: line.priority,
     activa: line.active,
   };

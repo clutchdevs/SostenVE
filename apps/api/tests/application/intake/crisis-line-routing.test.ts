@@ -28,3 +28,44 @@ describe('selectActiveCrisisLine (RF-1.2.1)', () => {
     expect(selectActiveCrisisLine(routing, backups, at(15)).backups).toEqual(backups);
   });
 });
+
+// 2026-06-24 is a Wednesday; 2026-06-25 is a Thursday.
+function atDay(day: number, hour: number): Date {
+  return new Date(2026, 5, day, hour, 0, 0);
+}
+
+describe('selectActiveCrisisLine days-of-week (issue #127)', () => {
+  const wednesdayOnly = [
+    { name: 'Wednesday line', start_hour: 20, end_hour: 26, phone: '1', days: ['miercoles'] },
+  ];
+
+  it('matches on the day it starts', () => {
+    expect(selectActiveCrisisLine(wednesdayOnly, [], atDay(24, 21)).active?.name).toBe(
+      'Wednesday line',
+    );
+  });
+
+  it('does not match on a day not listed', () => {
+    expect(selectActiveCrisisLine(wednesdayOnly, [], atDay(25, 21)).active).toBeNull();
+  });
+
+  it('still matches early the next morning without listing that day (overnight carry-over)', () => {
+    expect(selectActiveCrisisLine(wednesdayOnly, [], atDay(25, 1)).active?.name).toBe(
+      'Wednesday line',
+    );
+  });
+
+  it('stops matching once the next day moves past its own start hour', () => {
+    // Thursday 21:00 is NOT covered by a Wednesday-only 20->26 window.
+    expect(selectActiveCrisisLine(wednesdayOnly, [], atDay(25, 21)).active).toBeNull();
+  });
+
+  it('filters backup lines by day too', () => {
+    const backupsWithDays = [
+      { name: 'Weekday backup', phone: '2', days: ['miercoles'] },
+      { name: 'Always backup', phone: '3' },
+    ];
+    const result = selectActiveCrisisLine([], backupsWithDays, atDay(25, 12));
+    expect(result.backups).toEqual([{ name: 'Always backup', phone: '3' }]);
+  });
+});
