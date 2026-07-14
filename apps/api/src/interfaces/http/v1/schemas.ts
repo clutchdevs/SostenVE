@@ -15,18 +15,20 @@ export const strongPasswordSchema = z
   .regex(/[^A-Za-z0-9]/, 'Debe incluir un carácter especial');
 
 /**
- * Venezuelan MOBILE number: a carrier prefix (0412/0414/0416/0424/0426) followed
- * by exactly 7 digits, optionally written with the +58 country code instead of
- * the leading 0. Tolerant of spaces, dashes, dots and parentheses. Landlines are
+ * Venezuelan MOBILE number for the REQUESTER intake (issue #129): must carry the
+ * +58 country code, a carrier prefix (412/414/416/424/426) and 7 digits. The
+ * leading-0 national form (0414…) is intentionally REJECTED so the stored contact
+ * always has the country code the assigned psychologist's WhatsApp (wa.me) deep
+ * link needs. Tolerant of spaces, dashes, dots and parentheses. Landlines are
  * rejected (the app reaches people by call/WhatsApp). Source of truth mirrored by
  * the web `isValidVePhone`. NOT used for crisis-line numbers (short/service codes).
  */
-const VE_PHONE_RE = /^(\+?58|0)?(412|414|416|424|426)\d{7}$/;
+const VE_PHONE_RE = /^\+?58(412|414|416|424|426)\d{7}$/;
 export const venezuelanPhoneSchema = z
   .string()
   .trim()
   .refine((v) => VE_PHONE_RE.test(v.replace(/[\s().-]/g, '')), {
-    message: 'Teléfono venezolano inválido (ej. 0414-1234567)',
+    message: 'Incluye el código de país +58 (ej. +58 414 1234567)',
   });
 
 /**
