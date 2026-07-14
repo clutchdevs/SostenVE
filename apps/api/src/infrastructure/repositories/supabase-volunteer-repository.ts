@@ -35,6 +35,8 @@ interface VolunteerDetailRow extends VolunteerRow {
   document_number: string | null;
   university: string | null;
   graduation_year: number | null;
+  pais_residencia: string | null;
+  ciudad_residencia: string | null;
   modalities: string[] | null;
   availability_schedule: AvailabilitySlot[] | null;
   pap_trained: boolean | null;
@@ -79,6 +81,8 @@ function toDetail(row: VolunteerDetailRow): VolunteerDetail {
           university: row.university ?? '',
           graduationYear: row.graduation_year ?? 0,
           colegio: row.colegio ?? '',
+          paisResidencia: row.pais_residencia ?? undefined,
+          ciudadResidencia: row.ciudad_residencia ?? undefined,
           modalities: (row.modalities as Modalidad[] | null) ?? [],
           availabilitySchedule: row.availability_schedule ?? [],
           papTrained: row.pap_trained ?? false,
@@ -111,6 +115,8 @@ export class SupabaseVolunteerRepository implements VolunteerRepository {
         university: input.application?.university ?? null,
         graduation_year: input.application?.graduationYear ?? null,
         colegio: input.application?.colegio ?? null,
+        pais_residencia: input.application?.paisResidencia ?? null,
+        ciudad_residencia: input.application?.ciudadResidencia ?? null,
         modalities: input.application?.modalities ?? null,
         availability_schedule: input.application?.availabilitySchedule ?? null,
         pap_trained: input.application?.papTrained ?? null,

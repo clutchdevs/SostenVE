@@ -23,6 +23,15 @@ export function isValidVePhone(raw: string): boolean {
   return VE_PHONE_RE.test(normalizePhone(raw));
 }
 
+// International phone (#128): optional leading + and 7–15 digits (E.164-ish).
+// Used for psychologist registration (volunteers may live abroad). Intake stays
+// Venezuelan-only via isValidVePhone.
+const INTL_PHONE_RE = /^\+?\d{7,15}$/;
+
+export function isValidIntlPhone(raw: string): boolean {
+  return INTL_PHONE_RE.test(normalizePhone(raw));
+}
+
 /**
  * Identity document number: a V/E cédula is up to 8 digits; a passport (P) is
  * alphanumeric (5–20). `tipo` is the document-type code ('V' | 'E' | 'P').
@@ -35,4 +44,5 @@ export function isValidDocumentNumber(numero: string, tipo: string): boolean {
 }
 
 export const PHONE_ERROR = 'Ingresa un teléfono venezolano válido (ej. 0414-1234567).';
+export const INTL_PHONE_ERROR = 'Ingresa un teléfono válido en formato internacional (ej. +58 414 1234567).';
 export const CEDULA_ERROR = 'La cédula debe tener hasta 8 dígitos (solo números).';

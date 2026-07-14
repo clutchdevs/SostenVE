@@ -21,6 +21,9 @@ export interface VolunteerApplication {
   university: string;
   graduationYear: number;
   colegio: string;
+  /** Country and city of residence (#128). */
+  paisResidencia?: string;
+  ciudadResidencia?: string;
   modalities: Modalidad[];
   availabilitySchedule: AvailabilitySlot[];
   papTrained: boolean;
