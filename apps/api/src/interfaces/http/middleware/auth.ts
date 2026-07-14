@@ -53,7 +53,12 @@ export function requireAuth(options: RequireAuthOptions = {}): MiddlewareHandler
       }
     }
 
-    if (options.roles && options.roles.length > 0 && !options.roles.includes(user.role)) {
+    // Multi-role (#133): authorize when ANY of the account's roles is allowed.
+    if (
+      options.roles &&
+      options.roles.length > 0 &&
+      !user.roles.some((r) => options.roles!.includes(r))
+    ) {
       throw new ForbiddenError('Insufficient permissions');
     }
 
@@ -68,4 +73,17 @@ export function getAuthUser(c: Context): VerifiedToken {
     throw new UnauthorizedError('Authentication required');
   }
   return user;
+}
+
+/**
+ * The role the caller is currently acting as (#133 multi-role). Endpoints whose
+ * behavior differs per role (e.g. the psychologist "my cases" view vs the
+ * coordinator board) read this. The client sends `X-Active-Role` for the active
+ * portal; it is honored only if the account actually holds that role, otherwise
+ * we fall back to the primary role — so single-role callers are unaffected.
+ */
+export function activeRoleOf(c: Context, user: VerifiedToken): string {
+  const requested = c.req.header('X-Active-Role');
+  if (requested && user.roles.includes(requested)) return requested;
+  return user.role;
 }

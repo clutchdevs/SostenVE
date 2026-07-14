@@ -11,7 +11,7 @@ export function buildCors(allowedOrigins: readonly string[]): MiddlewareHandler 
   return cors({
     origin: (origin) => (origins.includes(origin) ? origin : null),
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Cron-Secret', 'Idempotency-Key'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Cron-Secret', 'Idempotency-Key', 'X-Active-Role'],
     credentials: true,
   });
 }

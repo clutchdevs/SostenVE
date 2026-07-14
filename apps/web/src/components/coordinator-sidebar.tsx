@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BarChart3, HeartHandshake, HeartPulse, KeyRound, LogOut, UserCog, Users } from 'lucide-react';
 import { clearSession } from '../lib/session';
+import { PortalSwitcher } from './portal-switcher';
 
 interface NavItem {
   href: string;
@@ -61,6 +62,7 @@ export function CoordinatorSidebar() {
             </Link>
           );
         })}
+        <PortalSwitcher current="coordinator" />
       </nav>
 
       <div className="px-3 pb-5">

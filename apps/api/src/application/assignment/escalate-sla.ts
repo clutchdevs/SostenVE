@@ -25,7 +25,7 @@ export async function escalateOverdueCases(
   }
 
   const activeCoordinatorIds = (await deps.volunteers.listByStatus('active'))
-    .filter((v) => v.role === 'coordinator')
+    .filter((v) => v.roles.includes('coordinator'))
     .map((v) => v.id);
   const onlineCoordinators = await deps.presence.filterOnline(activeCoordinatorIds);
   const coordinatorAvailable = onlineCoordinators.size > 0;

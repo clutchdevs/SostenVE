@@ -29,6 +29,7 @@ function psychologist(over: Partial<Volunteer> = {}): Volunteer {
     fullName: 'Dra. Pérez',
     professionalId: 'FPV-1',
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status: 'active',
     createdAt: new Date(),

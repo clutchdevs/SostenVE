@@ -15,6 +15,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { clearSession } from '../lib/session';
+import { PortalSwitcher } from './portal-switcher';
 
 interface NavItem {
   href: string;
@@ -79,6 +80,7 @@ export function AdminSidebar() {
             </Link>
           );
         })}
+        <PortalSwitcher current="admin" />
       </nav>
 
       <div className="px-3 pb-5">

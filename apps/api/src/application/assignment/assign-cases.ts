@@ -38,7 +38,7 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
   // Only psychologists receive cases — coordinators/admins are active staff but
   // are not part of the assignment pool.
   const activePsychologists: Volunteer[] = (await deps.volunteers.listByStatus('active')).filter(
-    (v) => v.role === 'psychologist',
+    (v) => v.roles.includes('psychologist'),
   );
   // Real-time presence gate (RF-2.5 / RF-3.1): only volunteers currently online
   // are eligible, so a critical case is never assigned to someone absent. If none

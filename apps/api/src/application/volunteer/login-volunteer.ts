@@ -17,7 +17,10 @@ export interface LoginDeps {
 export interface LoginResult {
   accessToken: string;
   refreshToken: string;
+  /** Primary role — drives the default post-login redirect. */
   role: VolunteerRole;
+  /** All roles the account holds (#133) — lets the UI expose every portal. */
+  roles: VolunteerRole[];
 }
 
 /**
@@ -45,7 +48,12 @@ export async function loginVolunteer(input: LoginInput, deps: LoginDeps): Promis
   // issued tokens (carrying the old version) are rejected, and mint this session
   // with the new version.
   const tokenVersion = await deps.volunteers.bumpTokenVersion(volunteer.id);
-  const claims = { sub: volunteer.id, role: volunteer.role, tokenVersion };
+  const claims = {
+    sub: volunteer.id,
+    role: volunteer.role,
+    roles: volunteer.roles,
+    tokenVersion,
+  };
   const accessToken = await signToken(claims, {
     ttlSeconds: deps.config.security.jwt.access_token_ttl_minutes * 60,
     type: 'access',
@@ -55,5 +63,5 @@ export async function loginVolunteer(input: LoginInput, deps: LoginDeps): Promis
     type: 'refresh',
   });
 
-  return { accessToken, refreshToken, role: volunteer.role };
+  return { accessToken, refreshToken, role: volunteer.role, roles: volunteer.roles };
 }

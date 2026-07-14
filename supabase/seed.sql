@@ -61,6 +61,27 @@ values
   )
 on conflict (id) do nothing;
 
+-- Cuenta con DOBLE rol (#133): coordinadora que ADEMÁS es psicóloga. Sirve para
+-- probar multi-rol — ve ambos portales (coordinador y psicólogo) y, como psicóloga
+-- con especialidad de adultos, puede recibir casos. `role` = rol primario
+-- (coordinator → redirección por defecto); `roles` lleva ambos. Contraseña:
+-- Coordinador123! (mismo hash que la coordinadora de prueba).
+insert into volunteers (id, full_name, professional_id, email, specialty, role, roles, password_hash, status, consent_version, consent_accepted_at)
+values (
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  'Dual Coordinadora-Psicóloga de Prueba',
+  'FPV-DUAL-001',
+  'dual@ppv.test',
+  'psicología clínica de adultos',
+  'coordinator',
+  array['coordinator', 'psychologist']::volunteer_role[],
+  '$argon2id$v=19$m=19456,t=2,p=1$ykdOEgZ83oois6LECtATnQ$mfj1zbfsSYwORLSIVxNgJc65zYNrFOLXst1W5k8MlNE',
+  'active',
+  'v0.1.0-draft',
+  now()
+)
+on conflict (id) do nothing;
+
 -- Excepciones de registro (RF-2.2): psicólogos que no se validaron automáticamente
 -- y esperan revisión manual del admin. Cada uno con su motivo (pending_reason).
 insert into volunteers (id, full_name, professional_id, email, specialty, role, password_hash, status, pending_reason, consent_version, consent_accepted_at)

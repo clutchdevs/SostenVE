@@ -3,14 +3,16 @@ import { SESSION_IDLE_TIMEOUT_MINUTES } from './config';
 
 const TOKEN_KEY = 'ppv.token';
 const ROLE_KEY = 'ppv.role';
+const ROLES_KEY = 'ppv.roles';
 const ACTIVITY_KEY = 'ppv.lastActivity';
 
 const IDLE_TIMEOUT_MS = SESSION_IDLE_TIMEOUT_MINUTES * 60_000;
 
-export function saveSession(token: string, role: string): void {
+export function saveSession(token: string, role: string, roles: string[] = [role]): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(TOKEN_KEY, token);
   window.localStorage.setItem(ROLE_KEY, role);
+  window.localStorage.setItem(ROLES_KEY, JSON.stringify(roles));
   touchActivity();
 }
 
@@ -38,10 +40,27 @@ export function getRole(): string | null {
   return window.localStorage.getItem(ROLE_KEY);
 }
 
+/** All roles the signed-in account holds (#133); falls back to `[role]`. */
+export function getRoles(): string[] {
+  if (typeof window === 'undefined') return [];
+  const raw = window.localStorage.getItem(ROLES_KEY);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed) && parsed.every((r) => typeof r === 'string')) return parsed;
+    } catch {
+      // fall through to the single-role fallback
+    }
+  }
+  const role = getRole();
+  return role ? [role] : [];
+}
+
 export function clearSession(): void {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(ROLE_KEY);
+  window.localStorage.removeItem(ROLES_KEY);
   window.localStorage.removeItem(ACTIVITY_KEY);
 }
 

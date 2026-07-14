@@ -14,6 +14,7 @@ function repoWith(status: VolunteerStatus): VolunteerRepository {
     professionalId: 'V-123',
     email: 'ana@example.com',
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status,
     createdAt: new Date(),
@@ -22,6 +23,7 @@ function repoWith(status: VolunteerStatus): VolunteerRepository {
     async create() {
       return volunteer;
     },
+    async addRole() {},
     async findById() {
       return volunteer;
     },

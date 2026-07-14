@@ -97,6 +97,8 @@ export interface VolunteerView {
   email?: string | null;
   especialidad?: string | null;
   rol: string;
+  /** All roles the account holds (#133); falls back to `[rol]` for old rows. */
+  roles?: string[];
   estado: VolunteerStatus;
   /** Why it needs manual review; only set while pending_approval. */
   motivo_excepcion: ExceptionReason | null;

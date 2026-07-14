@@ -10,6 +10,7 @@ function volunteer(id: string, specialty?: string): Volunteer {
     professionalId: `prof-${id}`,
     specialty,
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status: 'active',
     createdAt: new Date(),

@@ -21,6 +21,7 @@ function volunteer(status: VolunteerStatus): Volunteer {
     professionalId: 'V-123',
     email: 'ana@example.com',
     role: 'psychologist',
+    roles: ['psychologist'],
     tokenVersion: 1,
     status,
     createdAt: new Date(),
@@ -33,6 +34,7 @@ function volunteerRepo(v: Volunteer | null, sink: { updated: string | null; bump
     async create() {
       return self;
     },
+    async addRole() {},
     async findById() {
       return v;
     },

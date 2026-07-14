@@ -95,6 +95,17 @@ export async function registerVolunteer(
   input: RegisterVolunteerInput,
   deps: RegisterVolunteerDeps,
 ): Promise<RegisterVolunteerResult> {
+  // One account per email (it is the login + unique key). Fail fast with a clear
+  // message instead of a duplicate-key 500 if the email is already registered.
+  const existing = await deps.volunteers.findByEmail(input.email);
+  if (existing) {
+    throw new ApiError(
+      409,
+      'EMAIL_EXISTS',
+      'Ya existe una cuenta registrada con este correo.',
+    );
+  }
+
   const { status, reason } = await resolveStatus(input, deps);
   // High-entropy password generated server-side (RF-2.2.4); the user never picks
   // it. Delivered to an active volunteer via the welcome email — never returned
