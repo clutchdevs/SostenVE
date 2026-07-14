@@ -7,6 +7,7 @@ import { AuthShell } from '../../src/components/auth-shell';
 import { SubmitButton } from '../../src/components/submit-button';
 import { Spinner } from '../../src/components/spinner';
 import { apiFetch } from '../../src/lib/api-client';
+import { clearSession } from '../../src/lib/session';
 import { ui } from '../../src/lib/ui';
 
 /**
@@ -101,7 +102,12 @@ export default function CoordinatorOnboardingPage() {
           </p>
           <button
             type="button"
-            onClick={() => router.replace('/login-coordinador')}
+            onClick={() => {
+              // Force a fresh login so the new token includes the coordinator role
+              // (an existing stale session would otherwise bounce back to its portal).
+              clearSession();
+              router.replace('/login-coordinador');
+            }}
             className="inline-flex w-full items-center justify-center rounded-xl bg-ppv-blue px-4 py-2.5 font-medium text-white transition-colors hover:bg-ppv-blue-dark"
           >
             Aceptar
