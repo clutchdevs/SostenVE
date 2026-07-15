@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Inbox } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../src/features/psychologist-portal/psychologist-case-card';
@@ -25,6 +25,12 @@ export default function PsychologistHome() {
   const { cases, needsAuth, error, loaded } = usePolledCases();
   const { online, connected } = usePresence();
 
+  // The greeting depends on the local hour; computing it during SSR (server runs
+  // UTC) and again on the client caused a hydration mismatch. Render a neutral
+  // greeting on the server and switch to the time-based one after mount.
+  const [salutation, setSalutation] = useState('Hola');
+  useEffect(() => setSalutation(greeting()), []);
+
   const summary = useMemo(() => summarizeCaseload(cases), [cases]);
   // The dashboard surfaces the working queue: active cases only (assigned /
   // accepted / in follow-up). Closed ones live under the "Cerrados" filter in
@@ -43,7 +49,7 @@ export default function PsychologistHome() {
       {/* Header */}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold text-ink">{greeting()}</h1>
+          <h1 className="font-serif text-3xl font-semibold text-ink">{salutation}</h1>
           <p className="mt-1 text-sm text-slate-600">{subtitle(summary)}</p>
         </div>
         <span
