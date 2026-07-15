@@ -63,7 +63,11 @@ export const redBranchSchema = z.object({
   sub_canal: z.enum(['llamar', 'recibir-llamada', 'whatsapp-silencioso']),
   nombre: z.string().min(1).optional(),
   contacto: venezuelanPhoneSchema.optional(),
-  edad: z.number().int().min(0).max(120).optional(),
+  // Age is mandatory (FPV requirement, #131). The 'llamar' sub-channel creates no
+  // case and the web only submits the two contact channels, which collect it.
+  edad: z.number().int().min(0).max(120),
+  // Initial urgency Likert (Paso 0) — persisted so the psychologist can review it.
+  respuesta_likert: z.number().int().min(1).max(5).optional(),
 });
 
 /** Recent habit changes (green-branch screen 5, RF-1.3 pantalla 5). */
@@ -86,9 +90,12 @@ export const greenBranchSchema = z.object({
   modalidad: z.enum(['presencial', 'distancia']).optional(),
   // Preferred contact channel (RF-1.3 screen 2): WhatsApp or phone call.
   metodo_contacto: z.enum(['whatsapp', 'llamada']).optional(),
-  edad: z.number().int().min(0).max(120).optional(),
+  // Age is mandatory (FPV requirement, #131).
+  edad: z.number().int().min(0).max(120),
   tags: z.array(z.string().min(1)).default([]),
   cambio_habitos: z.array(habitChangeEnum).default([]),
+  // Initial urgency Likert (Paso 0) — persisted so the psychologist can review it.
+  respuesta_likert: z.number().int().min(1).max(5).optional(),
 });
 
 /** Complete applicant form vocab (RF-2.1.2). */
@@ -179,7 +186,8 @@ export const caseClosureSchema = z.object({
   derivacion_destino: z
     .enum(['psicologia', 'psiquiatria', 'ambos', 'medicina', 'proteccion_ninos', 'proteccion_mujer'])
     .optional(),
-  horas: z.number().min(0).max(1000),
+  // Attention time in whole minutes, minimum 1 (#131; was decimal hours).
+  minutos: z.number().int().min(1).max(6000),
   comentario: z.string().max(1500).optional(),
 });
 

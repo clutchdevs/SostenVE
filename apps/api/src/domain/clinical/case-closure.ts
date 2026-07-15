@@ -18,7 +18,7 @@ export interface CaseClosure {
   closeReason?: string;
   referralType?: string;
   referralDestination?: string;
-  hours: number;
+  minutes: number;
   comment?: string;
   createdAt: Date;
 }
@@ -37,7 +37,7 @@ export interface NewCaseClosure {
   closeReason?: string;
   referralType?: string;
   referralDestination?: string;
-  hours: number;
+  minutes: number;
   comment?: string;
 }
 

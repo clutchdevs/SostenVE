@@ -51,7 +51,7 @@ export function ClosureSummary({ cierre }: { cierre: CaseClosureView }) {
             {cierre.comentario && <Row label="Comentario" value={cierre.comentario} />}
           </>
         )}
-        <Row label="Horas" value={String(cierre.horas)} />
+        <Row label="Minutos de atención" value={String(cierre.minutos)} />
       </div>
     </section>
   );

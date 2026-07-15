@@ -93,10 +93,12 @@ describe('assignmentSettingsSchema', () => {
 });
 
 describe('greenBranchSchema', () => {
-  it('requires a valid Venezuelan contact phone', () => {
-    expect(greenBranchSchema.safeParse({ contacto: '+584141234567', tags: [] }).success).toBe(true);
-    expect(greenBranchSchema.safeParse({ contacto: 'no-soy-un-telefono', tags: [] }).success).toBe(
+  it('requires a valid Venezuelan contact phone and a mandatory age (#131)', () => {
+    expect(greenBranchSchema.safeParse({ contacto: '+584141234567', edad: 30, tags: [] }).success).toBe(true);
+    expect(greenBranchSchema.safeParse({ contacto: 'no-soy-un-telefono', edad: 30, tags: [] }).success).toBe(
       false,
     );
+    // Age is now mandatory.
+    expect(greenBranchSchema.safeParse({ contacto: '+584141234567', tags: [] }).success).toBe(false);
   });
 });

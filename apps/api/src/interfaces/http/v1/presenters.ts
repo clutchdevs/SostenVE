@@ -76,10 +76,14 @@ export function presentIntakeResult(result: IntakeCaseResult) {
  * identity. Only ever used on the psychologist path (see cases.controller).
  */
 export function presentAssignedCaseSummary(caseRecord: CaseRecord, contact: CaseContact | null) {
+  // Reveal the requester identity/contact only once the case is accepted (#131):
+  // showing the phone on an unaccepted case invites contacting before accepting,
+  // which distorts the metrics. Before then the portal shows a pseudonymous label.
+  const revealed = caseRecord.status === 'ACCEPTED' || caseRecord.status === 'CLOSED';
   return {
     ...presentCaseSummary(caseRecord),
-    nombre: contact?.name ?? null,
-    contacto: contact?.contact ?? null,
+    nombre: revealed ? (contact?.name ?? null) : null,
+    contacto: revealed ? (contact?.contact ?? null) : null,
   };
 }
 
@@ -106,6 +110,10 @@ export function presentCaseSummary(caseRecord: CaseRecord) {
       : null,
     edad: caseRecord.age ?? null,
     cambio_habitos: caseRecord.habitChanges ?? [],
+    // Requester's own intake answers (#131): symptoms selected (green Paso 1) and
+    // the initial urgency Likert (Paso 0). Empty/null for older cases.
+    sintomas: caseRecord.intakeTags ?? [],
+    urgencia_respuesta: caseRecord.urgencyAnswer ?? null,
     creado_en: caseRecord.createdAt.toISOString(),
     sla_vence_en: caseRecord.slaExpiresAt?.toISOString() ?? null,
   };
@@ -140,7 +148,7 @@ export function presentCaseClosure(closure: CaseClosure | null) {
     motivo_cierre: closure.closeReason ?? null,
     derivacion_tipo: closure.referralType ?? null,
     derivacion_destino: closure.referralDestination ?? null,
-    horas: closure.hours,
+    minutos: closure.minutes,
     comentario: closure.comment ?? null,
     creada_en: closure.createdAt.toISOString(),
   };

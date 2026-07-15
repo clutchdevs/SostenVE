@@ -113,6 +113,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
   it('persists the reported habit changes on the green case (screen 5, RF-1.3)', async () => {
     const res = await post('/api/v1/intake/green-branch', {
       contacto: uniqueVePhone(),
+      edad: 30,
       tags: ['material_loss'],
       cambio_habitos: ['sueno', 'alimentacion'],
     });
@@ -129,6 +130,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
   it('classifies a green submission with only yellow tags as follow-up', async () => {
     const res = await post('/api/v1/intake/green-branch', {
       contacto: uniqueVePhone(),
+      edad: 30,
       tipo_solicitante: 'familiar',
       tags: ['material_loss'],
     });
@@ -142,6 +144,7 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
   it('escalates a green submission with a red tag to high risk with crisis lines', async () => {
     const res = await post('/api/v1/intake/green-branch', {
       contacto: uniqueVePhone(),
+      edad: 30,
       tags: ['suicidal_ideation'],
     });
     expect(res.status).toBe(201);
@@ -177,19 +180,19 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
   it('reuses the open case for a repeated contact and opens a new one after closure', async () => {
     const contacto = uniqueVePhone();
 
-    const first = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    const first = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto, edad: 30 });
     expect(first.status).toBe(201);
     const firstBody = (await first.json()) as IntakeResponse;
     track(firstBody);
 
     // Re-submit while the case is open → same case, no duplicate-key 500.
-    const again = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    const again = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto, edad: 30 });
     expect(again.status).toBe(201);
     expect(((await again.json()) as IntakeResponse).caso_id).toBe(firstBody.caso_id);
 
     // Close it, then a new submission from the same person creates a NEW case.
     await pg.query("update cases set status = 'cerrado' where id = $1", [firstBody.caso_id]);
-    const afterClose = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    const afterClose = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto, edad: 30 });
     expect(afterClose.status).toBe(201);
     const afterCloseBody = (await afterClose.json()) as IntakeResponse;
     track(afterCloseBody);

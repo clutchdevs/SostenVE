@@ -13,6 +13,10 @@ export interface CaseSummary {
   edad?: number | null;
   /** Habit changes reported at intake (green-branch screen 5). */
   cambio_habitos?: string[];
+  /** Symptoms the requester selected at intake (green-branch tags, Paso 1). */
+  sintomas?: string[];
+  /** Initial urgency Likert answer (Paso 0, 1 = crisis … 5 = preventive). */
+  urgencia_respuesta?: number | null;
   creado_en: string;
   sla_vence_en: string | null;
   // Requester contact (PII). Present only on the psychologist's own case list
@@ -48,7 +52,7 @@ export interface CaseClosureView {
   motivo_cierre: string | null;
   derivacion_tipo: string | null;
   derivacion_destino: string | null;
-  horas: number;
+  minutos: number;
   comentario: string | null;
   creada_en: string;
 }

@@ -11,6 +11,8 @@ export interface RedBranchInput {
   name?: string;
   contact?: string;
   age?: number;
+  /** Initial urgency Likert (Paso 0), persisted for the psychologist (#131). */
+  likert?: number;
 }
 
 /**
@@ -48,6 +50,8 @@ export async function submitRedBranch(
     riskLevel: RiskLevel.HIGH,
     urgencyScore: RED_BRANCH_URGENCY,
     status: 'PENDING',
+    age: input.age,
+    urgencyAnswer: input.likert,
     slaExpiresAt: new Date(now.getTime() + slaMs),
   });
 
