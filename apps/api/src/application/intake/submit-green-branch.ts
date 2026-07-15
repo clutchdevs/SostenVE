@@ -21,6 +21,8 @@ export interface GreenBranchInput {
   tagCodes: string[];
   /** Recent habit changes reported on screen 5 (feeds the urgency index, RF-1.5). */
   habitChanges?: string[];
+  /** Initial urgency Likert (Paso 0), persisted for the psychologist (#131). */
+  likert?: number;
 }
 
 /**
@@ -72,6 +74,9 @@ export async function submitGreenBranch(
     preferredContactMethod: input.contactMethod,
     age: input.age,
     habitChanges: input.habitChanges,
+    // Persist the requester's own intake answers for the psychologist (#131).
+    intakeTags: input.tagCodes,
+    urgencyAnswer: input.likert,
     // Route to a child specialist if any "Infancia" tag is present (RF-1.3).
     requiresChildSpecialty: requiresChildSpecialty(input.tagCodes),
     slaExpiresAt: high ? new Date(now.getTime() + slaMs) : undefined,

@@ -38,8 +38,12 @@ export async function getCaseForVolunteer(
   }
   await assertOwnership(caseId, volunteerId, deps);
 
+  // Reveal the requester's contact PII only once the case is accepted (#131): the
+  // psychologist must not contact (or be able to) before accepting, or the metrics
+  // are distorted. Before then the contact is withheld entirely.
+  const revealed = caseRecord.status === 'ACCEPTED' || caseRecord.status === 'CLOSED';
   const [contact, notes, closure] = await Promise.all([
-    deps.contacts.findByPseudonymId(caseRecord.pseudonymId),
+    revealed ? deps.contacts.findByPseudonymId(caseRecord.pseudonymId) : Promise.resolve(null),
     deps.notes.listByCaseId(caseId),
     deps.closures.findByCaseId(caseId),
   ]);

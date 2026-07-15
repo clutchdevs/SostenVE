@@ -15,7 +15,7 @@ export interface CaseClosureInput {
   closeReason?: string;
   referralType?: string;
   referralDestination?: string;
-  hours: number;
+  minutes: number;
   comment?: string;
 }
 
@@ -66,7 +66,7 @@ export async function recordCaseClosure(
     closeReason: input.closeReason,
     referralType: input.referralType,
     referralDestination: input.referralDestination,
-    hours: input.hours,
+    minutes: input.minutes,
     comment: input.comment,
   });
 

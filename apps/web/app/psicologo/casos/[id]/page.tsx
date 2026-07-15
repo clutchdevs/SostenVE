@@ -33,27 +33,39 @@ export default function CaseDetailPage() {
   const [detail, setDetail] = useState<CaseDetail | null>(null);
   const [notice, setNotice] = useState<{ error: boolean; text: string } | null>(null);
 
-  const load = useCallback(() => {
-    apiFetch<CaseDetail>(`/cases/${id}`)
-      .then((d) => {
-        setDetail(d);
-        setNotice(null);
-      })
-      .catch((err) => {
-        // A case reassigned while this view was stale (e.g. after pausing, #130) is
-        // no longer ours: the server returns 403. Say so plainly and drop the stale
-        // detail so its actions disappear, instead of a vague "no se pudo cargar".
-        if (err instanceof ApiError && err.status === 403) {
-          setDetail(null);
-          setNotice({ error: true, text: 'Este caso ya no está asignado a ti; es posible que se haya reasignado a otro psicólogo.' });
-        } else {
-          setNotice({ error: true, text: 'No se pudo cargar el caso.' });
-        }
-      });
-  }, [id]);
+  const load = useCallback(
+    (opts?: { silent?: boolean }) => {
+      apiFetch<CaseDetail>(`/cases/${id}`)
+        .then((d) => {
+          setDetail(d);
+          // A background refresh keeps any success/error message the user just saw.
+          if (!opts?.silent) setNotice(null);
+        })
+        .catch((err) => {
+          // A case reassigned while this view was stale (e.g. after pausing, #130) is
+          // no longer ours: the server returns 403. Say so plainly and drop the stale
+          // detail so its actions disappear, instead of a vague "no se pudo cargar".
+          if (err instanceof ApiError && err.status === 403) {
+            setDetail(null);
+            setNotice({ error: true, text: 'Este caso ya no está asignado a ti; es posible que se haya reasignado a otro psicólogo.' });
+          } else if (!opts?.silent) {
+            setNotice({ error: true, text: 'No se pudo cargar el caso.' });
+          }
+        });
+    },
+    [id],
+  );
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  // Auto-refresh the case so a status change (accepted elsewhere, reassigned away,
+  // new note) surfaces without a manual reload (#131). Silent, so it never wipes a
+  // message or disturbs the closure form being filled in.
+  useEffect(() => {
+    const timer = setInterval(() => load({ silent: true }), 15_000);
+    return () => clearInterval(timer);
   }, [load]);
 
   async function accept() {

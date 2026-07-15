@@ -66,6 +66,7 @@ export function createIntakeRouter(): Hono {
             name: body.nombre,
             contact: body.contacto,
             age: body.edad,
+            likert: body.respuesta_likert,
           },
           intakeDeps,
         ),
@@ -97,6 +98,7 @@ export function createIntakeRouter(): Hono {
         age: body.edad,
         tagCodes: body.tags,
         habitChanges: body.cambio_habitos,
+        likert: body.respuesta_likert,
       },
       intakeDeps,
     );

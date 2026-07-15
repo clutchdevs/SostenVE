@@ -10,6 +10,13 @@ export const INTAKE_DRAFT_KEYS = {
   roja: 'ppv.intakeDraft.roja',
 } as const;
 
+/**
+ * The initial urgency Likert answer (Paso 0) is chosen on /intake and needed again
+ * at submit time (persisted for the psychologist, #131). Kept as its own key so it
+ * survives the navigation to the red/green branch.
+ */
+export const INTAKE_LIKERT_KEY = 'ppv.intake.likert';
+
 export function saveDraft<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
   try {

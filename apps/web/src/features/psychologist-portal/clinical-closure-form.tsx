@@ -24,7 +24,7 @@ export interface ClosureSubmission {
   motivo_cierre?: string;
   derivacion_tipo?: string;
   derivacion_destino?: string;
-  horas: number;
+  minutos: number;
   comentario?: string;
 }
 
@@ -51,14 +51,16 @@ export function ClinicalClosureForm({
   const [closeReason, setCloseReason] = useState('');
   const [referralType, setReferralType] = useState('ninguna');
   const [referralDestination, setReferralDestination] = useState('');
-  const [hours, setHours] = useState(contacted === false ? 0.05 : 0.25);
+  // Attention time in whole minutes, minimum 1 (#131; was decimal hours).
+  const [minutes, setMinutes] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const needsDestination = referralType !== 'ninguna' && referralType !== '';
   const canSubmit =
     contacted !== null &&
-    hours > 0 &&
+    Number.isInteger(minutes) &&
+    minutes >= 1 &&
     (contacted ? closeReason !== '' : noContactReason !== '');
 
   async function submit() {
@@ -76,7 +78,7 @@ export function ClinicalClosureForm({
               motivo_cierre: closeReason || undefined,
               derivacion_tipo: referralType || undefined,
               derivacion_destino: needsDestination ? referralDestination || undefined : undefined,
-              horas: hours,
+              minutos: minutes,
               comentario: comment || undefined,
             }
           : {
@@ -84,7 +86,7 @@ export function ClinicalClosureForm({
               motivo_no_contacto: noContactReason || undefined,
               sintomas: [],
               tecnicas: [],
-              horas: hours,
+              minutos: minutes,
             },
       );
     } finally {
@@ -110,7 +112,7 @@ export function ClinicalClosureForm({
             aria-pressed={contacted === true}
             onClick={() => {
               setContacted(true);
-              setHours(0.25);
+              setMinutes(5);
             }}
             className={`flex-1 rounded-md border px-3 py-2 ${contacted === true ? 'bg-brand text-white' : 'bg-white'}`}
           >
@@ -121,7 +123,7 @@ export function ClinicalClosureForm({
             aria-pressed={contacted === false}
             onClick={() => {
               setContacted(false);
-              setHours(0.05);
+              setMinutes(1);
             }}
             className={`flex-1 rounded-md border px-3 py-2 ${contacted === false ? 'bg-brand text-white' : 'bg-white'}`}
           >
@@ -204,14 +206,14 @@ export function ClinicalClosureForm({
 
       {contacted !== null && (
         <label className="block text-sm">
-          Horas totales de atención
+          Minutos totales de atención
           <input
             type="number"
-            step="0.25"
-            min="0"
+            step="1"
+            min="1"
             className="mt-1 w-full rounded-md border px-3 py-2"
-            value={hours}
-            onChange={(e) => setHours(Number(e.target.value))}
+            value={minutes}
+            onChange={(e) => setMinutes(Math.trunc(Number(e.target.value)))}
           />
         </label>
       )}

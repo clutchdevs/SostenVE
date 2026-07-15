@@ -85,6 +85,13 @@ export function formatPhoneDisplay(raw: string): string {
   return hasPlus ? `+${digits}` : digits;
 }
 
+/** A valid requester age: a 0–120 integer. Mandatory at intake (FPV, #131). */
+export function isValidAge(age: string): boolean {
+  const n = Number.parseInt(age, 10);
+  return age.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 120;
+}
+
 export const PHONE_ERROR = 'Incluye el código de país +58 (ej. +58 414 1234567).';
+export const AGE_ERROR = 'Indica la edad de quien necesita apoyo.';
 export const INTL_PHONE_ERROR = 'Ingresa un teléfono válido en formato internacional (ej. +58 414 1234567).';
 export const CEDULA_ERROR = 'La cédula debe tener hasta 8 dígitos (solo números).';

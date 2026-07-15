@@ -34,6 +34,10 @@ export interface CaseRecord {
   age?: number;
   /** Recent habit changes reported at intake (green-branch screen 5, RF-1.3). */
   habitChanges?: string[];
+  /** Symptoms the requester selected at intake (green-branch tags, Paso 1). */
+  intakeTags?: string[];
+  /** Initial urgency Likert answer (Paso 0, 1 = crisis … 5 = preventive). */
+  urgencyAnswer?: number;
   /** Case carries "Infancia" tags → prefer a child-specialist psychologist (RF-1.3). */
   requiresChildSpecialty?: boolean;
   createdAt: Date;
@@ -53,6 +57,8 @@ export interface NewCase {
   preferredContactMethod?: ContactMethod;
   age?: number;
   habitChanges?: string[];
+  intakeTags?: string[];
+  urgencyAnswer?: number;
   requiresChildSpecialty?: boolean;
   slaExpiresAt?: Date;
 }
