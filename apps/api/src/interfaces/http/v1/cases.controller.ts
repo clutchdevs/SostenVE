@@ -159,6 +159,7 @@ export function createCasesRouter(): Hono {
           notifier: assignmentDeps.notifier,
           audit: caseDeps.audit,
           config: getConfig(),
+          presence: assignmentDeps.presence,
         },
       );
       return c.json({ ok: true });

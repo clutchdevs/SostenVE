@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { ListSkeleton } from '../../../src/components/skeleton';
 import { VolunteerCard } from '../../../src/features/coordinator/volunteer-card';
@@ -20,6 +20,7 @@ export default function CoordinatorVolunteersPage() {
   const [roster, setRoster] = useState<VolunteerView[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<VolunteerStatus | 'all'>('all');
+  const [onlineOnly, setOnlineOnly] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
@@ -39,10 +40,33 @@ export default function CoordinatorVolunteersPage() {
     void load();
   }, [load]);
 
+  // Poll only while filtering by "Disponibles ahora" (issue #130): presence changes
+  // over time, so a live availability view must refresh — but when that filter is
+  // off, the one-time load is enough and there is nothing time-sensitive to re-fetch.
+  useEffect(() => {
+    if (!onlineOnly) return;
+    const timer = setInterval(() => void load(), 15_000);
+    return () => clearInterval(timer);
+  }, [onlineOnly, load]);
+
   const results = useMemo(
-    () => filterVolunteers(roster, search, status).filter((v) => v.rol === 'psychologist'),
-    [roster, search, status],
+    () =>
+      filterVolunteers(roster, search, status)
+        .filter((v) => v.rol === 'psychologist')
+        // "Disponibles ahora" (issue #130): only psychologists online right now, so
+        // the coordinator can spot who can take a case without scrolling the roster.
+        .filter((v) => (onlineOnly ? v.en_linea === true : true)),
+    [roster, search, status, onlineOnly],
   );
+
+  // Any filter departing from the default view (all statuses, no search, not gated
+  // by availability) enables the "Limpiar filtros" reset — same as padrón/invitaciones.
+  const isFiltered = search !== '' || status !== 'all' || onlineOnly;
+  function clearFilters() {
+    setSearch('');
+    setStatus('all');
+    setOnlineOnly(false);
+  }
 
   if (needsAuth) return <AuthRequired />;
 
@@ -67,21 +91,53 @@ export default function CoordinatorVolunteersPage() {
             aria-label="Buscar voluntarios"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {STATUS_TABS.map((tab) => (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStatus(tab.key)}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  tab.key === status
+                    ? 'border-navy bg-navy text-white'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+            <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden />
             <button
-              key={tab.key}
               type="button"
-              onClick={() => setStatus(tab.key)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                tab.key === status
-                  ? 'border-navy bg-navy text-white'
+              onClick={() => setOnlineOnly((v) => !v)}
+              aria-pressed={onlineOnly}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                onlineOnly
+                  ? 'border-emerald-600 bg-emerald-600 text-white'
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {tab.label}
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  onlineOnly ? 'bg-white' : 'bg-emerald-500'
+                }`}
+                aria-hidden
+              />
+              Disponibles ahora
+              {onlineOnly && <span className="text-xs font-normal opacity-90">· en vivo</span>}
             </button>
-          ))}
+          </div>
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              <X className="h-4 w-4" aria-hidden />
+              Limpiar filtros
+            </button>
+          )}
         </div>
       </div>
 

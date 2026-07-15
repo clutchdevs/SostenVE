@@ -3,6 +3,7 @@ import { getConfig } from '../../../config/index.js';
 import { registerVolunteer } from '../../../application/volunteer/register-volunteer.js';
 import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer.js';
 import { assignPendingCases } from '../../../application/assignment/assign-cases.js';
+import { releaseUnacceptedOnPause } from '../../../application/assignment/release-on-pause.js';
 import { logger } from '../../../shared/logger.js';
 import {
   addVolunteerNote,
@@ -175,6 +176,20 @@ export function createVolunteerRouter(): Hono {
       }
     } else {
       await presence.markOffline(user.sub);
+      // Pausing before accepting must not strand the case on someone who stepped
+      // away (issue #130): return any unaccepted assigned case to the queue and
+      // re-run assignment so an online psychologist picks it up. markOffline runs
+      // first so this psychologist is already out of the pool. Best-effort — a
+      // failure must not fail the pause.
+      try {
+        const deps = getAssignmentDeps();
+        const released = await releaseUnacceptedOnPause(user.sub, deps);
+        if (released > 0) await assignPendingCases(deps);
+      } catch (error) {
+        logger.warn('release-on-pause failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
     return c.body(null, 204);
   });

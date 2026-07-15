@@ -30,9 +30,16 @@ export default function CoordinatorBoard() {
 
   const refresh = useCallback(async () => {
     try {
-      const list = await apiFetch<CaseSummary[]>('/cases');
+      // Refresh the reassignment picker's roster alongside the cases so its live
+      // presence (en_linea) stays current — the picker only offers online
+      // psychologists (issue #130). A roster failure must not blank the board.
+      const [list, psys] = await Promise.all([
+        apiFetch<CaseSummary[]>('/cases'),
+        apiFetch<VolunteerView[]>('/volunteers?status=active').catch(() => null),
+      ]);
       if (!activeRef.current) return;
       setCases(list);
+      if (psys) setPsychologists(psys.filter((v) => v.rol === 'psychologist'));
       setUpdatedAt(new Date());
     } catch (err) {
       if (!activeRef.current) return;
@@ -53,13 +60,6 @@ export default function CoordinatorBoard() {
       clearInterval(timer);
     };
   }, [refresh]);
-
-  // Active psychologists for the reassignment picker (coordinator-authorized).
-  useEffect(() => {
-    apiFetch<VolunteerView[]>('/volunteers?status=active')
-      .then((list) => setPsychologists(list.filter((v) => v.rol === 'psychologist')))
-      .catch(() => {});
-  }, []);
 
   // 1-second tick so the clock, "updated ago" and SLA chips stay live.
   useEffect(() => {

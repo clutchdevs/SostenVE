@@ -6,6 +6,7 @@ import type { AuditLogRepository } from '../../domain/audit/audit.js';
 import type { CaseRepository } from '../../domain/case/case.js';
 import type { VolunteerRepository } from '../../domain/volunteer/volunteer.js';
 import type { AssignmentNotifier } from '../assignment/ports.js';
+import type { PresenceStore } from '../presence/ports.js';
 
 /** Who performed the coordinator action (recorded in the audit log). */
 export interface CoordinatorActor {
@@ -20,6 +21,8 @@ export interface ReassignCaseDeps {
   notifier: AssignmentNotifier;
   audit: AuditLogRepository;
   config: AppConfig;
+  /** Real-time presence: a case may only be reassigned to an online psychologist. */
+  presence: PresenceStore;
 }
 
 /**
@@ -45,6 +48,19 @@ export async function reassignCase(
   const volunteer = await deps.volunteers.findById(volunteerId);
   if (!volunteer || !volunteer.roles.includes('psychologist') || volunteer.status !== 'active') {
     throw new ApiError(400, 'INVALID_TARGET', 'Target must be an active psychologist');
+  }
+
+  // Real-time presence gate (issue #130 / RF-2.5): a case may only be handed to a
+  // psychologist who is online and available right now, so it isn't parked on
+  // someone absent while the SLA runs. A psychologist who paused between the
+  // coordinator opening the picker and confirming lands here (409, transient).
+  const onlineIds = await deps.presence.filterOnline([volunteerId]);
+  if (!onlineIds.has(volunteerId)) {
+    throw new ApiError(
+      409,
+      'TARGET_OFFLINE',
+      'El psicólogo seleccionado no está conectado y disponible',
+    );
   }
 
   await deps.assignments.deleteByCaseId(caseId);
