@@ -95,8 +95,34 @@ export class SupabaseCaseRepository implements CaseRepository {
       })
       .select()
       .single();
-    if (error) throw new Error(`Failed to create case: ${error.message}`);
+    if (error) {
+      // A person may hold only one OPEN case at a time (partial unique index
+      // idx_cases_active_pseudonym). A unique violation here means a concurrent or
+      // retried submission for someone who already has an open case — so return
+      // that case and keep intake idempotent instead of surfacing a 500 the client
+      // would retry forever (offline outbox). A new case is still created once the
+      // previous one is closed, since closed cases are excluded from the index.
+      if (error.code === '23505') {
+        const existing = await this.findActiveByPseudonymId(input.pseudonymId);
+        if (existing) return existing;
+      }
+      throw new Error(`Failed to create case: ${error.message}`);
+    }
     return toDomain(data as CaseRow);
+  }
+
+  /** The person's current open (non-closed) case, if any. */
+  private async findActiveByPseudonymId(pseudonymId: string): Promise<CaseRecord | null> {
+    const { data, error } = await this.client
+      .from('cases')
+      .select()
+      .eq('pseudonym_id', pseudonymId)
+      .neq('status', statusToDb.CLOSED)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(`Failed to look up active case: ${error.message}`);
+    return data ? toDomain(data as CaseRow) : null;
   }
 
   async findById(id: string): Promise<CaseRecord | null> {

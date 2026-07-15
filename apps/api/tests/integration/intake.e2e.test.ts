@@ -169,4 +169,30 @@ describe.skipIf(!dbAvailable)('intake endpoints (e2e)', () => {
     track(first);
     expect(second.caso_id).toBe(first.caso_id);
   });
+
+  // Regression: the same phone re-submitted (no Idempotency-Key, as the web client
+  // sends) used to hit the global-unique pseudonym → 500 → the offline outbox
+  // retried forever. It must now reuse the open case, and open a new one only once
+  // the previous is closed.
+  it('reuses the open case for a repeated contact and opens a new one after closure', async () => {
+    const contacto = uniqueVePhone();
+
+    const first = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    expect(first.status).toBe(201);
+    const firstBody = (await first.json()) as IntakeResponse;
+    track(firstBody);
+
+    // Re-submit while the case is open → same case, no duplicate-key 500.
+    const again = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    expect(again.status).toBe(201);
+    expect(((await again.json()) as IntakeResponse).caso_id).toBe(firstBody.caso_id);
+
+    // Close it, then a new submission from the same person creates a NEW case.
+    await pg.query("update cases set status = 'cerrado' where id = $1", [firstBody.caso_id]);
+    const afterClose = await post('/api/v1/intake/red-branch', { sub_canal: 'recibir-llamada', contacto });
+    expect(afterClose.status).toBe(201);
+    const afterCloseBody = (await afterClose.json()) as IntakeResponse;
+    track(afterCloseBody);
+    expect(afterCloseBody.caso_id).not.toBe(firstBody.caso_id);
+  });
 });
