@@ -26,6 +26,9 @@ export default function CoordinatorBoard() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [action, setAction] = useState<CaseAction | null>(null);
+  // The clock is locale/time-based; rendering it during SSR (server runs UTC) and
+  // again on the client caused a hydration mismatch. Only show it after mount.
+  const [mounted, setMounted] = useState(false);
   const activeRef = useRef(true);
 
   const refresh = useCallback(async () => {
@@ -63,6 +66,7 @@ export default function CoordinatorBoard() {
 
   // 1-second tick so the clock, "updated ago" and SLA chips stay live.
   useEffect(() => {
+    setMounted(true);
     const t = setInterval(() => setNow(new Date()), 1_000);
     return () => clearInterval(t);
   }, []);
@@ -83,8 +87,8 @@ export default function CoordinatorBoard() {
         <div>
           <h1 className="font-serif text-3xl font-semibold text-ink">Cola de casos en vivo</h1>
           <p className="mt-1 text-sm capitalize text-slate-600">
-            {clock}
-            {agoSeconds !== null && (
+            {mounted ? clock : ' '}
+            {mounted && agoSeconds !== null && (
               <span className="lowercase"> · actualizado hace {agoSeconds} s</span>
             )}
           </p>
