@@ -11,14 +11,15 @@ import {
   buildGreenPayload,
   EMPTY_GREEN_FORM,
   HABIT_CHANGES,
+  REQUESTER_TYPES,
   VENEZUELA_STATES,
   type GreenFormState,
 } from '../../../src/features/intake/green-form';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import { ui } from '../../../src/lib/ui';
-import { isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
+import { AGE_ERROR, isValidAge, isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
 import { FALLBACK_CRISIS_LINES, getCrisisLines } from '../../../src/lib/crisis-lines';
-import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
+import { clearDraft, INTAKE_DRAFT_KEYS, INTAKE_LIKERT_KEY, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 
 interface GreenResult {
@@ -75,9 +76,19 @@ export default function GreenBranchPage() {
       setError(PHONE_ERROR);
       return;
     }
+    if (!isValidAge(form.age)) {
+      setError(AGE_ERROR);
+      return;
+    }
+    if (!form.requesterType) {
+      setError('Indica quién solicita la ayuda.');
+      return;
+    }
     setBusy(true);
     setError('');
     const payload = buildGreenPayload(form);
+    const likert = loadDraft<number>(INTAKE_LIKERT_KEY);
+    if (typeof likert === 'number') payload.respuesta_likert = likert;
     try {
       const res = await apiFetch<GreenResult>('/intake/green-branch', {
         method: 'POST',
@@ -85,6 +96,7 @@ export default function GreenBranchPage() {
         body: payload,
       });
       clearDraft(INTAKE_DRAFT_KEYS.verde);
+      clearDraft(INTAKE_LIKERT_KEY);
       setResult(res);
       if (res.nivel_riesgo === 'riesgo_alto') setEscalatedLines(await getCrisisLines());
     } catch (err) {
@@ -96,6 +108,7 @@ export default function GreenBranchPage() {
         // nothing captured is lost.
         enqueueSubmission('/intake/green-branch', payload);
         clearDraft(INTAKE_DRAFT_KEYS.verde);
+        clearDraft(INTAKE_LIKERT_KEY);
         setQueued(true);
       }
     } finally {
@@ -217,6 +230,28 @@ export default function GreenBranchPage() {
       {step === 3 && (
         <section className="space-y-3">
           <h1 className="text-xl font-serif font-semibold text-ink">¿Cómo te contactamos?</h1>
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">
+              ¿Quién solicita la ayuda? <span className="text-risk-high">*</span>
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {REQUESTER_TYPES.map((opt) => (
+                <button
+                  key={opt.code}
+                  type="button"
+                  aria-pressed={form.requesterType === opt.code}
+                  onClick={() => update({ requesterType: opt.code })}
+                  className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium ${
+                    form.requesterType === opt.code
+                      ? 'border-ppv-blue bg-ppv-blue text-white'
+                      : 'border-slate-300 bg-white text-ink'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <input
             className={ui.field}
             placeholder="Nombre (opcional)"
@@ -224,13 +259,14 @@ export default function GreenBranchPage() {
             onChange={(e) => update({ name: e.target.value })}
           />
           <label className="block text-sm font-medium text-slate-700">
-            Edad de quien necesita apoyo (opcional)
+            Edad de quien necesita apoyo <span className="text-risk-high">*</span>
             <input
               className={`mt-1 ${ui.field}`}
               type="number"
               inputMode="numeric"
               min={0}
               max={120}
+              required
               placeholder="Ej. 8 si es un niño/a, 34 si es un adulto"
               value={form.age}
               onChange={(e) => update({ age: e.target.value })}
@@ -295,7 +331,7 @@ export default function GreenBranchPage() {
             type="button"
             onClick={submit}
             pending={busy}
-            disabled={!form.contact.trim()}
+            disabled={!form.contact.trim() || !isValidAge(form.age) || !form.requesterType}
             pendingText="Enviando…"
           >
             Enviar solicitud

@@ -6,14 +6,10 @@ import { useState } from 'react';
 import { apiFetch } from '../../src/lib/api-client';
 import { ConsentNotice } from '../../src/components/consent-notice';
 import { ui } from '../../src/lib/ui';
+import { saveDraft, INTAKE_LIKERT_KEY } from '../../src/lib/intake-draft';
+import { URGENCY_OPTIONS } from '../../src/features/intake/urgency';
 
-const OPTIONS = [
-  { value: 1, label: 'Estoy en crisis / en peligro ahora' },
-  { value: 2, label: 'Muy mal, necesito ayuda pronto' },
-  { value: 3, label: 'Regular, me cuesta el día a día' },
-  { value: 4, label: 'Algo afectado, pero sobrellevo' },
-  { value: 5, label: 'Quiero acompañamiento preventivo' },
-];
+const OPTIONS = URGENCY_OPTIONS;
 
 export default function IntakePage() {
   const router = useRouter();
@@ -21,6 +17,8 @@ export default function IntakePage() {
 
   async function choose(value: number) {
     setLoading(true);
+    // Remember the answer so the red/green submit can persist it (#131).
+    saveDraft<number>(INTAKE_LIKERT_KEY, value);
     try {
       const res = await apiFetch<{ rama: string }>('/intake/triage', {
         method: 'POST',

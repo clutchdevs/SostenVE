@@ -37,6 +37,8 @@ interface CaseRow {
   preferred_contact_method: string | null;
   age: number | null;
   habit_changes: string[] | null;
+  intake_tags: string[] | null;
+  urgency_answer: number | null;
   requires_child_specialty: boolean | null;
   created_at: string;
   sla_expires_at: string | null;
@@ -61,6 +63,8 @@ function toDomain(row: CaseRow): CaseRecord {
       : undefined,
     age: row.age ?? undefined,
     habitChanges: row.habit_changes ?? undefined,
+    intakeTags: row.intake_tags ?? undefined,
+    urgencyAnswer: row.urgency_answer ?? undefined,
     requiresChildSpecialty: row.requires_child_specialty ?? undefined,
     createdAt: new Date(row.created_at),
     slaExpiresAt: row.sla_expires_at ? new Date(row.sla_expires_at) : undefined,
@@ -90,6 +94,8 @@ export class SupabaseCaseRepository implements CaseRepository {
           : null,
         age: input.age ?? null,
         habit_changes: input.habitChanges ?? null,
+        intake_tags: input.intakeTags ?? null,
+        urgency_answer: input.urgencyAnswer ?? null,
         requires_child_specialty: input.requiresChildSpecialty ?? false,
         sla_expires_at: input.slaExpiresAt?.toISOString() ?? null,
       })

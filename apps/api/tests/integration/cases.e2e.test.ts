@@ -109,13 +109,16 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     );
     await assign(mine, vId);
     await seedCase(); // someone else's, unassigned to vId
+    const token = await tokenFor(vId);
+    // Contact is revealed in the list only once accepted (#131); accept first.
+    await authed(`/api/v1/cases/${mine}/accept`, token, { method: 'POST' });
 
-    const res = await authed('/api/v1/cases', await tokenFor(vId));
+    const res = await authed('/api/v1/cases', token);
     expect(res.status).toBe(200);
     const list = (await res.json()) as Array<{ caso_id: string; nombre: string | null; contacto: string | null }>;
     expect(list.length).toBe(1);
     const mineRow = list.find((c) => c.caso_id === mine);
-    // The assigned psychologist may search by name/phone, so the list carries it.
+    // Once accepted, the psychologist may search by name/phone, so the list carries it.
     expect(mineRow?.nombre).toBe('Ana Lista');
     expect(mineRow?.contacto).toBe('+584129999999');
   });
@@ -127,7 +130,7 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns the requester identity (name/phone) to the assigned psychologist', async () => {
+  it('reveals the requester identity to the psychologist only after accepting (#131)', async () => {
     const vId = await seedVolunteer();
     const pseudonym = `pseudo-${randomUUID()}`;
     const created = await pg.query<{ id: string }>(
@@ -142,10 +145,16 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
       [pseudonym],
     );
     await assign(caseId, vId);
+    const token = await tokenFor(vId);
 
-    const res = await authed(`/api/v1/cases/${caseId}`, await tokenFor(vId));
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { contacto: { nombre: string; contacto: string } | null };
+    // Assigned but not accepted → contact PII is withheld (metrics guard).
+    const before = await authed(`/api/v1/cases/${caseId}`, token);
+    expect(((await before.json()) as { contacto: unknown }).contacto).toBeNull();
+
+    // After accepting → identity/phone are revealed.
+    await authed(`/api/v1/cases/${caseId}/accept`, token, { method: 'POST' });
+    const after = await authed(`/api/v1/cases/${caseId}`, token);
+    const body = (await after.json()) as { contacto: { nombre: string; contacto: string } | null };
     expect(body.contacto?.nombre).toBe('Ana Test');
     expect(body.contacto?.contacto).toBe('+584120000000');
   });
@@ -174,7 +183,7 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
         tecnicas: ['pap'],
         motivo_cierre: 'finalizado',
         derivacion_tipo: 'ninguna',
-        horas: 0.5,
+        minutos: 30,
       }),
     });
     expect(close1.status).toBe(201);
@@ -185,7 +194,7 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
 
     const close2 = await authed(`/api/v1/cases/${caseId}/close`, token, {
       method: 'POST',
-      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', horas: 0.05 }),
+      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', minutos: 1 }),
     });
     expect(close2.status).toBe(409);
   });
@@ -196,7 +205,7 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
     await assign(caseId, vId);
     const res = await authed(`/api/v1/cases/${caseId}/close`, await tokenFor(vId), {
       method: 'POST',
-      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', horas: 0.05 }),
+      body: JSON.stringify({ contacto: false, motivo_no_contacto: 'abandono', minutos: 1 }),
     });
     expect(res.status).toBe(409);
   });

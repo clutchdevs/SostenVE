@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Clock, MapPin, Phone, UserRound } from 'lucide-react';
+import { ChevronRight, Clock, Lock, MapPin, Phone, UserRound } from 'lucide-react';
 import type { CaseSummary } from '../../lib/types';
 import {
   caseDescription,
@@ -71,18 +71,30 @@ export function PsychologistCaseCard({ caso, onOpen, now = new Date() }: Props) 
               <UserRound className="h-3.5 w-3.5" aria-hidden />
               {caso.edad != null ? `${caso.edad} años` : 'Edad N/D'}
             </span>
-            <span className="inline-flex items-center gap-1">
-              {caso.modalidad === 'presencial' ? (
-                <MapPin className="h-3.5 w-3.5" aria-hidden />
-              ) : (
-                <Phone className="h-3.5 w-3.5" aria-hidden />
-              )}
-              {contactMethod(caso)}
-            </span>
-            {caso.contacto && (
+            {caso.modalidad && (
+              <span className="inline-flex items-center gap-1">
+                {caso.modalidad === 'presencial' ? (
+                  <MapPin className="h-3.5 w-3.5" aria-hidden />
+                ) : (
+                  <Phone className="h-3.5 w-3.5" aria-hidden />
+                )}
+                {contactMethod(caso)}
+              </span>
+            )}
+            {/* The contact always exists but is withheld until the case is accepted
+                (#131); show a masked placeholder with a hover hint, never "sin definir". */}
+            {caso.contacto ? (
               <span className="inline-flex items-center gap-1">
                 <Phone className="h-3.5 w-3.5" aria-hidden />
                 {formatPhoneDisplay(caso.contacto)}
+              </span>
+            ) : (
+              <span
+                className="inline-flex cursor-help items-center gap-1 text-slate-400"
+                title="El teléfono se mostrará cuando aceptes el caso."
+              >
+                <Lock className="h-3.5 w-3.5" aria-hidden />
+                +58 ••• •••••••
               </span>
             )}
           </div>

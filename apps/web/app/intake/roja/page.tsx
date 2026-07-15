@@ -6,10 +6,10 @@ import { ConsentNotice } from '../../../src/components/consent-notice';
 import { SubmitButton } from '../../../src/components/submit-button';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
 import { getCrisisLines, type CrisisLines } from '../../../src/lib/crisis-lines';
-import { clearDraft, INTAKE_DRAFT_KEYS, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
+import { clearDraft, INTAKE_DRAFT_KEYS, INTAKE_LIKERT_KEY, loadDraft, saveDraft } from '../../../src/lib/intake-draft';
 import { enqueueSubmission } from '../../../src/lib/intake-outbox';
 import { ui } from '../../../src/lib/ui';
-import { isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
+import { AGE_ERROR, isValidAge, isValidVePhone, PHONE_ERROR, PHONE_MAX_LENGTH } from '../../../src/lib/validation';
 
 type SubChannel = 'recibir-llamada' | 'whatsapp-silencioso';
 
@@ -60,20 +60,26 @@ export default function RedBranchPage() {
       setError(PHONE_ERROR);
       return;
     }
+    if (!isValidAge(age)) {
+      setError(AGE_ERROR);
+      return;
+    }
     setError('');
     setBusy(true);
     // Age is a critical clinical parameter (minor vs geriatric priority) per
-    // RF-1.2.2 / RF-1.2.3; sent when provided.
-    const parsedAge = age.trim() === '' ? undefined : Number(age);
+    // RF-1.2.2 / RF-1.2.3; now mandatory (#131).
+    const likert = loadDraft<number>(INTAKE_LIKERT_KEY);
     const payload = {
       sub_canal: sub,
       nombre: name || undefined,
       contacto: contact,
-      edad: parsedAge !== undefined && Number.isFinite(parsedAge) ? parsedAge : undefined,
+      edad: Number.parseInt(age, 10),
+      ...(typeof likert === 'number' ? { respuesta_likert: likert } : {}),
     };
     try {
       await apiFetch('/intake/red-branch', { method: 'POST', auth: false, body: payload });
       clearDraft(INTAKE_DRAFT_KEYS.roja);
+      clearDraft(INTAKE_LIKERT_KEY);
     } catch (err) {
       // A high-risk contact request must never be silently dropped: on a network
       // or server error, queue it for automatic retry. A 4xx won't improve on
@@ -81,6 +87,7 @@ export default function RedBranchPage() {
       if (!(err instanceof ApiError) || err.status >= 500) {
         enqueueSubmission('/intake/red-branch', payload);
         clearDraft(INTAKE_DRAFT_KEYS.roja);
+      clearDraft(INTAKE_LIKERT_KEY);
       }
     } finally {
       setDone(true); // even if it fails, the crisis lines above remain visible
@@ -166,7 +173,8 @@ export default function RedBranchPage() {
                 inputMode="numeric"
                 min={0}
                 max={120}
-                placeholder="Edad (ayuda a priorizar la atención)"
+                required
+                placeholder="Edad de quien necesita apoyo (obligatorio)"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
               />
@@ -175,7 +183,7 @@ export default function RedBranchPage() {
                 type="button"
                 onClick={submit}
                 pending={busy}
-                disabled={!contact}
+                disabled={!contact || !isValidAge(age)}
                 pendingText="Enviando…"
                 className="w-full"
               >
