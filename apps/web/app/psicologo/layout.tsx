@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { PresenceToggle } from '../../src/components/presence-toggle';
+import { PresenceProvider } from '../../src/features/psychologist-portal/presence-context';
 import { PsychologistSidebar } from '../../src/components/psychologist-sidebar';
 import { SessionGuard } from '../../src/components/session-guard';
 import { StaffHeader } from '../../src/components/staff-header';
@@ -21,10 +22,12 @@ export default function PsychologistLayout({ children }: { children: ReactNode }
       </div>
       <main className="px-5 py-8 sm:px-8 lg:ml-64">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-6 flex justify-end">
-            <PresenceToggle />
-          </div>
-          {children}
+          <PresenceProvider>
+            <div className="mb-6 flex justify-end">
+              <PresenceToggle />
+            </div>
+            {children}
+          </PresenceProvider>
         </div>
       </main>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Spinner } from '../../components/spinner';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, ApiError } from '../../lib/api-client';
 import { caseCode, requesterLabel } from './operations';
 import type { CaseSummary, VolunteerView } from '../../lib/types';
 
@@ -29,6 +29,10 @@ export function CaseActionModal({ caso, mode, psychologists, onCancel, onDone }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  // Only online/available psychologists may receive a case (issue #130): parking a
+  // case on someone absent risks breaching the SLA. The backend enforces the same.
+  const availablePsychologists = psychologists.filter((p) => p.en_linea);
+
   async function confirm() {
     setBusy(true);
     setError('');
@@ -50,8 +54,14 @@ export function CaseActionModal({ caso, mode, psychologists, onCancel, onDone }:
         });
       }
       onDone();
-    } catch {
-      setError('No se pudo completar la acción. Intenta de nuevo.');
+    } catch (err) {
+      // Surface the server message on a conflict (e.g. the psychologist paused
+      // between opening the picker and confirming → 409 TARGET_OFFLINE).
+      setError(
+        err instanceof ApiError && err.status === 409
+          ? err.message
+          : 'No se pudo completar la acción. Intenta de nuevo.',
+      );
       setBusy(false);
     }
   }
@@ -75,22 +85,32 @@ export function CaseActionModal({ caso, mode, psychologists, onCancel, onDone }:
         </p>
 
         {mode === 'reassign' ? (
-          <label className="mt-4 block text-sm font-medium text-slate-700">
-            Psicólogo
-            <select
-              className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm"
-              value={volunteerId}
-              onChange={(e) => setVolunteerId(e.target.value)}
-            >
-              <option value="">Selecciona un psicólogo activo…</option>
-              {psychologists.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                  {p.especialidad ? ` · ${p.especialidad}` : ''}
-                </option>
-              ))}
-            </select>
-          </label>
+          availablePsychologists.length > 0 ? (
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              Psicólogo
+              <select
+                className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                value={volunteerId}
+                onChange={(e) => setVolunteerId(e.target.value)}
+              >
+                <option value="">Selecciona un psicólogo conectado…</option>
+                {availablePsychologists.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                    {p.especialidad ? ` · ${p.especialidad}` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs font-normal text-slate-500">
+                Solo se listan psicólogos conectados y disponibles ahora.
+              </p>
+            </label>
+          ) : (
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+              No hay psicólogos conectados en este momento. El caso permanece en la cola y se
+              asignará automáticamente en cuanto uno se conecte.
+            </p>
+          )
         ) : (
           <label className="mt-4 block text-sm font-medium text-slate-700">
             Motivo del cierre
@@ -120,7 +140,7 @@ export function CaseActionModal({ caso, mode, psychologists, onCancel, onDone }:
           </button>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || (mode === 'reassign' && availablePsychologists.length === 0)}
             onClick={confirm}
             className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
               mode === 'close' ? 'bg-accent-coral hover:opacity-90' : 'bg-navy hover:bg-navy-hover'

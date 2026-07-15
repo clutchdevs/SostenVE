@@ -37,7 +37,11 @@ function psychologist(over: Partial<Volunteer> = {}): Volunteer {
   };
 }
 
-function reassignDeps(theCase: CaseRecord | null, target: Volunteer | null) {
+function reassignDeps(
+  theCase: CaseRecord | null,
+  target: Volunteer | null,
+  { online = true }: { online?: boolean } = {},
+) {
   const calls = {
     deleted: [] as string[],
     created: [] as { caseId: string; volunteerId: string }[],
@@ -84,6 +88,11 @@ function reassignDeps(theCase: CaseRecord | null, target: Volunteer | null) {
       },
     },
     config: getConfig(),
+    presence: {
+      async filterOnline(ids: readonly string[]) {
+        return online ? new Set(ids) : new Set<string>();
+      },
+    },
   } as unknown as Parameters<typeof reassignCase>[3];
   return { deps, calls };
 }
@@ -114,6 +123,16 @@ describe('reassignCase', () => {
   it('refuses to reassign a closed case (409)', async () => {
     const { deps } = reassignDeps(caseRecord({ status: 'CLOSED' }), psychologist());
     await expect(reassignCase('case-1', 'psy-1', ACTOR, deps)).rejects.toMatchObject({ status: 409 });
+  });
+
+  it('rejects a target that is offline/not available (409, SLA guard #130)', async () => {
+    const { deps, calls } = reassignDeps(caseRecord(), psychologist(), { online: false });
+    await expect(reassignCase('case-1', 'psy-1', ACTOR, deps)).rejects.toMatchObject({
+      status: 409,
+    });
+    // Nothing was mutated: the case stays with its current assignee.
+    expect(calls.deleted).toEqual([]);
+    expect(calls.created).toEqual([]);
   });
 });
 

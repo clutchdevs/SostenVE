@@ -12,7 +12,7 @@ import {
 import { CaseIdentityCard } from '../../../../src/features/psychologist-portal/case-identity-card';
 import { CaseDetailSkeleton } from '../../../../src/features/psychologist-portal/case-skeletons';
 import { ClosureSummary } from '../../../../src/features/psychologist-portal/closure-summary';
-import { apiFetch } from '../../../../src/lib/api-client';
+import { apiFetch, ApiError } from '../../../../src/lib/api-client';
 import type {
   CaseClosureView,
   CaseContactView,
@@ -31,12 +31,25 @@ export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const [detail, setDetail] = useState<CaseDetail | null>(null);
-  const [message, setMessage] = useState('');
+  const [notice, setNotice] = useState<{ error: boolean; text: string } | null>(null);
 
   const load = useCallback(() => {
     apiFetch<CaseDetail>(`/cases/${id}`)
-      .then(setDetail)
-      .catch(() => setMessage('No se pudo cargar el caso.'));
+      .then((d) => {
+        setDetail(d);
+        setNotice(null);
+      })
+      .catch((err) => {
+        // A case reassigned while this view was stale (e.g. after pausing, #130) is
+        // no longer ours: the server returns 403. Say so plainly and drop the stale
+        // detail so its actions disappear, instead of a vague "no se pudo cargar".
+        if (err instanceof ApiError && err.status === 403) {
+          setDetail(null);
+          setNotice({ error: true, text: 'Este caso ya no está asignado a ti; es posible que se haya reasignado a otro psicólogo.' });
+        } else {
+          setNotice({ error: true, text: 'No se pudo cargar el caso.' });
+        }
+      });
   }, [id]);
 
   useEffect(() => {
@@ -46,42 +59,54 @@ export default function CaseDetailPage() {
   async function accept() {
     try {
       await apiFetch(`/cases/${id}/accept`, { method: 'POST' });
-      setMessage('Caso aceptado.');
+      setNotice({ error: false, text: 'Caso aceptado.' });
       load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'No se pudo aceptar el caso.');
+      if (err instanceof ApiError && err.status === 403) {
+        // Released/reassigned while stale: never let the psychologist "steal" it.
+        setDetail(null);
+        setNotice({ error: true, text: 'Este caso ya fue reasignado a otro psicólogo y no puedes aceptarlo.' });
+      } else if (err instanceof ApiError && err.status === 409) {
+        setNotice({ error: true, text: 'Este caso ya no puede aceptarse porque cambió de estado.' });
+        load();
+      } else {
+        setNotice({ error: true, text: 'No se pudo aceptar el caso.' });
+      }
     }
   }
 
   async function addNote(note: NoteSubmission) {
     try {
       await apiFetch(`/cases/${id}/notes`, { method: 'POST', body: note });
-      setMessage('Nota registrada.');
+      setNotice({ error: false, text: 'Nota registrada.' });
       load();
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'No se pudo registrar la nota.');
+    } catch {
+      setNotice({ error: true, text: 'No se pudo registrar la nota.' });
     }
   }
 
   async function close(closure: ClosureSubmission) {
     try {
       await apiFetch(`/cases/${id}/close`, { method: 'POST', body: closure });
-      setMessage('Caso cerrado.');
+      setNotice({ error: false, text: 'Caso cerrado.' });
       load();
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'No se pudo cerrar el caso.');
+    } catch {
+      setNotice({ error: true, text: 'No se pudo cerrar el caso.' });
     }
   }
 
   if (!detail) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-400">
+        <Link
+          href="/psicologo"
+          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-navy"
+        >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Volver a mis casos
-        </span>
-        {message ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-risk-high">{message}</p>
+        </Link>
+        {notice ? (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-risk-high">{notice.text}</p>
         ) : (
           <CaseDetailSkeleton />
         )}
@@ -103,9 +128,15 @@ export default function CaseDetailPage() {
 
       <CaseIdentityCard caso={detail.caso} contacto={detail.contacto} />
 
-      {message && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
-          {message}
+      {notice && (
+        <p
+          className={`rounded-xl border p-3 ${
+            notice.error
+              ? 'border-red-200 bg-red-50 text-risk-high'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+          }`}
+        >
+          {notice.text}
         </p>
       )}
 
