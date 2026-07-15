@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ChevronRight, Inbox } from 'lucide-react';
 import { AuthRequired } from '../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../src/features/psychologist-portal/psychologist-case-card';
@@ -16,28 +16,14 @@ import {
   sortByUrgency,
   summarizeCaseload,
 } from '../../src/features/psychologist-portal/caseload';
-import { apiFetch, ApiError } from '../../src/lib/api-client';
-import type { CaseSummary } from '../../src/lib/types';
+import { usePolledCases } from '../../src/features/psychologist-portal/use-polled-cases';
+import { usePresence } from '../../src/features/psychologist-portal/presence-context';
 
 export default function PsychologistHome() {
   const router = useRouter();
-  const [cases, setCases] = useState<CaseSummary[]>([]);
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [error, setError] = useState('');
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    apiFetch<CaseSummary[]>('/cases')
-      .then(setCases)
-      .catch((err) => {
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-          setNeedsAuth(true);
-        } else {
-          setError('No se pudieron cargar los casos. Intenta de nuevo.');
-        }
-      })
-      .finally(() => setLoaded(true));
-  }, []);
+  // Auto-refreshing so a newly assigned case appears without a manual reload (#131).
+  const { cases, needsAuth, error, loaded } = usePolledCases();
+  const { online, connected } = usePresence();
 
   const summary = useMemo(() => summarizeCaseload(cases), [cases]);
   // The dashboard surfaces the working queue: active cases only (assigned /
@@ -60,9 +46,22 @@ export default function PsychologistHome() {
           <h1 className="font-serif text-3xl font-semibold text-ink">{greeting()}</h1>
           <p className="mt-1 text-sm text-slate-600">{subtitle(summary)}</p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-          Recibiendo casos
+        <span
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${
+            online
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : !connected
+                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                : 'border-slate-200 bg-slate-50 text-slate-600'
+          }`}
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${
+              online ? 'bg-emerald-500' : !connected ? 'bg-amber-500' : 'bg-slate-400'
+            }`}
+            aria-hidden
+          />
+          {online ? 'Recibiendo casos' : !connected ? 'Sin conexión' : 'En pausa'}
         </span>
       </header>
 

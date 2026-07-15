@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FilterX, Search, SearchX } from 'lucide-react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { PsychologistCaseCard } from '../../../src/features/psychologist-portal/psychologist-case-card';
@@ -15,8 +15,7 @@ import {
   type EstadoFilter,
   type RiskFilter,
 } from '../../../src/features/psychologist-portal/caseload';
-import { apiFetch, ApiError } from '../../../src/lib/api-client';
-import type { CaseSummary } from '../../../src/lib/types';
+import { usePolledCases } from '../../../src/features/psychologist-portal/use-polled-cases';
 
 const RISK_TABS: { key: RiskFilter; label: string; dot?: string }[] = [
   { key: 'todas', label: 'Todas' },
@@ -39,21 +38,9 @@ const ESTADO_TABS: { key: EstadoFilter; label: string; dot?: string }[] = [
 
 export default function CasesListPage() {
   const router = useRouter();
-  const [cases, setCases] = useState<CaseSummary[]>([]);
+  // Auto-refreshing so a newly assigned case appears without a manual reload (#131).
+  const { cases, needsAuth, error, loaded } = usePolledCases();
   const [filters, setFilters] = useState<CaseFilters>(EMPTY_FILTERS);
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [error, setError] = useState('');
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    apiFetch<CaseSummary[]>('/cases')
-      .then(setCases)
-      .catch((err) => {
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) setNeedsAuth(true);
-        else setError('No se pudieron cargar los casos. Intenta de nuevo.');
-      })
-      .finally(() => setLoaded(true));
-  }, []);
 
   const results = useMemo(
     () => sortByUrgency(filterCases(cases, filters)),

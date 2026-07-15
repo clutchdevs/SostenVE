@@ -32,6 +32,7 @@ describe.skipIf(!dbAvailable)('coordinator actions (e2e)', () => {
   let app: Hono;
   let pg: Client;
   let signToken: typeof import('../../src/shared/security/jwt.js').signToken;
+  let getPresenceStore: typeof import('../../src/interfaces/http/v1/dependencies.js').getPresenceStore;
   const caseIds: string[] = [];
   const volunteerIds: string[] = [];
 
@@ -43,6 +44,7 @@ describe.skipIf(!dbAvailable)('coordinator actions (e2e)', () => {
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
     app = (await import('../../api/index.js')).app;
     signToken = (await import('../../src/shared/security/jwt.js')).signToken;
+    getPresenceStore = (await import('../../src/interfaces/http/v1/dependencies.js')).getPresenceStore;
     pg = new Client({ connectionString: DB_URL });
     await pg.connect();
   });
@@ -87,11 +89,14 @@ describe.skipIf(!dbAvailable)('coordinator actions (e2e)', () => {
     });
   }
 
-  it('lets a coordinator reassign a case to an active psychologist', async () => {
+  it('lets a coordinator reassign a case to an online psychologist', async () => {
     const coord = await seedVolunteer('coordinator');
     const psy = await seedVolunteer('psychologist');
     const caseId = await seedCase('pendiente');
     const token = await tokenFor(coord, 'coordinator');
+    // The target must be online/available (issue #130) or the reassignment is
+    // refused; mark them present through the same store the app uses.
+    await getPresenceStore().markOnline(psy, 300);
 
     const res = await authed(`/api/v1/cases/${caseId}/reassign`, token, {
       method: 'POST',
@@ -103,6 +108,19 @@ describe.skipIf(!dbAvailable)('coordinator actions (e2e)', () => {
     expect(row.rows[0]?.status).toBe('asignado');
     const assign = await pg.query('select volunteer_id from assignments where case_id = $1', [caseId]);
     expect(assign.rows[0]?.volunteer_id).toBe(psy);
+  });
+
+  it('rejects reassignment to an offline psychologist (409, SLA guard #130)', async () => {
+    const coord = await seedVolunteer('coordinator');
+    const offline = await seedVolunteer('psychologist');
+    const caseId = await seedCase('pendiente');
+    // Freshly seeded, never marked online → must be refused so the case isn't
+    // parked on someone absent while the SLA runs.
+    const res = await authed(`/api/v1/cases/${caseId}/reassign`, await tokenFor(coord, 'coordinator'), {
+      method: 'POST',
+      body: JSON.stringify({ voluntario_id: offline }),
+    });
+    expect(res.status).toBe(409);
   });
 
   it('rejects reassignment to a non-psychologist (400)', async () => {
