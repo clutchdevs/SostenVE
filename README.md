@@ -22,10 +22,14 @@ atención y registrar diagnóstico, notas clínicas y contacto de cada caso.
 - Ante **riesgo alto**: muestra de inmediato las líneas de crisis, antes e independientemente de toda
   asignación (fail-safe: se muestran aun con el backend caído).
 - **Asignación automática** por especialidad y **presencia en vivo** (solo asigna a
-  psicólogos `Online`); cola visible y honesta ante saturación, con **SLA de 10 min** y escalamiento.
-- **Panel de psicólogo** (solo casos propios; identidad del solicitante, notas y **cierre clínico
-  estructurado**; toggle de disponibilidad en vivo) y **panel de coordinador** (todos los casos,
-  prioridad de riesgo alto, reasignar/cerrar, notas de voluntario, presencia por psicólogo).
+  psicólogos `Online`); cola visible y honesta ante saturación, con **SLA de 10 min** y **escalamiento
+  event-driven** que, al vencer, **reasigna el caso a otro voluntario disponible** distinto del que no
+  aceptó. Al entrar en pausa con un caso no aceptado, ese caso vuelve a la cola.
+- **Panel de psicólogo** (solo casos propios; **identidad del solicitante revelada al aceptar** el caso
+  —antes se oculta el contacto—, sus **respuestas de intake** (síntomas + urgencia), notas y **cierre
+  clínico estructurado en minutos**; toggle de disponibilidad en vivo) y **panel de coordinador** (todos
+  los casos, prioridad de riesgo alto, **reasignar solo a psicólogos conectados**/cerrar, filtro
+  "Disponibles ahora", notas de voluntario, presencia por psicólogo).
 - **Registro de voluntarios validado contra el padrón real de la FPV**; alta automática
   (`cédula+FPV ∧ PAP → Activo`) con credenciales por correo. Coordinadores por **invitación tokenizada**.
 - **Panel de administración:** padrón de voluntarios, invitaciones de coordinador, líneas de crisis
@@ -48,8 +52,10 @@ atención y registrar diagnóstico, notas clínicas y contacto de cada caso.
 ## Arquitectura
 Aplicación web (PWA) **serverless**: frontend y backend en **Vercel** (backend como funciones
 `/api/*`, ADR-0009), base de datos **PostgreSQL gestionada en Supabase** (ADR-0002, aislada del
-cPanel de la Federación), y el **SLA de 10 min** resuelto con un **Vercel Cron Job** en vez de un
-proceso persistente. La **presencia en tiempo real** de los psicólogos usa **Upstash Redis** (REST,
+cPanel de la Federación), y el **SLA de 10 min** resuelto de forma **event-driven** (se dispara cuando un
+psicólogo se pone en línea y **reasigna el caso a otro voluntario disponible**), con el **Vercel Cron**
+(1 vez/día en el plan free) como respaldo — sin proceso persistente. La **presencia en tiempo real** de
+los psicólogos usa **Upstash Redis** (REST,
 sin proceso persistente; en dev/tests hay un adaptador en memoria — ADR-0014). La validación de
 voluntarios llama al **padrón real de la FPV** por HTTP tras un adaptador con Circuit Breaker
 (ADR-0013). El triage sigue el PRD de la Federación ("Sistema PPV 2026", ADR-0010).
@@ -90,16 +96,47 @@ docs/
   05-deployment/      Guía de despliegue (pendiente de ejecutar el go-live)
   06-monitoring/      Observabilidad: métricas de SLA y alertas
   architecture/     Diagramas C4 (Mermaid)
+  asciidoc/         Documentación técnica oficial (AsciiDoc → PDF, ClutchDevs)
 CHANGELOG.md  LICENSE  README.md
 ```
+
+### Índice de documentación
+Todo en un solo lugar. Rutas relativas a la raíz del repo.
+
+- **Documento oficial (PDF):** [`docs/asciidoc/`](docs/asciidoc/) — fuente AsciiDoc + tema; se genera
+  con [`docs/asciidoc/build.sh`](docs/asciidoc/build.sh). Cubre arquitectura, integraciones, Upstash,
+  el modelo **event-driven** (sin broker), API, seguridad, despliegue y AI-DLC.
+- **00 · Project:** [charter](docs/00-project/charter.md) · [glosario](docs/00-project/glossary.md) ·
+  [clasificación de datos](docs/00-project/data-classification.md) ·
+  [decisiones de infraestructura](docs/00-project/decisiones-infraestructura.md) ·
+  [ADRs 0001–0016](docs/00-project/adr/)
+- **01 · Requirements:** [flujo central](docs/01-requirements/flujo-central.md) ·
+  [cobertura y brechas vs. PRD FPV](docs/01-requirements/prd-cobertura-y-brechas.md) ·
+  [decisiones de interpretación](docs/01-requirements/decisiones-interpretacion.md)
+- **02 · Design:** [arquitectura](docs/02-design/architecture.md) ·
+  [contratos de API](docs/02-design/api-contracts.md) ·
+  [OpenAPI (diseño)](docs/02-design/openapi.yaml) ·
+  [threat model](docs/02-design/threat-model.md) ·
+  [diagramas C4](docs/architecture/)
+- **03 · Implementation / 04 · Testing:** [backlog](docs/03-implementation/backlog.md) ·
+  [manual de usuario](docs/04-testing/manual-de-usuario.md) ·
+  [datos de prueba](docs/04-testing/seed-data.md) ·
+  [estrategia de pruebas](docs/04-testing/README.md)
+- **05 · Deployment / 06 · Monitoring:** [guía de despliegue](docs/05-deployment/guia-de-despliegue.md) ·
+  [ambiente provisional](docs/05-deployment/plan-ambiente-provisional.md) ·
+  [plan de instalación](docs/05-deployment/plan-de-instalacion.md) ·
+  [observabilidad](docs/06-monitoring/README.md)
+- **API viva:** `GET /api/v1/openapi.json` (OpenAPI 3.1) · Swagger UI en `GET /api/v1/docs` — **fuente
+  de verdad** del contrato, generada desde los esquemas Zod.
+- **Historial:** [CHANGELOG.md](CHANGELOG.md)
 
 ## Estado
 | Fase | Gate | Estado |
 |---|---|---|
 | 00 · Project | — | ✅ Charter, glosario, clasificación de datos |
 | 01 · Requirements | Gate 0 | ✅ PRD del flujo central con escenarios de riesgo |
-| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0014, contrato OpenAPI |
-| 03 · Implementation | Gate 2 | ✅ Módulos 1-4 (online): intake offline-first + consentimiento + PAP, triage, asignación por presencia/región/especialidad + SLA, portales de psicólogo/coordinador/admin, registro validado contra el padrón real de la FPV, presencia en vivo y seguridad de sesión. Módulo 4 offline-first (SQLCipher) pendiente de decisión de alcance |
+| 02 · Design | Gate 1 | ✅ C4, threat model STRIDE/DREAD, ADRs 0001-0016, contrato OpenAPI |
+| 03 · Implementation | Gate 2 | ✅ Módulos 1-4 (online): intake offline-first + consentimiento + PAP, triage, asignación por presencia/especialidad + **SLA event-driven** (reasigna a otro voluntario al vencer), portales de psicólogo/coordinador/admin, registro validado contra el padrón real de la FPV, presencia en vivo y seguridad de sesión. Incluye la ronda de QA de la FPV 2026-07 (#125–#131, #148, #150) y ajustes de la Federación (#158, #159). Módulo 4 offline-first (SQLCipher) pendiente de decisión de alcance |
 | 04 · Testing | Gate 3 | ✅ Tests de unidad/integración (API), Playwright e2e (incl. fail-safe de crisis) y carga con autocannon |
 | 05 · Deployment | Gate 4 | ⬜ Guía escrita; go-live pendiente |
 | 06 · Monitoring | Gate 5 | 🟡 Métricas de SLA + alertas implementadas; dashboards/observabilidad externa pendientes |

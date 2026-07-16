@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch, ApiError } from '../../lib/api-client';
+import { DATA_REFRESH_INTERVAL_MS } from '../../lib/config';
 import type { CaseSummary } from '../../lib/types';
 import { usePresence } from './presence-context';
 
 /** Default poll cadence — mirrors the coordinator live board so the app feels uniform. */
-export const CASES_REFRESH_MS = 15_000;
+export const CASES_REFRESH_MS = DATA_REFRESH_INTERVAL_MS;
 
 /**
  * Loads the psychologist's cases and keeps them fresh with a lightweight poll, so a

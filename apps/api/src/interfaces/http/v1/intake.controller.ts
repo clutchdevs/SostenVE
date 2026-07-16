@@ -26,12 +26,11 @@ import {
   type TriageInitialBody,
 } from './schemas.js';
 
-const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
-
 /** Intake routes (Likert triage + red/green branch). Rate-limited per IP. */
 export function createIntakeRouter(): Hono {
   const router = new Hono();
-  const { security } = getConfig();
+  const { security, intake } = getConfig();
+  const idempotencyTtlMs = intake.idempotency_ttl_hours * 60 * 60 * 1000;
 
   router.use(
     '*',
@@ -58,7 +57,7 @@ export function createIntakeRouter(): Hono {
     const result = await withIdempotency<IntakeCaseResult>(
       idempotency,
       idempotencyKey,
-      IDEMPOTENCY_TTL_MS,
+      idempotencyTtlMs,
       () =>
         submitRedBranch(
           {

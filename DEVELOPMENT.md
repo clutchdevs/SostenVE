@@ -91,7 +91,9 @@ Detalle de estrategia, checklist del threat model y plan de piloto: [`docs/04-te
    se muestran (caché/respaldo embebido).
 4. **Personal**: crea un voluntario con `POST /api/v1/volunteers/register`, inicia sesión en `/login`,
    revisa el **portal del psicólogo** y el **panel del coordinador**.
-5. **Asignación/SLA**: invoca el cron `POST /api/v1/cron/check-sla` con el header `X-Cron-Secret`.
+5. **Asignación/SLA**: la asignación es **orientada a eventos** — se dispara al crear un caso y cuando
+   un psicólogo se pone en línea (ver `docs/00-project/adr/0015-sla-event-driven-cron-diario.md`). Para
+   forzar el barrido manualmente, invoca `POST /api/v1/cron/check-sla` con el header `X-Cron-Secret`.
 
 ## Rutas de la aplicación web
 | Ruta | Para quién | Descripción | Sesión |
@@ -145,3 +147,7 @@ Detalle de estrategia, checklist del threat model y plan de piloto: [`docs/04-te
   alternativa sin Docker.
 - **La API responde 500 "Missing env"**: faltan llaves de Supabase/secretos. Con Docker vienen por
   defecto; sin Docker, revisa tu `.env`.
+- **El login falla con HTTP 000 / la API deja de responder tras correr `npm` en el host**: correr
+  `npm`/comandos de workspace desde el host puede reescribir el `node_modules` compartido y tumbar el
+  watch (`tsx`) del contenedor de la API. Solución: `docker compose restart api`; prefiere `npx` desde
+  el directorio de la app (`apps/api`) en vez de comandos de workspace desde la raíz.

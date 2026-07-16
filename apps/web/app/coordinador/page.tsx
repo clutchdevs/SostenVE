@@ -8,9 +8,10 @@ import { CaseQueueTable } from '../../src/features/coordinator/case-queue-table'
 import { CaseActionModal } from '../../src/features/coordinator/case-action-modal';
 import { sortForBoard, summarizeOps } from '../../src/features/coordinator/operations';
 import { apiFetch, ApiError } from '../../src/lib/api-client';
+import { DATA_REFRESH_INTERVAL_MS } from '../../src/lib/config';
 import type { CaseSummary, VolunteerView } from '../../src/lib/types';
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = DATA_REFRESH_INTERVAL_MS;
 
 interface CaseAction {
   caso: CaseSummary;

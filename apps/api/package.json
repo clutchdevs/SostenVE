@@ -1,6 +1,6 @@
 {
   "name": "@ppv/api",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "PPV backend — serverless Hono API on Vercel + Supabase",

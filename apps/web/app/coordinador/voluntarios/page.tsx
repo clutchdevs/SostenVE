@@ -7,6 +7,7 @@ import { ListSkeleton } from '../../../src/components/skeleton';
 import { VolunteerCard } from '../../../src/features/coordinator/volunteer-card';
 import { filterVolunteers } from '../../../src/features/admin/volunteers';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
+import { DATA_REFRESH_INTERVAL_MS } from '../../../src/lib/config';
 import type { VolunteerStatus, VolunteerView } from '../../../src/lib/types';
 
 const STATUS_TABS: { key: VolunteerStatus | 'all'; label: string }[] = [
@@ -45,7 +46,7 @@ export default function CoordinatorVolunteersPage() {
   // off, the one-time load is enough and there is nothing time-sensitive to re-fetch.
   useEffect(() => {
     if (!onlineOnly) return;
-    const timer = setInterval(() => void load(), 15_000);
+    const timer = setInterval(() => void load(), DATA_REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [onlineOnly, load]);
 

@@ -13,6 +13,7 @@ import { CaseIdentityCard } from '../../../../src/features/psychologist-portal/c
 import { CaseDetailSkeleton } from '../../../../src/features/psychologist-portal/case-skeletons';
 import { ClosureSummary } from '../../../../src/features/psychologist-portal/closure-summary';
 import { apiFetch, ApiError } from '../../../../src/lib/api-client';
+import { DATA_REFRESH_INTERVAL_MS } from '../../../../src/lib/config';
 import type {
   CaseClosureView,
   CaseContactView,
@@ -64,7 +65,7 @@ export default function CaseDetailPage() {
   // new note) surfaces without a manual reload (#131). Silent, so it never wipes a
   // message or disturbs the closure form being filled in.
   useEffect(() => {
-    const timer = setInterval(() => load({ silent: true }), 15_000);
+    const timer = setInterval(() => load({ silent: true }), DATA_REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [load]);
 

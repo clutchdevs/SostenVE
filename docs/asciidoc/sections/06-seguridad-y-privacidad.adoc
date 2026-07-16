@@ -1,0 +1,42 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[seguridad]]
+== Seguridad y privacidad
+
+Los datos clínicos son *información restringida*. El modelo de responsabilidad, el cifrado, la
+seudonimización y la auditoría se diseñaron según los NFR de la FPV. El análisis STRIDE/DREAD
+completo vive en `docs/02-design/threat-model.md` (ver <<referencias>>).
+
+=== Responsabilidad de los datos
+
+La *FPV es la responsable y dueña de los datos* (ADR-0003). ClutchDevs es el proveedor de la
+plataforma, no operador de los datos. Las decisiones de retención y políticas las define la FPV.
+
+=== Controles implementados
+
+[cols="1,2",options="header"]
+|===
+| Control | Implementación
+| Cifrado en tránsito | HTTPS/TLS extremo a extremo (frontend↔backend↔Supabase).
+| Cifrado en reposo | Campos clínicos cifrados *por columna* (ADR-0004).
+| Seudonimización de PII | Tabla separada + identificador determinístico (HMAC/hash con salt) — el `pseudonym_id` del caso no expone el teléfono (ADR-0011).
+| Contacto oculto | El nombre y contacto del solicitante solo se revelan al psicólogo *tras aceptar* el caso.
+| Control de acceso por rol | RLS en Supabase; un psicólogo solo ve/escribe notas de *sus* casos.
+| Auditoría inmutable | Bitácora de accesos a datos clínicos, inmodificable (ADR-0012).
+| Seguridad de sesión | Cambio/reseteo de contraseña, expiración por inactividad, invalidación de sesiones duplicadas (bump de `token_version`).
+| Endpoint de cron | Protegido por *secreto compartido* (`CRON_SECRET`), no por auth de usuario.
+|===
+
+=== Observabilidad de seguridad
+
+* Métricas de *SLA por nivel de riesgo*.
+* *Alerta crítica* cuando un caso de riesgo alto se escala sin ningún coordinador en línea
+  (`high_risk_escalated_no_coordinator`).
+* El manejador central de errores *loguea los 500 inesperados* (sin filtrar detalles al cliente).
+
+[WARNING]
+====
+*Deuda técnica de cumplimiento (MVP):* el plan gratuito de Supabase no incluye respaldos
+automáticos, por lo que el MVP *no cumple el NFR 6.2* (respaldo cada 6 h) mientras se use ese plan.
+Debe resolverse antes de operar con datos clínicos reales a escala (ADR-0002).
+====

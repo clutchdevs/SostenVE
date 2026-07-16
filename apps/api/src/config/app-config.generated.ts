@@ -12,7 +12,10 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "sla": {
       "high_risk_assignment_minutes": 10,
-      "cron_check_interval_minutes": 2
+      "warning_threshold_minutes": 5
+    },
+    "intake": {
+      "idempotency_ttl_hours": 24
     },
     "crisis_lines": {
       "routing": [
@@ -155,6 +158,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
       "provider": "memory",
       "heartbeat_ttl_seconds": 130,
       "heartbeat_interval_seconds": 60
+    },
+    "ui": {
+      "data_refresh_seconds": 15
     },
     "rbac": {
       "roles": [
@@ -200,7 +206,10 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "sla": {
       "high_risk_assignment_minutes": 10,
-      "cron_check_interval_minutes": 2
+      "warning_threshold_minutes": 5
+    },
+    "intake": {
+      "idempotency_ttl_hours": 24
     },
     "crisis_lines": {
       "routing": [
@@ -344,6 +353,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
       "heartbeat_ttl_seconds": 130,
       "heartbeat_interval_seconds": 60
     },
+    "ui": {
+      "data_refresh_seconds": 15
+    },
     "rbac": {
       "roles": [
         "requester",
@@ -388,7 +400,10 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "sla": {
       "high_risk_assignment_minutes": 10,
-      "cron_check_interval_minutes": 2
+      "warning_threshold_minutes": 5
+    },
+    "intake": {
+      "idempotency_ttl_hours": 24
     },
     "crisis_lines": {
       "routing": [
@@ -532,6 +547,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
       "heartbeat_ttl_seconds": 130,
       "heartbeat_interval_seconds": 60
     },
+    "ui": {
+      "data_refresh_seconds": 15
+    },
     "rbac": {
       "roles": [
         "requester",
@@ -576,7 +594,10 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "sla": {
       "high_risk_assignment_minutes": 10,
-      "cron_check_interval_minutes": 2
+      "warning_threshold_minutes": 5
+    },
+    "intake": {
+      "idempotency_ttl_hours": 24
     },
     "crisis_lines": {
       "routing": [
@@ -719,6 +740,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
       "provider": "upstash",
       "heartbeat_ttl_seconds": 130,
       "heartbeat_interval_seconds": 60
+    },
+    "ui": {
+      "data_refresh_seconds": 15
     },
     "rbac": {
       "roles": [

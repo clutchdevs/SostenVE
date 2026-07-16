@@ -1,0 +1,66 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[ai-dlc]]
+== Metodología: AI-DLC
+
+PPV se documenta y construye con *AI-DLC* (AI Development Life Cycle): un ciclo de vida por *fases*
+con *gates* (compuertas) de calidad entre ellas, donde la documentación es *markdown versionable, en
+español*, y cada fase produce artefactos revisables antes de avanzar. El objetivo es que el diseño,
+las decisiones y la trazabilidad frente al PRD de la FPV queden explícitos y auditables, no
+implícitos en el código.
+
+=== Fases y su correspondencia en el repositorio
+
+Cada fase tiene su carpeta bajo `docs/`:
+
+[cols="1,2,2",options="header"]
+|===
+| Fase | Carpeta | Contenido
+| 00 · Project | `docs/00-project/` | Charter, glosario, clasificación de datos, *ADRs* y decisiones de infraestructura.
+| 01 · Requirements | `docs/01-requirements/` | PRD del flujo central, cobertura y brechas frente al PRD de la FPV.
+| 02 · Design | `docs/02-design/` | Arquitectura, threat model STRIDE/DREAD, contratos de API y OpenAPI.
+| 03 · Implementation | `docs/03-implementation/` | Backlog de implementación y estado.
+| 04 · Testing | `docs/04-testing/` | Estrategia de pruebas, manual de usuario, checklist del threat model, plan piloto.
+| 05 · Deployment | `docs/05-deployment/` | Guía de despliegue, plan de ambiente provisional, plan de instalación.
+| 06 · Monitoring | `docs/06-monitoring/` | Observabilidad: métricas de SLA y alertas.
+| — · Diagramas | `docs/architecture/` | Diagramas C4 (Mermaid), reutilizados en este documento.
+|===
+
+=== Gates y plantillas
+
+La carpeta `.ai-dlc/` en la raíz contiene las *compuertas* y *plantillas* que gobiernan el avance
+entre fases:
+
+[cols="1,2",options="header"]
+|===
+| Artefacto | Propósito
+| `.ai-dlc/gates/gate-0-checklist.md` | Compuerta de *requisitos* (fase 01 → 02): el PRD está completo y con escenarios de riesgo.
+| `.ai-dlc/gates/gate-1-checklist.md` | Compuerta de *diseño* (fase 02 → 03): C4, threat model, ADRs y contrato listos.
+| `.ai-dlc/templates/adr-template.md` | Plantilla de *Architecture Decision Record*.
+| `.ai-dlc/templates/prd-template.md` | Plantilla del PRD.
+| `.ai-dlc/templates/threat-model-template.md` | Plantilla del modelo de amenazas.
+|===
+
+=== Architecture Decision Records (ADRs)
+
+Las decisiones arquitectónicas se registran como *ADRs* numerados en `docs/00-project/adr/`. Los más
+relevantes para entender cómo está compuesto el sistema:
+
+[cols="1,3",options="header"]
+|===
+| ADR | Decisión
+| 0001 | Stack de backend (Node.js/TypeScript).
+| 0002 | PostgreSQL gestionado en Supabase, aislado del cPanel de la FPV.
+| 0003 | La FPV es responsable y dueña de los datos.
+| 0004 | Cifrado de datos clínicos (tránsito + reposo por columna).
+| 0006 / 0009 | Hosting de bajo costo · despliegue serverless en Vercel.
+| 0008 | Cola con priorización por riesgo.
+| 0011 / 0012 | Seudonimización de PII · auditoría inmutable.
+| 0013 | Validación contra el padrón FPV con Circuit Breaker.
+| 0014 | Presencia en tiempo real vía `PresenceStore` (Upstash + fallback en memoria).
+| *0015* | *SLA orientado a eventos, con el Vercel Cron diario como respaldo* (ver <<event-driven>>).
+| *0016* | *Idempotencia del intake: un único caso abierto por persona* (ver <<requisitos>>).
+|===
+
+El estado de cada gate y el detalle por fase se resumen en el `README.md` del repositorio (tabla de
+*Estado*) y en el <<referencias, índice de documentación>>.

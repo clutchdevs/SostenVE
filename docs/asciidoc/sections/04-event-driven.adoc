@@ -1,0 +1,82 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[event-driven]]
+== Arquitectura orientada a eventos (sin broker de mensajería)
+
+Esta es una de las decisiones de diseño más importantes de PPV y la que más suele sorprender:
+*el sistema es orientado a eventos, pero no usa RabbitMQ, Kafka ni ningún broker de mensajería*.
+Esta sección explica por qué y con qué se construyó, para que quede claro cómo está compuesto.
+
+=== El problema: un SLA de minutos sobre infraestructura de "un cron al día"
+
+El requisito (RF-3.3) exige un *SLA de aceptación*: si un caso de riesgo alto no es aceptado por el
+psicólogo asignado dentro de la ventana (10 min), debe *escalarse* y reasignarse, no quedarse
+esperando indefinidamente a alguien ausente.
+
+La solución "de manual" sería un proceso que barra la base de datos cada 1–2 minutos. Pero PPV corre
+*serverless en el plan gratuito de Vercel*, que:
+
+* *no* permite procesos persistentes (no hay dónde correr un worker 24/7), y
+* *solo permite un Cron Job, con una única corrida al día*.
+
+Un barrido diario es insuficiente como *único* mecanismo para un SLA de minutos, y no hay
+presupuesto para un broker gestionado ni para un servidor que mantener.
+
+=== La solución: el "evento" es la transición de presencia
+
+En lugar de un broker, PPV aprovecha una señal que *ya ocurre de todas formas*: el *latido de
+presencia* de los psicólogos (ver <<integraciones>>). El razonamiento es simple: un caso encolado o
+vencido solo puede avanzar cuando *aparece capacidad*, es decir, cuando un psicólogo se pone en
+línea. Ese es exactamente el momento en que conviene actuar.
+
+Cuando el backend detecta que un latido representa una *transición offline→online* (lo sabe por el
+`GET` del valor previo en Redis), ejecuta `processQueue` de forma *best-effort* (un fallo aquí nunca
+rompe el latido ni el intake). `processQueue`:
+
+. *Asigna* los casos pendientes al psicólogo adecuado (especialidad + presencia + balanceo de carga).
+. *Escala* los casos de riesgo alto cuyo SLA venció sin aceptación (los devuelve a la cola).
+. *Reasigna* cada caso escalado a *otro voluntario disponible* —distinto del que no aceptó— y
+  *renueva la ventana de SLA*.
+
+.Flujo orientado a eventos — del latido a la (re)asignación
+image::arch-event-driven.png[Secuencia event-driven,align=center,pdfwidth=6.6in]
+
+=== Otros disparadores del mismo motor
+
+El mismo `processQueue` (o parte de él) se dispara ante otros *eventos de dominio*, no solo la
+conexión:
+
+[cols="1,2",options="header"]
+|===
+| Evento | Efecto
+| Se *crea un caso* (intake) | Intenta asignarlo de inmediato (best-effort).
+| Un psicólogo *se pone online* (transición) | Asigna pendientes + escala/reasigna vencidos.
+| Un psicólogo *entra en pausa* con un caso no aceptado | Ese caso vuelve a la cola al instante (no espera al SLA).
+| *Vercel Cron diario* (`0 0 * * *`) | Respaldo: corre el mismo barrido una vez al día por si hubo un tramo sin conexiones.
+|===
+
+=== Por qué no un broker (RabbitMQ / Kafka / SQS)
+
+[cols="1,3",options="header"]
+|===
+| Motivo | Detalle
+| Costo y operación | Un broker gestionado es un servicio más que pagar y mantener; contradice el objetivo de bajo costo y "sin servidor que mantener" (ADR-0006).
+| Encaja con serverless | No hay un consumidor persistente que escuche una cola; las funciones viven por request. La presencia (que ya existe) da el pulso.
+| Suficiente para el patrón de uso | Los voluntarios entran y salen a lo largo del día; cada conexión es una oportunidad de avanzar la cola. El cron diario cubre los huecos.
+| Simplicidad | Menos piezas móviles = menos superficie de fallo para un equipo pequeño.
+|===
+
+=== Consistencia y anti-duplicados
+
+Como varios disparadores pueden coincidir (dos psicólogos que se conectan a la vez, o el cron y una
+conexión), cada caso pasa por un *claim atómico* a nivel de fila
+(`UPDATE … WHERE id = ? AND status = 'pendiente'`). Quien pierde el claim simplemente *salta* el
+caso, de modo que un caso nunca se asigna dos veces. La reasignación por SLA *excluye* al asignado
+previo, así un caso nunca vuelve al psicólogo que no lo aceptó.
+
+[NOTE]
+====
+*Límite aceptado:* si durante un tramo *ningún* psicólogo se conecta, el escalamiento efectivo
+espera al cron diario. Es un compromiso consciente dado el límite del plan gratuito; se puede
+reforzar con un cron más frecuente al pasar a Vercel Pro (ADR-0015).
+====

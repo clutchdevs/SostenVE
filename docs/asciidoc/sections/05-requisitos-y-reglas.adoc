@@ -1,0 +1,70 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[requisitos]]
+== Requisitos y reglas de negocio
+
+Esta sección resume el flujo central y las reglas de negocio *implementadas*. El detalle completo y
+la trazabilidad frente al PRD de la FPV están en `docs/01-requirements/` (ver <<referencias>>).
+
+=== Flujo central
+
+. *Solicitud (intake):* el solicitante llena el formulario. Es *offline-first*: se guarda el
+  borrador y se reintenta al recuperar conexión. Se captura la *edad* (obligatoria), el *teléfono*
+  venezolano (`+58`), el tipo de solicitante y las respuestas de síntomas/urgencia.
+. *Triage:* clasificación determinística del riesgo (alto / moderado / seguimiento).
+. *Derivación de crisis:* si el riesgo es alto, se muestran las líneas de crisis *de inmediato*,
+  antes e independientemente de cualquier asignación.
+. *Asignación / cola:* riesgo alto primero; el resto por orden de llegada dentro de su categoría.
+  Solo se asigna a psicólogos en línea, con balanceo de carga.
+. *SLA y escalamiento:* 10 min para aceptar un caso de riesgo alto; al vencer, se escala y
+  *reasigna a otro voluntario disponible* (orientado a eventos, ver <<event-driven>>).
+. *Atención y cierre:* el psicólogo acepta, atiende, registra notas y cierra con un formulario
+  clínico estructurado.
+
+=== Reglas de negocio (invariantes)
+
+* Las *líneas de crisis nunca dependen* de que haya un voluntario disponible (principio no negociable
+  del charter). Se cachean en el cliente y se muestran aun con el backend caído.
+* *Riesgo alto siempre primero*; el resto FIFO dentro de su categoría.
+* El sistema *comunica honestamente la saturación*; no promete tiempos de respuesta.
+* *Un caso abierto por persona:* el intake es idempotente. Reenvíos del formulario resuelven al mismo
+  caso; una persona no puede tener dos casos abiertos a la vez, pero sí reabrir tras un cierre
+  (ADR-0016).
+* *El contacto del solicitante se oculta hasta que el psicólogo acepta el caso* (tanto en el listado
+  como en el detalle).
+* *Solo se asigna a psicólogos en línea;* si un psicólogo entra en pausa con un caso no aceptado, ese
+  caso vuelve a la cola.
+
+=== Detalles del intake
+
+[cols="1,2",options="header"]
+|===
+| Campo | Regla
+| Edad | Obligatoria. Un menor (`< 18`) se rutea a un psicólogo con especialidad infantil aunque el síntoma no sea un tag de infancia.
+| Teléfono | Móvil venezolano (`0412/0414/0416/0424/0426` + 7 dígitos, tolera `+58`). Es la clave de contacto e identidad del caso (base del `pseudonym_id`).
+| Tipo de solicitante | Obligatorio (víctima, familiar, voluntario/rescatista…).
+| Síntomas / urgencia | Tags clínicos + respuesta de urgencia (Likert); alimentan el score de triage.
+|===
+
+=== Detalles del cierre clínico
+
+[cols="1,2",options="header"]
+|===
+| Campo | Regla
+| Tiempo de atención | En *minutos enteros* (≥ 1). Antes se registraba en horas decimales (#131).
+| Destino de derivación | *Multiselección* — uno o varios destinos. Se eliminó la opción combinada "Psicología y Psiquiatría" (#158).
+| Notas / diagnóstico | Contenido clínico cifrado por columna.
+|===
+
+=== Decisiones de alcance frente al PRD de la FPV
+
+Decisiones *explícitas y documentadas* (no omisiones): el cronograma de la FPV las ubica dentro de su
+MVP, pero se posponen por depender de terceros fuera del control del equipo.
+
+[cols="2,1,2",options="header"]
+|===
+| Ítem | Estado | Por qué
+| Webhook de Rescate Activo (RF-3.4) | Fase 3, fuera del MVP | Depende de integración institucional con Defensa Civil / Bomberos.
+| SMS de dos vías (RF-5.1) | Fuera del MVP | Requiere pasarela SMS (costo + contrato + integración).
+| Redes LoRa / Meshtastic (RF-5.2) | Fuera del MVP | Ya excluido por la FPV; sin discrepancia.
+|===

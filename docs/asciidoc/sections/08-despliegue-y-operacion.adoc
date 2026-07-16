@@ -1,0 +1,362 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[despliegue]]
+== Despliegue, configuración y operación
+
+=== Topología de despliegue
+
+[cols="1,2",options="header"]
+|===
+| Pieza | Dónde
+| Frontend (`apps/web`) | Proyecto Vercel (Next.js).
+| Backend (`apps/api`) | Proyecto Vercel (Hono como funciones serverless; entry `apps/api/api/index.ts`).
+| Base de datos | Proyecto Supabase (PostgreSQL con RLS, migraciones en `supabase/`).
+| Presencia | Upstash Redis (REST) — `presence.provider: upstash` + credenciales.
+| Cron | *Vercel Cron diario* (`0 0 * * *`) → `GET /api/v1/cron/check-sla`, respaldo del escalado event-driven (ver <<event-driven>>). Protegido por `CRON_SECRET`.
+| Correo | Proveedor SMTP (Gmail / Brevo / SendGrid…).
+| Padrón FPV | Servicio externo de la FPV para validar cédula + nº FPV.
+|===
+
+La guía paso a paso vive en `docs/05-deployment/` (ver <<referencias>>).
+
+[[env-vars]]
+=== Variables de entorno
+
+Los *secretos* y los valores *por entorno* viven en `.env` (git-ignored) o en la configuración de
+Vercel/Supabase; *nunca* se commitean. `.env.example` documenta el conjunto con valores de dev listos
+para usar. Los valores *no secretos* de la app viven en `config.yml` (ver <<config>>).
+
+.Backend (`apps/api`)
+[cols="2,3,1",options="header"]
+|===
+| Variable | Uso | Secreto
+| `SUPABASE_URL` | URL del proyecto Supabase | No
+| `SUPABASE_SERVICE_ROLE_KEY` | Clave service-role (acceso del backend a Supabase) | *Sí*
+| `SUPABASE_ANON_KEY` | Clave anónima de Supabase (cuando aplica) | Parcial
+| `DATABASE_URL` | Conexión Postgres (pooler TLS) | *Sí*
+| `TEST_DATABASE_URL` | Postgres para la suite de integración | *Sí*
+| `JWT_SECRET` | Firma de los tokens de sesión | *Sí*
+| `ENCRYPTION_KEY` | Cifrado por columna de los campos clínicos (ADR-0004) | *Sí*
+| `PSEUDONYMIZATION_SALT` | Salt del HMAC del `pseudonym_id` (ADR-0011) | *Sí*
+| `CRON_SECRET` | Protege `GET/POST /cron/check-sla` | *Sí*
+| `EMAIL_PROVIDER` | `log` \| `smtp` — override del proveedor de correo | No
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` / `SMTP_FROM` | Servidor SMTP y remitente | Password *Sí*
+| `FPV_API_TOKEN` | Autentica contra el padrón de la FPV (ADR-0013) | *Sí*
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Presencia en vivo (producción, ADR-0014) | Token *Sí*
+| `CORS_ORIGINS` | Allow-list CORS (coma-separada); override de la config | No
+| `WEB_BASE_URL` | Rebasa el *origen* de las URLs de correo (login/reset/invitación) | No
+| `NODE_ENV` | Selecciona la sección de `config.yml` (`development`/`test`/`production`) | No
+| `PORT` | Puerto del servidor local (dev sin Docker) | No
+|===
+
+.Frontend (`apps/web`)
+[cols="2,3",options="header"]
+|===
+| Variable | Uso
+| `NEXT_PUBLIC_API_URL` | URL base del backend que consume el frontend
+| `E2E_BASE_URL` / `E2E_STAFF_EMAIL` / `E2E_STAFF_PASSWORD` / `CI` | Solo pruebas Playwright
+|===
+
+[[gen-secretos]]
+==== Generación de secretos
+
+Los secretos de producción se generan con `npm run gen:secrets` (`scripts/gen-secrets.mjs`), que
+imprime valores aleatorios frescos para pegar en el host (Vercel → *Environment Variables*); *no se
+commitean*. Cada corrida produce un set nuevo:
+
+[cols="1,2",options="header"]
+|===
+| Variable | Cómo se genera
+| `JWT_SECRET` | `base64(48 bytes)` — firma de tokens (ADR-0005).
+| `ENCRYPTION_KEY` | `base64(32 bytes)` — AES-256-GCM de datos clínicos; debe decodificar a 32 bytes (ADR-0004).
+| `PSEUDONYMIZATION_SALT` | `base64(32 bytes)` — HMAC del `pseudonym_id`; *rotarla rompe los seudónimos* (ADR-0011).
+| `CRON_SECRET` | `hex(32 bytes)` — equivalente a `openssl rand -hex 32` (ADR-0009).
+|===
+
+==== Secreto del cron (`CRON_SECRET`)
+
+El endpoint `GET/POST /cron/check-sla` está protegido por un *secreto compartido* (no auth de
+usuario), verificado por el middleware `cron-auth`:
+
+* *Dónde se configura:* en `.env` para dev (`.env.example` trae un placeholder) y en las *Environment
+  Variables de Vercel* por entorno para staging/producción.
+* *Cómo se valida:* el middleware compara contra `process.env.CRON_SECRET`. Acepta el secreto por
+  `Authorization: Bearer <secret>` *o* por `X-Cron-Secret: <secret>`. Si no coincide → `401`; si la
+  env var falta → error de arranque del handler.
+* *Cómo lo envía Vercel:* `vercel.json` solo declara `path` + `schedule`; *Vercel Cron inyecta
+  automáticamente* `Authorization: Bearer <CRON_SECRET>` cuando la env var está seteada en el
+  proyecto. Para invocarlo a mano, se envía ese header (o `X-Cron-Secret`).
+
+[[config]]
+=== Configuración de la aplicación (`config.yml`)
+
+Todo lo que *no* es secreto y *no* cambia por despliegue vive versionado en
+`apps/api/config/app.config.yml`: parámetros de negocio, textos oficiales de la FPV, umbrales y
+límites. La idea es tener *un solo lugar* con los parámetros de la aplicación, revisables en el repo,
+en vez de dispersarlos ("quemarlos") por el código.
+
+==== Fuente vs. artefacto de runtime
+
+La configuración vive en *dos* archivos con roles distintos —es una relación *fuente → compilado*
+(como `.ts` → `.js` o SCSS → CSS), *no* una duplicación:
+
+[cols="2,2,1,1",options="header"]
+|===
+| Archivo | Rol | ¿Se edita a mano? | ¿Lo carga el runtime?
+| `apps/api/config/app.config.yml` | *Fuente de verdad* (legible, con comentarios y anclas por entorno) | *Sí — solo este* | No
+| `apps/api/src/config/app-config.generated.ts` | *Artefacto* horneado por el build | Nunca | *Sí — este*
+|===
+
+*Por qué existen los dos (y por qué se commitean ambos):* en Vercel serverless *no se pueden leer
+archivos del disco* de forma fiable en runtime (fallaba con _"Could not locate config/app.config.yml"_).
+La solución fue "hornear" el YAML en un *módulo TypeScript* que el bundler siempre incluye en la
+función. Así, el YAML queda como la fuente que se mantiene y el generado es *lo que realmente se
+carga*. El generado lleva un banner _"AUTO-GENERATED… Do NOT edit by hand"_ y un test valida que ambos
+estén en sync. Borrar el YAML no rompería la ejecución (usa el generado), pero se perdería la fuente
+editable: por eso el YAML es *imprescindible* y el generado nunca se edita a mano.
+
+==== Cómo se carga y se construye
+
+. Se *edita* el YAML (`apps/api/config/app.config.yml`).
+. Se ejecuta `npm run config:build` (`scripts/build-config.mjs`), que "hornea" el YAML en un módulo
+  TypeScript `apps/api/src/config/app-config.generated.ts`. Esto es necesario porque en Vercel
+  serverless *no se leen archivos del disco en runtime*; el módulo generado se incluye en el bundle.
+  Un test valida que YAML y generado estén en sync.
+. El *loader* (`apps/api/src/config`) carga el módulo *una vez* (singleton), selecciona la sección
+  según `NODE_ENV` y la *valida con Zod*. Ningún módulo lee el YAML directamente.
+. Los *secretos* (`.env`) se mantienen *aparte*; algunas variables de entorno *sobrescriben* valores
+  de la config (ver más abajo).
+
+==== Estructura: `default` + secciones por entorno
+
+El YAML usa *anclas y merge de YAML* (`<<: *default`): hay un bloque `default` con toda la
+configuración y tres secciones que heredan y sobrescriben lo justo:
+
+[cols="1,3",options="header"]
+|===
+| Sección | Qué cambia respecto a `default`
+| `development` | Nombre "PPV (dev)"; usa el padrón FPV *real* (`fpv.verifier: http`).
+| `test` | Usa el verificador FPV *dummy* (determinista, sin red) — `vitest` corre con `NODE_ENV=test`.
+| `production` | Correo por `smtp`, presencia por `upstash`; URLs y credenciales se completan por entorno.
+|===
+
+==== Qué contiene (principales bloques)
+
+[cols="1,3",options="header"]
+|===
+| Bloque | Contenido
+| `app` | Nombre y locale (`es-VE`).
+| `triage` | Umbrales del triage (p. ej. `orange_tags_threshold_for_escalation: 3`, opción Likert crítica).
+| `sla` | `high_risk_assignment_minutes: 10` (ventana de aceptación) y `warning_threshold_minutes: 5` (aviso "por vencer").
+| `intake` | `idempotency_ttl_hours: 24` (ventana de idempotencia de la rama roja, ADR-0016).
+| `crisis_lines` | Ruteo horario de líneas y respaldos (fallback si la BD no responde).
+| `clinical_records` | Regla TEPT (`tept_diagnosis_block_days: 30`) y fecha del evento sísmico.
+| `consent` | Textos *oficiales de la FPV* del consentimiento del psicólogo y del aviso al solicitante (+ `version`).
+| `pap` | Guías de Primeros Auxilios Psicológicos (contenido servido por `GET /pap`).
+| `fpv` | Verificador (`http`/`dummy`), `base_url`, timeout y *circuit breaker* del padrón.
+| `email` | Proveedor, remitente y URLs de correo (login/invitación/reset).
+| `presence` | Proveedor (`memory`/`upstash`), `heartbeat_ttl_seconds` (130) e `interval` (60).
+| `ui` | Cadencia de refresco (polling) de los paneles del PWA: `data_refresh_seconds` (15).
+| `rbac` | Roles del sistema.
+| `security` | CORS, rate-limit (intake/login), TTL de JWT y sesión, ventanas de invitación/reset.
+|===
+
+==== Variables de entorno que sobrescriben la config
+
+Para no reconstruir por cada despliegue, algunos valores se pueden ajustar por entorno:
+
+[cols="2,3",options="header"]
+|===
+| Variable | Sobrescribe
+| `CORS_ORIGINS` | `security.cors.*_origins`
+| `EMAIL_PROVIDER`, `SMTP_*` | `email.provider` y `email.smtp.*`
+| `WEB_BASE_URL` | El *origen* de `email.login_url` / `coordinator_invite_url` / `password_reset_url`
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Credenciales del proveedor `presence: upstash`
+| `FPV_API_TOKEN` | Token del cliente del padrón (`fpv`)
+|===
+
+[IMPORTANT]
+====
+`config.yml` *no* contiene secretos. Al editarlo, corre `npm run config:build` y commitea *ambos*
+archivos (YAML + generado). Los placeholders `REEMPLAZAR-web.vercel.app` de la sección `production`
+se resuelven en despliegue con `WEB_BASE_URL` / `CORS_ORIGINS`.
+====
+
+==== Espejo en el frontend
+
+El backend `config.yml` es la *fuente de verdad*, pero el frontend (Next.js, otro despliegue) no lee
+ese YAML en runtime. Para no *quemar parámetros por pantalla*, los pocos valores que la UI necesita se
+centralizan y *espejan* en `apps/web/src/lib/config.ts`, cada uno anotado con el campo del backend que
+refleja:
+
+[cols="2,2",options="header"]
+|===
+| Constante (web) | Espeja (backend)
+| `PRESENCE_HEARTBEAT_INTERVAL_SECONDS` (60) | `presence.heartbeat_interval_seconds`
+| `DATA_REFRESH_INTERVAL_SECONDS` / `_MS` (15) | `ui.data_refresh_seconds`
+| `SLA_WARNING_THRESHOLD_MINUTES` (5) | `sla.warning_threshold_minutes`
+| `SESSION_IDLE_TIMEOUT_MINUTES` (30) | `security.session.idle_timeout_minutes`
+| `EVENT_DATE` / `TEPT_BLOCK_DAYS` | `clinical_records.event_date` / `tept_diagnosis_block_days`
+|===
+
+Así, el intervalo de polling de los paneles (tablero del coordinador, listas de casos/voluntarios y
+detalle del caso) sale de *un solo* valor (`ui.data_refresh_seconds`) y no de literales repartidos por
+las pantallas. El backend sigue siendo la autoridad y revalida del lado servidor.
+
+=== Cron en el plan gratuito (Vercel Hobby)
+
+Vercel Hobby permite *un solo cron, una vez al día*, por eso `apps/api/vercel.json` usa `0 0 * * *`.
+Esto *no* limita el SLA: el escalado es *orientado a eventos* (ver <<event-driven>>) y el cron diario
+es solo la red de seguridad. Una corrida diaria también evita que Supabase (plan free) pause el
+proyecto por inactividad. Al pasar a Vercel Pro se podría configurar un cron más frecuente.
+
+[[salud]]
+=== Salud y verificación
+
+[cols="1,2",options="header"]
+|===
+| Chequeo | Cómo
+| Liveness | `GET /api/v1/health` → `{ status, uptime_seconds }`.
+| Métricas de SLA | `GET /api/v1/metrics` (coordinador/admin).
+| Presencia | Registrar un psicólogo, iniciar sesión, ver `en_linea` en el panel de coordinador.
+| Cron | `POST /api/v1/cron/check-sla` con `Authorization: Bearer <CRON_SECRET>` → `{ escalated, assigned }`.
+| Padrón FPV | Registrar un voluntario real → se valida contra el padrón (`FPV_API_TOKEN` válido).
+| Correo | Registro/reset → llega un correo real (SMTP OK).
+|===
+
+=== Guía de despliegue a producción (paso a paso)
+
+Procedimiento para llevar la plataforma a producción de forma segura. Es una app de salud mental con
+datos sensibles (PII + notas clínicas): el cifrado, los respaldos y la gestión de secretos *no son
+opcionales*.
+
+==== Paso 1 — Servicios a provisionar
+
+[cols="1,2,2",options="header"]
+|===
+| Servicio | Para qué | Notas
+| *Vercel* | Hosting de Web + API | Dos proyectos apuntando al mismo repo, distinto *Root Directory*.
+| *Supabase* | Postgres + claves + backups | Plan con *backups diarios / Point-in-Time Recovery*.
+| *Upstash Redis* | Presencia en tiempo real | Base Redis con REST habilitado.
+| *Proveedor SMTP* | Correos (credenciales, invitaciones, reset) | Gmail App Password / Brevo / SendGrid.
+| *Token del padrón FPV* | Validación de psicólogos | Lo entrega la FPV.
+| *Dominio + DNS* | `ppv.org.ve` (o el final) | El certificado HTTPS lo gestiona Vercel.
+|===
+
+==== Paso 2 — Decisiones previas (Human-in-the-Loop)
+
+Deben cerrarse con la FPV *antes* de abrir al público: dominio definitivo (afecta CORS, URLs de correo
+y `NEXT_PUBLIC_API_URL`); plan de hosting/DB con backups; políticas de la FPV (turnos, *retención de
+datos*, consentimiento final, verificación de psicólogos); proveedor SMTP institucional; y *responsable
+de la custodia de secretos* (`ENCRYPTION_KEY` y `PSEUDONYMIZATION_SALT`).
+
+==== Paso 3 — Secretos y variables de entorno
+
+Generar los secretos (ver <<gen-secretos>>) y cargar en Vercel *todas* las variables de la
+tabla de <<env-vars>> para el proyecto API, y `NEXT_PUBLIC_API_URL` para el proyecto Web.
+
+[WARNING]
+====
+`ENCRYPTION_KEY` debe *decodificar a exactamente 32 bytes* o la app no arranca. Guárdala (y
+`PSEUDONYMIZATION_SALT`) en un gestor de secretos: si se pierden, los datos clínicos cifrados son
+*irrecuperables* y rotar la salt rompe el vínculo PII↔clínico.
+====
+
+==== Paso 4 — Ajustar la config de producción
+
+En `app.config.yml` (sección `production:`), recordando que el merge de YAML es *superficial* (definir
+un bloque lo *reemplaza* entero, hay que darlo completo):
+
+* *CORS:* dominio real de la web (o vía `CORS_ORIGINS` en el entorno).
+* *URLs de correo:* `login_url` / `coordinator_invite_url` / `password_reset_url` — su *origen* se
+  puede rebasar por entorno con `WEB_BASE_URL`; `provider`/`SMTP_*` vienen del entorno.
+* *Presencia:* `presence.provider: upstash` + credenciales `UPSTASH_*` (la memoria *no* sirve en
+  serverless).
+
+==== Paso 5 — Base de datos (Supabase)
+
+. Crear el proyecto (región más cercana a Venezuela).
+. Aplicar migraciones: `supabase link --project-ref <ref>` y `supabase db push`
+  (aplica `supabase/migrations/*.sql` en orden, con RLS y triggers de auditoría).
+. *NO cargar el seed* (`supabase/seed.sql` son datos de prueba `@ppv.test`).
+. Crear el *primer administrador real* por SQL/migración (hash argon2id), no con el seed.
+. Verificar *RLS habilitado* en todas las tablas con PII/clínicas.
+. Activar *backups diarios / PITR desde el día 1* y *probar una restauración* antes de abrir.
+. Usar la *URL del pooler* en `DATABASE_URL` (serverless abre/cierra conexiones — ADR-0002).
+
+==== Paso 6 — Desplegar el API (Vercel)
+
+*New Project* → mismo repo → *Root Directory = `apps/api`*; build `npm run build` (las funciones se
+sirven desde `apps/api/api/`); cargar las env vars del Paso 3; el cron ya está en `vercel.json`
+(`0 0 * * *`, Vercel envía el `CRON_SECRET` como Bearer); opcionalmente dominio `api.ppv.org.ve`.
+
+==== Paso 7 — Desplegar la Web (Vercel)
+
+*New Project* → mismo repo → *Root Directory = `apps/web`*; build `npm run build` (`next build`);
+`NEXT_PUBLIC_API_URL` apuntando al API desplegado; dominio `ppv.org.ve` (HTTPS automático); verificar
+que se instale como *PWA*.
+
+==== Paso 8 — Seguridad y cumplimiento (obligatorio)
+
+HTTPS en todo (Vercel lo fuerza); secretos fuera del repo; respaldo seguro de `ENCRYPTION_KEY` /
+`PSEUDONYMIZATION_SALT`; *RLS activo* en Supabase; *auditoría* append-only (`audit_log` con trigger
+anti-borrado); rate limiting de intake/login; sesiones que expiran por inactividad y por
+`token_version`; *backups diarios* + prueba de restauración; y una cadencia de *rotación de
+credenciales* (rotar `JWT_SECRET` invalida sesiones activas — comunicar).
+
+==== Paso 9 — Checklist de go-live
+
+* [ ] Secretos generados y cargados en Vercel (API + Web).
+* [ ] `NODE_ENV=production`; sección `production:` con URLs y CORS reales.
+* [ ] Migraciones aplicadas en Supabase de producción; *seed NO ejecutado*.
+* [ ] Admin real creado (no `@ppv.test`).
+* [ ] Backups diarios activos + restauración probada.
+* [ ] Upstash configurado (`presence.provider: upstash`) + credenciales.
+* [ ] SMTP real probado (llega un correo de verdad).
+* [ ] `FPV_API_TOKEN` válido → un registro real se valida contra el padrón.
+* [ ] Dominios conectados (web + api) con HTTPS.
+* [ ] Cron diario corriendo (`0 0 * * *`) como respaldo del escalado event-driven.
+* [ ] Líneas de crisis reales cargadas en `/admin/lineas` (las del seed son de prueba).
+
+==== Paso 10 — Verificación post-despliegue (smoke tests)
+
+[source,bash]
+----
+API=https://api.ppv.org.ve/api/v1
+curl -s $API/health                     # 200 { status, uptime_seconds }
+curl -s $API/crisis-lines/active        # líneas reales
+# login admin real → token; intake verde/roja desde la web → crea caso
+curl -s -X POST $API/cron/check-sla -H "Authorization: Bearer $CRON_SECRET"   # {escalated,assigned}
+# paneles: /admin, /coordinador, /psicologo ; monitoreo: GET /metrics
+----
+
+Ver también la tabla de <<salud>>.
+
+==== Paso 11 — Migraciones y rollback
+
+* *Migraciones:* incrementales en `supabase/migrations/`, aplicadas con `supabase db push`; evitar
+  cambios destructivos (columnas nuevas + backfill).
+* *Rollback de app:* Vercel *Instant Rollback* a un despliegue previo; si había una migración aplicada,
+  puede requerir una migración compensatoria (versionar código + migración juntos).
+* *Rollback de datos:* restaurar desde backup/PITR de Supabase (por eso el respaldo diario es
+  innegociable).
+
+[NOTE]
+====
+Esta guía centraliza el procedimiento; la versión operativa "de trabajo" (con enlaces a archivos y
+notas `<TODO — HITL>`) vive en `docs/05-deployment/guia-de-despliegue.md`.
+====
+
+=== Desarrollo local
+
+* Monorepo con *workspaces* (`apps/web`, `apps/api`) y scripts en la raíz (`package.json`).
+* `supabase/` con las migraciones SQL; `scripts/seed-db.mjs` para datos de prueba.
+* Docker Compose para levantar la API en local.
+
+[NOTE]
+====
+*Gotcha conocido (dev con Docker):* ejecutar `npm`/comandos de workspace desde el host puede
+reiniciar el `node_modules` compartido y tumbar el watch (`tsx`) del contenedor de la API (login
+falla con HTTP 000). Solución: `docker compose restart api`, y preferir `npx` desde el directorio de
+la app. Documentado en las notas de desarrollo.
+====

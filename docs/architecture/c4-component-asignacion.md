@@ -34,3 +34,10 @@ C4Component
    - Moderado y seguimiento por orden de llegada dentro de su categoría.
    - Se devuelve al usuario un **mensaje honesto de espera** y se repiten las líneas de crisis.
 4. El **panel de capacidad** del coordinador refleja los casos sin asignar en tiempo real.
+5. **Presencia (ADR-0014):** solo se asigna a psicólogos **en línea/disponibles**; un caso nunca cae en
+   alguien ausente. Si un psicólogo entra en pausa con un caso asignado no aceptado, ese caso vuelve a
+   la cola (#130).
+6. **SLA (event-driven, #159):** al vencer el SLA de aceptación de un caso de alto riesgo, se **escala**
+   (vuelve a la cola) y se **reasigna a otro voluntario disponible** distinto del que no aceptó, con la
+   ventana de SLA renovada. El barrido se dispara cuando un psicólogo se conecta; el Vercel Cron (1/día
+   en plan free) es el respaldo (ADR-0015).

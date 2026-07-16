@@ -7,7 +7,8 @@
 ## Resumen de la decisión
 - **Backend + frontend:** Vercel (funciones serverless; plan gratuito/hobby inicial).
 - **Base de datos:** PostgreSQL gestionado en Supabase (separado del cPanel de la Federación).
-- **SLA y escalamiento:** Vercel Cron Jobs (cada 1-2 min), no procesos persistentes.
+- **SLA y escalamiento:** **event-driven** (se dispara al conectarse un psicólogo), con **un Vercel Cron
+  diario** de respaldo — el plan free solo permite un cron/día; sin procesos persistentes (ver ADR-0015).
 
 ## Por qué se descartó el cPanel de la Federación
 La Federación cuenta con un hosting cPanel para su sistema PHP/Symfony existente. Se evaluó

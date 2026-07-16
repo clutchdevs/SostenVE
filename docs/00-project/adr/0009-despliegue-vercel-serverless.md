@@ -1,7 +1,13 @@
 # ADR-0009 — Despliegue serverless en Vercel
 
-> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
+> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada (parcialmente superada por ADR-0015)
 > **Fecha:** 2026-06-28  ·  **Responsable:** equipo de desarrollo
+>
+> **Nota (2026-07-16):** el mecanismo del SLA descrito abajo ("Vercel Cron cada 1-2 minutos") **quedó
+> superado por [ADR-0015](0015-sla-event-driven-cron-diario.md)**: el plan gratuito de Vercel solo permite
+> **un cron al día**, así que el escalado real es **event-driven** (se dispara cuando un psicólogo se
+> conecta) y el cron diario pasó a ser el respaldo. El resto de esta ADR (backend serverless en `/api/*`)
+> sigue vigente.
 
 ## Contexto
 Se necesita un despliegue de bajo costo y bajo mantenimiento. El equipo ya está familiarizado con

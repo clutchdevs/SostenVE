@@ -1,3 +1,4 @@
+import { SLA_WARNING_THRESHOLD_MINUTES } from '../../lib/config';
 import type { CaseSummary } from '../../lib/types';
 
 /**
@@ -61,7 +62,7 @@ export interface SlaState {
   tone: SlaTone;
 }
 
-const WARNING_MINUTES = 5;
+const WARNING_MINUTES = SLA_WARNING_THRESHOLD_MINUTES;
 
 /** SLA chip state for a case at a given moment. */
 export function slaState(c: CaseSummary, now: Date = new Date()): SlaState {
