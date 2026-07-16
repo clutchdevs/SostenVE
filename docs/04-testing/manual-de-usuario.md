@@ -41,7 +41,7 @@
 1. Entra a `https://TU-WEB.vercel.app`.
 2. Toca el botón grande **"Necesito apoyo psicológico"**.
 
-<p align="center"><img src="img/01-landing.png" alt="Pantalla de inicio" width="320"></p>
+<p align="center"><img src="img/01-landing.png" alt="Pantalla de inicio" width="900"></p>
 
 *Pantalla de inicio: el botón azul es la acción principal para quien busca ayuda.*
 
@@ -57,10 +57,11 @@
 Si elige *"Estoy en crisis / en peligro ahora"* o *"Muy mal, necesito ayuda pronto"*:
 - Se muestran **de inmediato las líneas de crisis** (teléfonos para llamar ya).
 - Puede pedir que **lo contacten**: *"Recibir una llamada"* o *"WhatsApp silencioso"*, dejando un
-  teléfono (formato venezolano: `0414/0424/0412/0416/0426` + 7 dígitos) y, opcionalmente, la edad.
+  teléfono en **formato internacional con el código de país** (`+58` + móvil, ej. `+58 414 1234567`)
+  y la **edad** (ahora **obligatoria**).
 - Al enviar, la solicitud entra a la cola con **prioridad alta**.
 
-<p align="center"><img src="img/03-intake-roja.png" alt="Ruta roja — líneas de crisis" width="320"></p>
+<p align="center"><img src="img/03-intake-roja.png" alt="Ruta roja — líneas de crisis" width="900"></p>
 
 *Ruta roja: líneas de crisis inmediatas + opción de ser contactado.*
 
@@ -70,12 +71,13 @@ Si elige una opción más leve, entra a un formulario de **4 pasos**:
 1. **Síntomas** — marca lo que aplique.
 2. **Ubicación** — estado (y ciudad opcional).
 3. **Hábitos** — cambios recientes (sueño, alimentación…), opcional.
-4. **Contacto** — nombre (opcional), **edad** (ayuda a asignar atención infantil o adulta),
-   teléfono y si prefiere **llamada** o **WhatsApp**.
+4. **Contacto** — **quién solicita la ayuda** (la persona afectada / un familiar / voluntario),
+   nombre (opcional), **edad obligatoria** (ayuda a asignar atención infantil o adulta), teléfono
+   **con código de país `+58`** (ej. `+58 414 1234567`) y si prefiere **llamada** o **WhatsApp**.
 
 Al enviar, verá la confirmación de que **un psicólogo voluntario lo contactará**.
 
-<p align="center"><img src="img/04-intake-verde.png" alt="Ruta verde — formulario" width="320"></p>
+<p align="center"><img src="img/04-intake-verde.png" alt="Ruta verde — formulario" width="900"></p>
 
 *Ruta verde: formulario por pasos para atención no urgente.*
 
@@ -88,8 +90,8 @@ El enlace **"Guías de autoayuda"** (`/guias`) abre ejercicios de Primeros Auxil
 
 *Guías de autoayuda (Primeros Auxilios Psicológicos).*
 
-> 💡 **Qué probar:** crea varios casos con distintas respuestas (rojas y verdes), con y sin edad de
-> menor, para ver cómo se clasifican y asignan.
+> 💡 **Qué probar:** crea varios casos con distintas respuestas (rojas y verdes) y con distintas
+> edades (menor y adulto), para ver cómo se clasifican y asignan.
 
 ---
 
@@ -99,8 +101,8 @@ El enlace **"Guías de autoayuda"** (`/guias`) abre ejercicios de Primeros Auxil
 
 1. En el inicio → **"Registrarme como psicólogo"** (`/registro`).
 2. Completa: nombre, documento (V/E/P), **nº FPV**, correo, teléfono, universidad, año de egreso,
-   colegio, modalidad (presencial / a distancia), **disponibilidad horaria**, formación en PAP, y
-   **acepta el consentimiento informado** (obligatorio).
+   colegio, **país y ciudad de residencia**, modalidad (presencial / a distancia),
+   **disponibilidad horaria**, formación en PAP, y **acepta el consentimiento informado** (obligatorio).
 3. Al enviar:
    - Si el nº FPV se **valida automáticamente** → cuenta aprobada y llegan las **credenciales por correo**.
    - Si no se puede validar → queda **pendiente de revisión** por un coordinador/administrador.
@@ -129,24 +131,37 @@ El enlace **"Guías de autoayuda"** (`/guias`) abre ejercicios de Primeros Auxil
 *Portal del psicólogo: indicadores y casos activos.*
 
 **Mis casos** (`/psicologo/casos`): lista completa con **filtros** (Estado: Activos / Cerrados / Todos ·
-Riesgo · Rama) y un botón **"Limpiar filtros"**.
+Riesgo · Rama) y un botón **"Limpiar filtros"**. La lista **se auto-refresca** (no hace falta recargar).
+En los casos **aún sin aceptar**, el teléfono aparece **censurado** (🔒 `+58 ••• •••••••`); se revela al
+aceptar.
 
-<p align="center"><img src="img/11-psicologo-casos.png" alt="Mis casos" width="320"></p>
+<p align="center"><img src="img/11-psicologo-casos.png" alt="Mis casos" width="900"></p>
 
-*"Mis casos": por defecto muestra los activos; los cerrados quedan en su propio filtro.*
+*"Mis casos": por defecto muestra los activos; el teléfono se censura hasta aceptar el caso.*
 
 ### B.4 Atender un caso
 
-1. Abre un caso de tu lista.
-2. Si está **asignado** (nuevo), toca **"Aceptar caso"** → verás los datos de contacto del solicitante.
+1. Abre un caso de tu lista. Verás su ficha con el **riesgo**, la **edad**, y las **respuestas del
+   solicitante**: los **síntomas** que marcó y **"¿Cómo se siente?"** (su respuesta inicial de urgencia).
+2. Si está **asignado** (nuevo), el **contacto está oculto** (para no contactar antes de tiempo y no
+   distorsionar las métricas). Toca **"Aceptar caso"** → **entonces** se revelan el nombre y el teléfono
+   (con botones **Llamar** y **WhatsApp**).
 3. Con el caso **aceptado** puedes:
    - **Registrar notas clínicas** (con reglas de seguridad, p. ej. el TEPT no se registra antes de 4
      semanas del evento).
    - **Cerrar el caso** con el formulario de cierre estructurado (contactabilidad, síntomas, técnicas,
-     motivo, derivación, horas). El cierre es **definitivo**.
+     motivo, derivación y **minutos** de atención — números enteros, mínimo 1). El cierre es **definitivo**.
 
-> 💡 **Qué probar:** ponte disponible, recibe un caso, acéptalo, agrega una nota y ciérralo. Verifica
-> que sale de "Activos" y aparece en "Cerrados".
+El detalle también **se auto-refresca**, así que si el caso cambia de estado lo verás sin recargar.
+
+<p align="center"><img src="img/12-psicologo-caso-detalle.png" alt="Detalle del caso aceptado" width="900"></p>
+
+*Detalle del caso: al aceptar se revela el contacto; se ven los síntomas y "¿Cómo se siente?" del
+solicitante, y el cierre se registra en minutos.*
+
+> 💡 **Qué probar:** ponte disponible, recibe un caso, comprueba que el teléfono está censurado,
+> acéptalo (aparece el contacto y las respuestas del solicitante), agrega una nota y ciérralo con los
+> minutos de atención. Verifica que sale de "Activos" y aparece en "Cerrados".
 
 ---
 
@@ -165,8 +180,10 @@ Riesgo · Rama) y un botón **"Limpiar filtros"**.
 ### C.2 Cola de casos en vivo (`/coordinador`)
 
 Indicadores (riesgo alto, en cola, psicólogos en atención, espera promedio), alertas de **SLA vencido**,
-y la tabla de casos que **se actualiza sola**. Desde cada caso puedes **Reasignar** (a otro psicólogo) o
-**Cerrar** administrativamente.
+y la tabla de casos que **se actualiza sola**. Desde cada caso puedes **Reasignar** o **Cerrar**
+administrativamente. Al **Reasignar**, la lista solo ofrece psicólogos **conectados y disponibles**
+ahora mismo (para no dejar el caso con alguien ausente y vencer el SLA). Además, si un psicólogo entra
+en **pausa** con un caso asignado **que aún no aceptó**, ese caso **vuelve a la cola** automáticamente.
 
 <p align="center"><img src="img/20-coordinador-cola.png" alt="Cola de casos en vivo" width="900"></p>
 
@@ -182,7 +199,9 @@ Quién tiene casos activos asignados ahora mismo y cuántos.
 
 ### C.4 Voluntarios (`/coordinador/voluntarios`)
 
-**Aprobar / suspender** psicólogos y dejar **notas confidenciales**. Con búsqueda y filtros por estado.
+**Aprobar / suspender** psicólogos y dejar **notas confidenciales**. Con búsqueda, filtros por estado,
+un filtro **"Disponibles ahora"** (solo los psicólogos en línea en este momento; mientras está activo la
+lista se refresca sola) y un botón **"Limpiar filtros"**.
 
 <p align="center"><img src="img/22-coordinador-voluntarios.png" alt="Voluntarios" width="900"></p>
 
@@ -225,8 +244,11 @@ Listado de **todas** las personas registradas, con búsqueda y filtro por estado
 
 ### D.3 Líneas de crisis (`/admin/lineas`)
 
-**Crear / editar / activar / desactivar / eliminar** las líneas de crisis que ve el público (nombre,
-teléfono, cobertura, prioridad y franja horaria opcional para el ruteo).
+**Crear / editar / activar / desactivar / eliminar** las líneas de crisis que ve el público. El
+formulario de creación está **arriba** de la lista. Cada línea tiene nombre, teléfono, cobertura,
+prioridad y una **franja horaria opcional** en formato **24 h (0–24)** con **días de la semana** para el
+ruteo automático (p. ej. una línea de 20:00 a 02:00). **Desactivar** la oculta temporalmente;
+**Eliminar** la borra de forma **definitiva** (pide confirmación).
 
 <p align="center"><img src="img/32-admin-lineas.png" alt="Líneas de crisis" width="900"></p>
 
@@ -285,7 +307,11 @@ Un recorrido que ejercita todo el sistema, en orden:
 
 - Es un **entorno de pruebas**: los datos son ficticios y se pueden borrar. El equipo técnico puede
   **limpiar la base** entre rondas (deja la configuración y los admins).
-- **Teléfonos**: solo móviles venezolanos (`0414/0424/0412/0416/0426` + 7 dígitos).
+- **Teléfonos del solicitante**: móviles venezolanos **con código de país `+58`** (ej. `+58 414 1234567`);
+  ya no se acepta el `0` inicial (así el enlace de WhatsApp del psicólogo funciona directo).
+- **Un caso abierto por persona**: si el mismo teléfono envía otra solicitud mientras tiene un caso
+  abierto, se **reutiliza** ese caso (no se duplica); podrá abrir uno nuevo una vez cerrado el anterior.
+- **Edad**: ahora es **obligatoria** en el intake (roja y verde).
 - **Cédulas**: hasta 8 dígitos (V/E); pasaporte (P) alfanumérico.
 - **Correos reales**: si el envío SMTP está activo, las aprobaciones/invitaciones llegan a la bandeja
   (revisen también **spam**). Si no, el equipo técnico comparte las credenciales/tokens.
