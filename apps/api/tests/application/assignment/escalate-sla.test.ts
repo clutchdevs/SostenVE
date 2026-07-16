@@ -43,7 +43,7 @@ function deps(
       },
       async updateStatus() {},
     },
-    assignments: { async deleteByCaseId() {} },
+    assignments: { async deleteByCaseId() {}, async findByCaseId() { return []; } },
     volunteers: {
       async listByStatus() {
         return activeStaff;
@@ -63,9 +63,9 @@ afterEach(() => vi.restoreAllMocks());
 describe('escalateOverdueCases — no-coordinator alert (fase 06)', () => {
   it('raises a critical alert when a high-risk case escalates with no coordinator online', async () => {
     const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
-    const count = await escalateOverdueCases(deps([highRiskCase('x1')], []), new Date());
+    const { escalated } = await escalateOverdueCases(deps([highRiskCase('x1')], []), new Date());
 
-    expect(count).toBe(1);
+    expect(escalated).toBe(1);
     expect(errorSpy).toHaveBeenCalledTimes(1);
     const [message, context] = errorSpy.mock.calls[0]!;
     expect(message).toContain('high_risk_escalated_no_coordinator');
@@ -90,8 +90,8 @@ describe('escalateOverdueCases — no-coordinator alert (fase 06)', () => {
 
   it('does nothing (and does not query staff) when there is nothing overdue', async () => {
     const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
-    const count = await escalateOverdueCases(deps([], []), new Date());
-    expect(count).toBe(0);
+    const { escalated } = await escalateOverdueCases(deps([], []), new Date());
+    expect(escalated).toBe(0);
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });

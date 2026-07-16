@@ -148,12 +148,44 @@ describe.skipIf(!dbAvailable)('assignment & SLA (e2e)', () => {
       volunteerId,
     ]);
 
-    const escalated = await escalateOverdueCases(getAssignmentDeps());
+    const { escalated } = await escalateOverdueCases(getAssignmentDeps());
     expect(escalated).toBeGreaterThanOrEqual(1);
 
     const row = await pg.query('select status from cases where id = $1', [caseId]);
     expect(row.rows[0]?.status).toBe('pendiente');
     const assignment = await pg.query('select id from assignments where case_id = $1', [caseId]);
     expect(assignment.rowCount).toBe(0);
+  });
+
+  it('reassigns an escalated high-risk case to a DIFFERENT online volunteer and resets its SLA (#159)', async () => {
+    const volA = await seedVolunteer();
+    const volB = await seedVolunteer();
+    // Both online → a reassignment target other than the one who let the SLA
+    // expire is available.
+    await getPresenceStore().markOnline(volA, 300);
+    await getPresenceStore().markOnline(volB, 300);
+    const caseId = await seedCase({
+      status: 'asignado',
+      slaExpiresAt: new Date(Date.now() - 60_000), // already expired
+    });
+    await pg.query('insert into assignments (case_id, volunteer_id) values ($1, $2)', [caseId, volA]);
+
+    // One cron pass: escalate (revoke A) then reassign to someone else.
+    expect((await cron('test-cron-secret')).status).toBe(200);
+
+    const row = await pg.query<{ status: string; sla_expires_at: string | null }>(
+      'select status, sla_expires_at from cases where id = $1',
+      [caseId],
+    );
+    expect(row.rows[0]?.status).toBe('asignado');
+    // Fresh acceptance window so it is not re-escalated instantly.
+    expect(new Date(row.rows[0]!.sla_expires_at!).getTime()).toBeGreaterThan(Date.now());
+    const assignment = await pg.query<{ volunteer_id: string }>(
+      'select volunteer_id from assignments where case_id = $1',
+      [caseId],
+    );
+    expect(assignment.rowCount).toBe(1);
+    // Reassigned to a DIFFERENT volunteer than the one who did not accept.
+    expect(assignment.rows[0]?.volunteer_id).not.toBe(volA);
   });
 });

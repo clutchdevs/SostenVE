@@ -114,6 +114,7 @@ export function getAssignmentDeps(): AssignmentDeps {
       notifier: new LogAssignmentNotifier(),
       presence: createPresenceStore(getConfig()),
       settings: new SupabaseAssignmentSettingsRepository(client),
+      config: getConfig(),
     };
   }
   return assignmentCached;

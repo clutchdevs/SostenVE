@@ -15,13 +15,24 @@ import type { AssignmentDeps } from './ports.js';
  * a coordinator whose real-time presence is Online (RF-2.5), not merely one whose
  * account is active — a coordinator with the app closed can't act on the alert.
  */
+export interface EscalationResult {
+  /** How many high-risk cases were escalated back to the queue. */
+  escalated: number;
+  /**
+   * caseId → the psychologist who let the SLA expire (#159). The next assignment
+   * pass excludes them so the case goes to a **different** available volunteer.
+   */
+  previousAssignee: Map<string, string>;
+}
+
 export async function escalateOverdueCases(
   deps: AssignmentDeps,
   now: Date = new Date(),
-): Promise<number> {
+): Promise<EscalationResult> {
+  const previousAssignee = new Map<string, string>();
   const overdue = await deps.cases.listOverdueHighRiskAssigned(now);
   if (overdue.length === 0) {
-    return 0;
+    return { escalated: 0, previousAssignee };
   }
 
   const activeCoordinatorIds = (await deps.volunteers.listByStatus('active'))
@@ -31,6 +42,11 @@ export async function escalateOverdueCases(
   const coordinatorAvailable = onlineCoordinators.size > 0;
 
   for (const caseRecord of overdue) {
+    // Remember who failed to accept BEFORE revoking, so the reassignment goes to
+    // someone else (#159).
+    const [assignment] = await deps.assignments.findByCaseId(caseRecord.id);
+    if (assignment) previousAssignee.set(caseRecord.id, assignment.volunteerId);
+
     await deps.assignments.deleteByCaseId(caseRecord.id);
     await deps.cases.updateStatus(caseRecord.id, 'PENDING');
     await deps.notifier.notifyEscalated({ caseId: caseRecord.id });
@@ -41,5 +57,5 @@ export async function escalateOverdueCases(
       raiseAlert('high_risk_escalated_no_coordinator', { caseId: caseRecord.id });
     }
   }
-  return overdue.length;
+  return { escalated: overdue.length, previousAssignee };
 }
