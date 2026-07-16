@@ -150,7 +150,8 @@ aceptar.
    - **Registrar notas clínicas** (con reglas de seguridad, p. ej. el TEPT no se registra antes de 4
      semanas del evento).
    - **Cerrar el caso** con el formulario de cierre estructurado (contactabilidad, síntomas, técnicas,
-     motivo, derivación y **minutos** de atención — números enteros, mínimo 1). El cierre es **definitivo**.
+     motivo, derivación y **minutos** de atención — números enteros, mínimo 1). El **destino de la
+     derivación** admite **más de un especialista** (se marcan varios). El cierre es **definitivo**.
 
 El detalle también **se auto-refresca**, así que si el caso cambia de estado lo verás sin recargar.
 
@@ -184,6 +185,8 @@ y la tabla de casos que **se actualiza sola**. Desde cada caso puedes **Reasigna
 administrativamente. Al **Reasignar**, la lista solo ofrece psicólogos **conectados y disponibles**
 ahora mismo (para no dejar el caso con alguien ausente y vencer el SLA). Además, si un psicólogo entra
 en **pausa** con un caso asignado **que aún no aceptó**, ese caso **vuelve a la cola** automáticamente.
+Y si **vence el SLA** de un caso de alto riesgo sin que lo acepten, el sistema lo **reasigna solo a otro
+voluntario disponible** (distinto del que no aceptó) en cuanto haya uno en línea.
 
 <p align="center"><img src="img/20-coordinador-cola.png" alt="Cola de casos en vivo" width="900"></p>
 
