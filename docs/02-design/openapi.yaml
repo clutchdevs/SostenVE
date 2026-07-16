@@ -1,16 +1,26 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTRATO DE DISEÑO (fase 02) — puede ir por detrás del runtime.
+# La FUENTE DE VERDAD es el contrato VIVO, generado en código desde los esquemas Zod:
+#   · Especificación:  GET /api/v1/openapi.json
+#   · Swagger UI:       GET /api/v1/docs
+# Nota: el runtime usa rutas en inglés bajo el base path /api/v1 (p. ej. /intake/red-branch),
+# mientras que este archivo conserva la nomenclatura de diseño en español. Ante cualquier
+# discrepancia, prevalece /api/v1/openapi.json.
+# ─────────────────────────────────────────────────────────────────────────────
 openapi: 3.1.0
 info:
-  title: PPV — API de apoyo psicológico post-terremoto
-  version: 0.2.0
+  title: PPV — API de apoyo psicológico post-terremoto (contrato de diseño)
+  version: 1.0.0
   description: >
-    API REST de la plataforma PPV, desplegada como funciones serverless en Vercel
+    Contrato de DISEÑO de la API REST de PPV, desplegada como funciones serverless en Vercel
     (ver ADR-0009) sobre PostgreSQL en Supabase (ADR-0002). Implementa el flujo de triage
     del PRD de la Federación ("Sistema PPV 2026", ADR-0010): pantalla Likert, ramas roja/verde,
     tags clínicos ponderados, validación de psicólogos contra la BD de la FPV, y SLA de 10 min
-    con escalamiento vía Vercel Cron Job. Datos clínicos cifrados en reposo y tránsito (ADR-0004).
+    con escalamiento orientado a eventos (respaldado por un Vercel Cron diario, ADR-0015).
+    Datos clínicos cifrados en reposo y tránsito (ADR-0004). El contrato VIVO es /api/v1/openapi.json.
 servers:
-  - url: https://ppv.example/api
-    description: Producción en Vercel (placeholder)
+  - url: /api/v1
+    description: Base path de la API (mismo origen que el frontend)
 
 tags:
   - name: intake
@@ -227,7 +237,7 @@ paths:
           description: El caso no pertenece al psicólogo autenticado.
     patch:
       tags: [casos]
-      summary: Actualizar estado de un caso propio (p. ej. cerrar)
+      summary: Cerrar un caso propio con el expediente de cierre estructurado (Módulo 4)
       security:
         - bearerAuth: []
       parameters:
@@ -237,12 +247,10 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
+              $ref: '#/components/schemas/Cierre'
       responses:
-        '200':
-          description: Caso actualizado.
+        '201':
+          description: Caso cerrado con su expediente. El cierre es definitivo.
 
   /casos/{id}/aceptar:
     post:
@@ -291,10 +299,13 @@ paths:
   /cron/revisar-slas-vencidos:
     post:
       tags: [cron]
-      summary: Revisión de SLAs vencidos (invocado por Vercel Cron, no por usuarios)
+      summary: Barrido de SLA + asignación (respaldo; el escalamiento real es event-driven)
       description: >
-        Detecta casos de riesgo alto con más de 10 minutos sin aceptar y dispara el
-        escalamiento (RF-3.3). Protegido con secreto compartido, no con auth de usuario.
+        Escala los casos de riesgo alto sin aceptar dentro del SLA y los reasigna a OTRO
+        voluntario disponible (#159). En el plan free de Vercel el cron corre 1 vez al día,
+        por lo que el escalamiento real se dispara por evento (cuando un psicólogo se pone en
+        línea); este endpoint es el respaldo periódico. Protegido con secreto compartido, no
+        con auth de usuario.
       security:
         - cronSecret: []
       responses:
@@ -371,12 +382,14 @@ components:
 
     RamaRoja:
       type: object
-      required: [sub_canal]
+      required: [sub_canal, edad]
       properties:
         sub_canal: { $ref: '#/components/schemas/SubCanalRamaRoja' }
         contacto:
           type: string
-          description: Requerido si el sub-canal implica devolver la llamada o WhatsApp.
+          description: "Móvil venezolano con código de país +58 (ej. +58 414 1234567). Requerido si el sub-canal implica devolver la llamada o WhatsApp."
+        edad: { type: integer, minimum: 0, maximum: 120, description: "Obligatoria (#131)." }
+        respuesta_likert: { type: integer, minimum: 1, maximum: 5, description: "Urgencia inicial del Paso 0, persistida para el psicólogo (#131)." }
 
     ResultadoRamaRoja:
       type: object
@@ -395,18 +408,20 @@ components:
 
     RamaVerde:
       type: object
-      required: [contacto, tipo_solicitante, tags]
+      required: [contacto, tipo_solicitante, edad, tags]
       properties:
         nombre: { type: string }
-        contacto: { type: string, description: "Dato sensible." }
-        tipo_solicitante: { $ref: '#/components/schemas/TipoSolicitante' }
+        contacto: { type: string, description: "Dato sensible. Móvil venezolano con código de país +58." }
+        tipo_solicitante: { $ref: '#/components/schemas/TipoSolicitante', description: "Quién solicita la ayuda (obligatorio, #131)." }
+        edad: { type: integer, minimum: 0, maximum: 120, description: "Obligatoria (#131)." }
+        respuesta_likert: { type: integer, minimum: 1, maximum: 5, description: "Urgencia inicial del Paso 0, persistida (#131)." }
         en_nombre_de_tercero: { type: boolean, default: false }
         zona: { type: string }
         modalidad: { $ref: '#/components/schemas/Modalidad' }
         tags:
           type: array
           items: { $ref: '#/components/schemas/TagClinico' }
-          description: Tags clínicos seleccionados; el backend calcula el score ponderado.
+          description: Tags clínicos/síntomas seleccionados; el backend calcula el score y los persiste para el psicólogo.
 
     ResultadoSolicitud:
       type: object
@@ -431,6 +446,15 @@ components:
         nivel_riesgo: { $ref: '#/components/schemas/NivelRiesgo' }
         score_urgencia: { type: number }
         estado: { $ref: '#/components/schemas/EstadoCasoEnum' }
+        edad: { type: integer, nullable: true }
+        sintomas:
+          type: array
+          items: { type: string }
+          description: "Síntomas que el solicitante marcó en el intake (#131)."
+        urgencia_respuesta:
+          type: integer
+          nullable: true
+          description: "Respuesta de urgencia (Likert, Paso 0) del solicitante (#131)."
         creado_en: { type: string, format: date-time }
         sla_vence_en: { type: string, format: date-time, description: "Solo riesgo alto." }
 
@@ -439,8 +463,8 @@ components:
         - $ref: '#/components/schemas/ResumenCaso'
         - type: object
           properties:
-            nombre: { type: string }
-            contacto: { type: string }
+            nombre: { type: string, nullable: true, description: "PII: solo se devuelve cuando el caso está aceptado/cerrado (#131)." }
+            contacto: { type: string, nullable: true, description: "PII (móvil +58): solo cuando el caso está aceptado/cerrado (#131)." }
             zona: { type: string }
             modalidad: { $ref: '#/components/schemas/Modalidad' }
             tags:
@@ -465,6 +489,26 @@ components:
             autor_id: { type: string }
             creada_en: { type: string, format: date-time }
 
+    Cierre:
+      type: object
+      required: [contacto, minutos]
+      properties:
+        contacto: { type: boolean, description: "¿Se logró contactar al solicitante?" }
+        motivo_no_contacto: { type: string, nullable: true }
+        sexo: { type: string, nullable: true }
+        sintomas: { type: array, items: { type: string } }
+        otro_sintoma: { type: string, nullable: true }
+        medio_contacto: { type: string, nullable: true }
+        tecnicas: { type: array, items: { type: string } }
+        motivo_cierre: { type: string, nullable: true }
+        derivacion_tipo: { type: string, enum: [urgente, seguimiento, ninguna], nullable: true }
+        derivacion_destino:
+          type: array
+          items: { type: string, enum: [psicologia, psiquiatria, medicina, proteccion_ninos, proteccion_mujer] }
+          description: "Uno o varios destinos — multiselección (#158; se eliminó 'ambos')."
+        minutos: { type: integer, minimum: 1, description: "Tiempo de atención en minutos enteros, mínimo 1 (#131; antes eran horas decimales)." }
+        comentario: { type: string, nullable: true, description: "Restringido (cifrado en reposo)." }
+
     LineaCrisis:
       type: object
       required: [nombre, contacto]
@@ -472,7 +516,14 @@ components:
         id: { type: string }
         nombre: { type: string }
         contacto: { type: string }
-        cobertura: { type: string, description: "Cobertura horaria, base del ruteo dinámico." }
+        cobertura: { type: string, description: "Texto de cobertura mostrado al público." }
+        hora_inicio: { type: integer, minimum: 0, maximum: 24, nullable: true, description: "Hora de inicio (formato 24 h, 0–24)." }
+        hora_fin: { type: integer, minimum: 0, maximum: 24, nullable: true, description: "Hora de fin. Ventana nocturna si hora_fin <= hora_inicio (p. ej. 20→2)." }
+        dias_semana:
+          type: array
+          nullable: true
+          items: { type: string, enum: [lunes, martes, miercoles, jueves, viernes, sabado, domingo] }
+          description: "Días en que opera; omitido = todos. Ruteo dinámico en zona horaria de Venezuela (#127)."
         prioridad: { type: integer }
         activa: { type: boolean, default: true }
 
@@ -483,7 +534,9 @@ components:
         nombre: { type: string }
         cedula_profesional: { type: string, description: "Se valida contra la BD de la FPV." }
         especialidad: { type: string }
-        contacto: { type: string }
+        contacto: { type: string, description: "Teléfono internacional (el voluntario puede vivir fuera del país)." }
+        pais_residencia: { type: string, description: "País de residencia (#128)." }
+        ciudad_residencia: { type: string, description: "Ciudad de residencia (#128)." }
 
     ResultadoRegistro:
       type: object

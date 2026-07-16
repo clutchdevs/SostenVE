@@ -91,16 +91,18 @@ curl -s -X POST $API/cron/check-sla -H "Authorization: Bearer $CRON_SECRET"   # 
 ```
 - Verifica que llega un **correo real** (registro/reset) → SMTP OK.
 - Registra un psicólogo real → se valida contra el **padrón FPV** → `FPV_API_TOKEN` OK.
-- El cron de Vercel corre cada 2 min (ver logs) → presencia (Upstash) + asignación funcionan.
+- El cron de Vercel corre **1 vez/día** (ver logs) como respaldo; el escalado real es **event-driven** →
+  presencia (Upstash) + asignación funcionan al conectarse un psicólogo.
 
 ## Nota: cron en el plan Hobby (gratis) de Vercel
-Vercel Hobby solo permite cron **1 vez al día**, así que `vercel.json` usa `0 0 * * *` (diario). El motor de
-asignación es **orientado a eventos** (al crear el caso / al ponerse online un psicólogo), por lo que el
-cron es solo **red de seguridad** (escalado de SLA + reintentos) — el flujo principal no depende de él.
-- **Para el barrido real cada 2 min sin pagar Pro:** usa un **cron externo gratis** (p. ej.
-  [cron-job.org](https://cron-job.org)) que haga `GET https://TU-API.vercel.app/api/v1/cron/check-sla`
-  con el header `Authorization: Bearer <CRON_SECRET>` cada 2 minutos.
-- **Al pasar a Vercel Pro:** vuelve a poner `*/2 * * * *` en `vercel.json` y quita el cron externo.
+Vercel Hobby solo permite cron **1 vez al día**, así que `vercel.json` usa `0 0 * * *` (diario). Por eso el
+escalado de SLA es **event-driven** (se dispara al ponerse online un psicólogo, reasignando a otro voluntario
+disponible — #159, ADR-0015) y el cron diario es solo la **red de seguridad**; el flujo principal no depende
+de él. Con este diseño **no hace falta** un cron de alta frecuencia.
+- **Opcional (si se quisieran barridos más frecuentes sin pagar Pro):** un **cron externo gratis** (p. ej.
+  [cron-job.org](https://cron-job.org)) puede hacer `GET https://TU-API.vercel.app/api/v1/cron/check-sla`
+  con el header `Authorization: Bearer <CRON_SECRET>`. No es necesario para el funcionamiento normal.
+- **Al pasar a Vercel Pro:** podrías poner un cron más frecuente (p. ej. `*/2 * * * *`) en `vercel.json`.
 
 ## Checklist rápido
 - [ ] Cuentas creadas (Supabase, Upstash, SMTP, token FPV).
