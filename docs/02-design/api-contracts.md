@@ -51,14 +51,23 @@
 ### Administrador (rol `administrador`)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/api/lineas-crisis` | Crear una línea de crisis/respaldo (incluye cobertura horaria). |
+| `POST` | `/api/lineas-crisis` | Crear una línea de crisis/respaldo (cobertura horaria en formato **24 h (0–24)** y **días de la semana** opcionales para el ruteo). |
 | `PUT` | `/api/lineas-crisis/{id}` | Editar una línea de crisis/respaldo. |
-| `DELETE` | `/api/lineas-crisis/{id}` | Desactivar una línea de crisis/respaldo. |
+| `DELETE` | `/api/lineas-crisis/{id}` | **Eliminar de forma definitiva** una línea (distinto de *desactivar*, que solo la oculta). |
 
 ### Interno (Vercel Cron Job)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/api/cron/revisar-slas-vencidos` | Invocado por **Vercel Cron** cada 1-2 min. Detecta casos de riesgo alto > 10 min sin aceptar y dispara el escalamiento (RF-3.3). **No** es para usuarios. |
+| `GET/POST` | `/api/v1/cron/check-sla` | Barrido de SLA + asignación. En Vercel free el cron corre **1 vez al día** (respaldo). El escalamiento real es **event-driven** (ver *Comportamiento*). **No** es para usuarios. |
+
+## Comportamiento (reglas de negocio implementadas)
+- **SLA event-driven (#159):** como el cron de Vercel free solo corre una vez al día, el escalamiento de un caso de alto riesgo sin aceptar se dispara por **evento**: cuando un psicólogo **se pone en línea** (transición) se corre el barrido. Al vencer el SLA, el caso se **reasigna a otro voluntario disponible distinto** del que no aceptó (con su ventana de SLA renovada); si solo estaba el que no aceptó, queda en cola.
+- **Pausa libera el caso (#130):** si un psicólogo entra en pausa con un caso **asignado y no aceptado**, ese caso vuelve a la cola automáticamente.
+- **Reasignación solo a conectados (#130):** el coordinador solo puede reasignar a psicólogos en línea/disponibles.
+- **Un caso abierto por persona (#148):** el `pseudonym_id` es determinista por teléfono; un reenvío mientras hay un caso **abierto** lo reutiliza (idempotente). Se puede abrir uno nuevo tras el cierre.
+- **Contacto oculto hasta aceptar (#131):** el nombre/teléfono del solicitante solo se devuelven cuando el caso está `aceptado`/`cerrado`.
+- **Intake (#129/#131):** el teléfono del solicitante exige **código de país `+58`**; la **edad es obligatoria** (roja y verde); se persisten la **respuesta de urgencia (Likert)** y los **síntomas** para que el psicólogo los vea. El verde captura también **quién solicita la ayuda** (`tipo_solicitante`).
+- **Cierre (#131/#158):** el tiempo de atención se registra en **minutos enteros (mín 1)**; el **destino de la derivación** admite **varios** especialistas (multiselección).
 
 ## Notas de seguridad
 - `/api/casos` y `/api/casos/{id}` aplican autorización por **propiedad** (psicólogo) y por **rol** (coordinador/admin).

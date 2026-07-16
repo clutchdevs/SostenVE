@@ -19,7 +19,8 @@
 ## Resumen
 El **imperativo clínico** del PRD —ninguna vida en riesgo crítico depende de revisión manual— está
 cumplido: líneas de crisis inmediatas con fail-safe en cliente, triage que escala a riesgo alto, y
-**SLA de 10 min con escalamiento automático por Vercel Cron**. El RBAC del código usa los 4 roles del
+**SLA de 10 min con escalamiento event-driven** (al conectarse un psicólogo) que **reasigna a otro
+voluntario disponible**; el Vercel Cron (1 vez/día en plan free) queda como respaldo. El RBAC del código usa los 4 roles del
 PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principales están en el
 **Módulo 2** (consentimiento + registro completo de psicólogos), la **presencia en tiempo real**, el
 **expediente clínico detallado** y varias **acciones de coordinador/admin**.
@@ -36,22 +37,23 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Psicólogo Voluntario
 - ✅ Portal exclusivo (`/psicologo`).
 - ✅ Ver **solo** sus casos asignados (RLS + verificación de propiedad).
-- ✅ Ver la **identidad** del solicitante (nombre/teléfono/edad) de su caso asignado (PRD §2.1).
+- ✅ Ver la **identidad** del solicitante (nombre/teléfono/edad) **una vez aceptado** el caso; antes de aceptar el contacto (PII) se **oculta** para no distorsionar las métricas (#131, PRD §2.1).
+- ✅ Ver las **respuestas del solicitante** en el detalle: síntomas del intake y la respuesta de urgencia (Likert, #131).
 - ✅ Registrar diagnóstico/notas + **expediente de cierre estructurado** (RF-4.2 online).
 - ✅ Formulario de cierre con flujo "¿contactó? Sí/No" → cierre rápido o clínico completo.
 - ✅ **Máquina de estados** correcta: aceptar solo desde `asignado` (una vez); cierre terminal; `cerrado` solo lectura.
 - ❌ Portal **offline-first** con SQLCipher (RF-4.1) — decisión: fuera del MVP.
-- ✅ Presencia en tiempo real (heartbeat/Redis Upstash, RF-2.5) — filtra la asignación por `Online`.
+- ✅ Presencia en tiempo real (heartbeat/Redis Upstash, RF-2.5) — filtra la asignación por `Online`. Al entrar en **pausa** con un caso asignado no aceptado, ese caso vuelve a la cola (#130).
 
 ### Coordinador de Turno
 - ✅ **Centro de operaciones en vivo** (`/coordinador`): cola de casos priorizada (vencido SLA → riesgo →
   antigüedad), KPIs (riesgo alto / en cola / psicólogos en atención / espera promedio), badge de **SLA
   vencido** y refresco por polling. La lista trae el **psicólogo asignado** (`asignado_a`, sin PII del solicitante).
 - ✅ Sub-vistas **Psicólogos en atención** y **Reportes** (cola por categoría) con datos reales.
-- ✅ Alertas de SLA vencido (visual + escalamiento por cron).
+- ✅ Alertas de SLA vencido (visual + escalamiento **event-driven** que reasigna a otro voluntario, #159). Filtro **"Disponibles ahora"** y **"Limpiar filtros"** en Voluntarios (#130).
 - ❌ Panel **georreferenciado** (mapas) — fuera de alcance (geo pospuesto).
-- ✅ **Reasignar/cerrar** manualmente casos (issue #20): `POST /cases/:id/reassign` (a un psicólogo
-  activo, resetea el SLA en riesgo alto) y `POST /cases/:id/coordinator-close` (cierre administrativo con
+- ✅ **Reasignar/cerrar** manualmente casos (issue #20): `POST /cases/:id/reassign` (solo a un psicólogo
+  **conectado/disponible**, resetea el SLA en riesgo alto, #130) y `POST /cases/:id/coordinator-close` (cierre administrativo con
   motivo). Acciones en el board, auditadas.
 - ✅ Gestión de voluntarios (aprobar/suspender) **abierta al rol `coordinador`** (issue #20, RF-2.3);
   el admin la conserva. Página `/coordinador/voluntarios`.
@@ -86,9 +88,15 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 ### Módulo 1 — Intake y triage
 - ✅ RF-1.1 Triage-first (Likert one-tap, sin PII en el primer paso).
 - ✅ RF-1.2 Rama Roja con 3 sub-canales (llamar / recibir-llamada / WhatsApp).
-- ✅ RF-1.2.1 Ruteo dinámico por hora (LAPSI 8:00–2:00 / Miranda 2:01–7:59, con cruce de medianoche).
-- ✅ RF-1.2.2 / RF-1.2.3 Formulario mínimo de Rama Roja con **Nombre, Teléfono y Edad** (la edad, parámetro
-  clínico crítico para minoría/geriatría, ya se captura en la UI y persiste en el caso, alimentando el ruteo).
+- ✅ RF-1.2.1 Ruteo dinámico por **hora (formato 24 h, 0–24) y día de la semana**, configurable por la FPV
+  desde el admin, en zona horaria de Venezuela y con cruce de medianoche (#127). La premisa fija
+  "LAPSI 8:00–2:00" quedó obsoleta: la federación configura las franjas.
+- ✅ RF-1.2.2 / RF-1.2.3 Formulario mínimo de Rama Roja con **Nombre, Teléfono (con código de país `+58`,
+  #129) y Edad obligatoria** (#131; parámetro clínico crítico para minoría/geriatría, persiste en el caso).
+  Se persiste también la **respuesta de urgencia (Likert)** para que el psicólogo la vea (#131).
+- ✅ **Un caso abierto por persona (#148):** el `pseudonym_id` es un HMAC determinista del teléfono; un
+  reenvío mientras hay un caso abierto lo **reutiliza** (idempotente, sin duplicar ni fallar). Tras el
+  cierre se puede abrir uno nuevo.
 - ✅ RF-1.3 Rama Verde con tags por severidad (motor) + **catálogo clínico real de la FPV** (issue #19):
   los **22 tags** del PRD RF-1.3 (rojo/naranja/amarillo, con duelo, infancia y disociación), **versionado**
   (`TAG_CATALOG_VERSION`), en el dominio y espejado en el web (mismos códigos). Pesos por severidad con
@@ -112,8 +120,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   auditable (versión + timestamp en `volunteers` y en `audit_log`). El texto es el **oficial de la FPV**
   transcrito del PRD (RF-2.1.1), versión `v1.0.0-fpv` (issue #32); se cambia sin tocar código.
 - ✅ RF-2.1.2 Formulario de postulación completo: tipo + número de documento (cédula) separados del
-  `professional_id` (= nº FPV), universidad, año de egreso, colegio, PAP (sí/no) + detalle obligatorio,
-  modalidad (multiselect presencial/distancia) y disponibilidad horaria estructurada (día × bloque).
+  `professional_id` (= nº FPV), universidad, año de egreso, colegio, **país y ciudad de residencia** (#128),
+  PAP (sí/no) + detalle obligatorio, modalidad (multiselect presencial/distancia) y disponibilidad horaria
+  estructurada (día × bloque).
   Persistido en `volunteers` (migración `…0008`, columnas nullable) y validado en la API (Zod).
 - ✅ RF-2.2 Validación contra el **padrón real de la FPV** vía **Adapter** `HttpFpvVerifier`
   (`validate` + `getProfile`, Circuit Breaker → `pending_approval`; dummy solo en tests, ADR-0013, issue #6)
@@ -155,7 +164,9 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
   > motor de asignación. `cases.region` se conserva como ubicación pero ya no rutea.
 - ✅ Filtro de elegibilidad — estado `Activo` **y** presencia `Online` (RF-2.5).
 - ✅ RF-3.2 SLA de 10 min (se fija `sla_expires_at`).
-- ✅ RF-3.3 Escalamiento automático (revoca, vuelve a la cola, notifica coordinadores) vía cron. La alerta
+- ✅ RF-3.3 Escalamiento **event-driven** (revoca, vuelve a la cola, **reasigna a otro voluntario disponible**
+  distinto del que no aceptó y le renueva el SLA, #159; notifica coordinadores). Se dispara al conectarse
+  un psicólogo; el Vercel Cron (1/día en plan free) es el respaldo periódico. La alerta
   crítica `high_risk_escalated_no_coordinator` se basa ahora en **presencia en vivo** (issue #55): salta si al
   escalar **no hay ningún coordinador `Online`** (RF-2.5), no solo si no hay coordinador activo.
 - ⚠️ Notificación — `LogNotifier`; faltan push PWA y correo reales.
@@ -168,8 +179,10 @@ PRD (`requester`, `psychologist`, `coordinator`, `admin`). Los huecos principale
 - ❌ RF-4.1 Offline-first + SQLCipher (AES-256) — fuera del MVP.
 - ✅ RF-4.2 Registro clínico / cierre estructurado (online): contactabilidad Sí/No (RF-4.2.2), demografía
   (sexo, destinatario derivado, RF-4.2.3), sintomatología-chips (RF-4.2.4), medio de contacto (RF-4.2.5),
-  técnicas SMAPS (RF-4.2.6), motivo de cierre + **derivación tipo+destino** (RF-4.2.7), horas y comentario
-  (RF-4.2.8). Identidad del solicitante visible para el asignado (RF-4.2.1).
+  técnicas SMAPS (RF-4.2.6), motivo de cierre + **derivación tipo + destino(s) en multiselección**
+  (RF-4.2.7, #158 — se eliminó la opción combinada "Psicología y Psiquiatría"), **minutos** de atención
+  (enteros, mín 1; #131) y comentario (RF-4.2.8). Identidad del solicitante visible **solo tras aceptar**
+  el caso (#131, RF-4.2.1); el detalle muestra además los **síntomas** y la **urgencia** que respondió.
 - ✅ RF-4.2.4: la **ideación suicida** registra alerta de seguimiento (auditoría; el PRD pide bandera
   preventiva a 5 días para notificar a los coordinadores — hoy queda como evento auditado, falta el plazo).
 - ✅ **Crisis psicótica aguda** → derivación urgente bloqueada + sube riesgo (regla de seguridad nuestra,

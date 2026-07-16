@@ -1,6 +1,6 @@
 # Backlog de implementación — PPV (Sistema PPV 2026)
 
-> **Fase AI-DLC:** `03-implementation` · **Estado:** vigente · **Actualizado:** 2026-07-02
+> **Fase AI-DLC:** `03-implementation` · **Estado:** vigente · **Actualizado:** 2026-07-16
 >
 > Trabajo restante para completar el MVP, derivado de la brecha entre el
 > [PRD de la Federación](../01-requirements/flujo-central.md) y lo ya implementado (bloques 0-7, ver
@@ -14,6 +14,21 @@
 - **Bloqueo:** dependencia que impide empezar o terminar.
 - **Labels sugeridos al crear el issue:** `area:web` / `area:api` / `area:infra`, `tipo:feat` /
   `tipo:bug` / `tipo:docs` / `tipo:decisión`, `prioridad:alta|media|baja`, `bloqueado` (si aplica).
+
+## Ya resuelto (QA + Federación, 2026-07-16)
+Ronda de QA de la FPV sobre el ambiente de pruebas + 2 ajustes de la Federación, cada uno con issue + PR:
+- ✅ **#125** Home — CTAs de emergencia/guías sobre el fold en laptop (2 columnas en desktop).
+- ✅ **#126** Admin — invitación de coordinador (filtros + paginación + buscador).
+- ✅ **#127** Admin — líneas de crisis: horas **0–24 (24 h)**, **días de la semana**, eliminar definitivo, ruteo en hora de Venezuela.
+- ✅ **#128** Registro de psicólogo — **país y ciudad de residencia**.
+- ✅ **#129** Intake — teléfono del solicitante con **código de país `+58`** (para el link de WhatsApp del psicólogo).
+- ✅ **#130** Coordinador — filtro **"Disponibles ahora"**, la **pausa libera** el caso no aceptado, reasignación **solo a conectados** (SLA).
+- ✅ **#131** Psicólogo — **contacto oculto hasta aceptar**, auto-refresco, **cierre en minutos**, **edad obligatoria**, ver **respuestas del solicitante** + tipo de solicitante.
+- ✅ **#148** Intake — **un caso abierto por persona** (create idempotente; corrige el `duplicate key`/bucle del outbox).
+- ✅ **#150** Web — fix de **hidratación SSR** (saludo/reloj dependientes de la hora).
+- ✅ **#158** Cierre — **destino de derivación multiselección** (se quitó "Psicología y Psiquiatría").
+- ✅ **#159** SLA — al vencer, **reasigna a otro voluntario disponible**; escalamiento **event-driven** (cron free = 1/día de respaldo).
+- ✅ **Manual de usuario** actualizado (`docs/04-testing/manual-de-usuario.md` + capturas).
 
 ## Ya resuelto (2026-07-02)
 - ✅ **Verificador FPV real** ([A6](#a6--implementar-httpfpvverifier-real--issue-6), issue #6) —

@@ -6,6 +6,33 @@ El formato se basa en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado]
+
+## [1.0.0] - 2026-07-16
+_Primera versión publicada en `main` (MVP/piloto disponible): flujo central completo online, ronda de
+QA de la FPV (#125–#131, #148, #150) y ajustes de la Federación (#158, #159), más la documentación
+técnica oficial (`docs/asciidoc/`)._
+
+### Cambiado
+- **SLA de aceptación event-driven que reasigna a otro voluntario (#159):** al vencer el SLA de un caso de
+  riesgo alto no aceptado, el sistema lo **escala y lo reasigna a un voluntario disponible distinto** del que
+  no aceptó, renovando la ventana. El barrido se dispara **cuando un psicólogo se pone en línea** (el plan
+  free de Vercel solo permite un cron/día, que queda como respaldo). Ver ADR-0015.
+- **Destino de derivación en el cierre ahora es multiselección (#158):** el cierre clínico permite marcar
+  **uno o varios destinos** de derivación; se eliminó la opción combinada **"Psicología y Psiquiatría"**
+  (`ambos`). Persistido como `text[]` (`referral_destinations`).
+- **Tiempo de atención del cierre en minutos enteros (#131):** el cierre registra los **minutos** de
+  atención (entero ≥ 1) en vez de horas decimales.
+- **Contacto del solicitante oculto hasta aceptar el caso (#131):** el nombre y los datos de contacto solo
+  se revelan al psicólogo **una vez que acepta** el caso (tanto en el listado como en el detalle).
+
+### Corregido
+- **Intake ya no falla con `duplicate key` (#148):** los reenvíos del formulario offline-first son
+  **idempotentes** — un `pseudonym_id` determinístico (HMAC del teléfono) + índice único parcial garantizan
+  **un único caso abierto por persona**, y `create` devuelve el caso existente ante colisión en vez de un
+  500. Se permite reabrir tras el cierre. Ver ADR-0016.
+- **Error de hidratación en el panel (#150):** el saludo/reloj dependiente del cliente se calcula tras el
+  montaje para evitar el desajuste servidor/cliente de React.
+
 ### Añadido
 - **Balanceo de carga en la asignación + tope configurable desde el admin (RF-2.5):** la asignación ya no
   amontona casos en el primer psicólogo. Ahora calcula la **carga activa** de cada psicólogo online (casos

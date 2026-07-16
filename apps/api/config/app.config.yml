@@ -13,7 +13,15 @@ default: &default
 
   sla:
     high_risk_assignment_minutes: 10
-    cron_check_interval_minutes: 2
+    # Umbral (minutos antes del vencimiento) en que un caso de alto riesgo se marca
+    # "por vencer" en el tablero del coordinador. Espejado en el web.
+    warning_threshold_minutes: 5
+
+  intake:
+    # Ventana de idempotencia del intake (rama roja): reenvíos del formulario
+    # offline-first con el mismo Idempotency-Key resuelven al mismo caso durante
+    # este lapso. Ver ADR-0016.
+    idempotency_ttl_hours: 24
 
   crisis_lines:
     routing:
@@ -185,6 +193,13 @@ default: &default
     provider: "memory"
     heartbeat_ttl_seconds: 130
     heartbeat_interval_seconds: 60
+
+  ui:
+    # Cadencia de refresco (polling) de los paneles del PWA para acercarse a
+    # "tiempo real" sin websockets: tablero del coordinador, listas de casos y
+    # voluntarios, y detalle del caso. El web lo espeja en apps/web/src/lib/config.ts
+    # (no se quema el valor en cada pantalla).
+    data_refresh_seconds: 15
 
   rbac:
     roles: ["requester", "psychologist", "coordinator", "admin"]

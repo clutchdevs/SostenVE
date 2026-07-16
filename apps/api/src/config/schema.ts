@@ -30,7 +30,14 @@ export const appConfigSchema = z.object({
   }),
   sla: z.object({
     high_risk_assignment_minutes: z.number().int().positive(),
-    cron_check_interval_minutes: z.number().int().positive(),
+    // Minutes-before-expiry at which a high-risk case is flagged "expiring" on the
+    // coordinator board. Mirrored client-side in apps/web/src/lib/config.ts.
+    warning_threshold_minutes: z.number().int().positive(),
+  }),
+  // Intake tuning. `idempotency_ttl_hours`: window during which a red-branch resubmit
+  // with the same Idempotency-Key resolves to the same case (offline-first, ADR-0016).
+  intake: z.object({
+    idempotency_ttl_hours: z.number().int().positive(),
   }),
   crisis_lines: z.object({
     routing: z.array(crisisLineRoutingSchema).min(1),
@@ -112,6 +119,12 @@ export const appConfigSchema = z.object({
     provider: z.enum(['memory', 'upstash']),
     heartbeat_ttl_seconds: z.number().int().positive(),
     heartbeat_interval_seconds: z.number().int().positive(),
+  }),
+  // UX cadence for the PWA panels (RF-2.5): how often the coordinator board,
+  // case/volunteer lists and case detail re-poll the API. Mirrored client-side in
+  // apps/web/src/lib/config.ts so the interval isn't hardcoded per screen.
+  ui: z.object({
+    data_refresh_seconds: z.number().int().positive(),
   }),
   rbac: z.object({
     roles: z.array(z.string().min(1)).min(1),

@@ -33,10 +33,10 @@ Solicitante / Psicólogo / Coordinador
 │ Supabase — PostgreSQL (cifrado de columnas)  │
 └──────────────────────────────────────────────┘
         ▲
-        │  cada 1-2 min
+        │  event-driven (psicólogo se conecta) + Vercel Cron diario de respaldo
 ┌──────────────────────────────────────────────┐
-│ Vercel Cron Job — Motor de SLA               │
-│   revisa casos > 10 min y escala (RF-3.3)    │
+│ Motor de SLA — escala casos de alto riesgo   │
+│   no aceptados y reasigna a OTRO voluntario  │
 └──────────────────────────────────────────────┘
 ```
 
@@ -48,18 +48,22 @@ Solicitante / Psicólogo / Coordinador
   Supabase). Orquesta triage, asignación/cola, validación de voluntarios y ruteo de líneas de crisis.
 - **Motor de triage:** embudo de baja fricción con **tags clínicos ponderados** y score de urgencia
   (ADR-0010), determinístico. No es ML; el analizador léxico-semántico (RF-1.4) es Fase 2.
-- **Motor de asignación/cola:** prioridad del ADR-0008; stateless.
-- **Motor de SLA (Vercel Cron Job):** único componente periódico; revisa la BD cada 1-2 min y
-  dispara el escalamiento de casos de riesgo alto no aceptados en 10 minutos (ADR-0009).
+- **Motor de asignación/cola:** prioridad del ADR-0008; stateless. Solo asigna a psicólogos **en
+  línea** (presencia en tiempo real, ADR-0014). Si un psicólogo entra en pausa con un caso asignado y
+  no aceptado, ese caso vuelve a la cola (#130).
+- **Motor de SLA:** escala los casos de riesgo alto no aceptados dentro del SLA y los **reasigna a otro
+  voluntario disponible** distinto del que no aceptó (#159). Es **event-driven** — se dispara cuando un
+  psicólogo se pone en línea (transición) — porque el plan free de Vercel solo permite **un cron al
+  día**, que queda como respaldo periódico (ADR-0009, ADR-0015).
 - **Supabase (PostgreSQL):** casos, usuarios, asignaciones, notas (cifradas), líneas de respaldo.
   Acceso vía **connection pooler** desde las funciones serverless (ADR-0002).
 
 ## 3. Modelo de datos (alto nivel)
 - **usuarios** — psicólogos y coordinadores: nombre, cédula profesional, especialidad, contacto, disponibilidad, rol, credenciales (hash), estado de validación contra BD FPV.
-- **casos** — solicitante (nombre, contacto, tipo), rama (roja/verde), **tags seleccionados + score ponderado**, nivel de riesgo, estado, zona, modalidad, fecha de creación, marca de tiempo para el SLA.
+- **casos** — solicitante (nombre, contacto, tipo, edad), rama (roja/verde), **tags/síntomas del intake + respuesta de urgencia (Likert) + score ponderado**, nivel de riesgo, estado, zona, modalidad, fecha de creación, marca de tiempo para el SLA. El `pseudonym_id` (HMAC del teléfono) es único **por caso abierto** (un caso abierto por persona, #148); el contacto (PII) se separa y solo se revela al aceptar (#131).
 - **asignaciones** — relación caso–psicólogo, fecha, canal de contacto, marca de "aceptado".
 - **notas_clinicas** — caso, psicólogo autor, fecha, diagnóstico, contenido (campo cifrado).
-- **lineas_de_respaldo** — nombre, número, **cobertura horaria** (para el ruteo dinámico), prioridad; editable sin tocar código.
+- **lineas_de_respaldo** — nombre, número, **cobertura horaria (24 h) y días de la semana** (ruteo dinámico en zona horaria de Venezuela), prioridad, activa; editable sin tocar código (crear/editar/desactivar/eliminar).
 
 ## 4. Control de acceso
 - Un psicólogo solo ve y escribe notas de sus casos asignados.

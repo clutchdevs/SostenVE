@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 import {
   acceptInvitationSchema,
   addNoteSchema,
+  assignmentSettingsSchema,
   caseClosureSchema,
   changePasswordSchema,
   coordinatorCloseSchema,
@@ -11,6 +12,7 @@ import {
   crisisLineUpdateSchema,
   forgotPasswordSchema,
   greenBranchSchema,
+  invitationInfoSchema,
   loginSchema,
   presenceSchema,
   resetPasswordSchema,
@@ -52,7 +54,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
     openapi: '3.1.0',
     info: {
       title: 'PPV — API (Sistema PPV 2026)',
-      version: '0.3.0',
+      version: '1.0.0',
       description:
         'API de la plataforma de respuesta psicosocial. Contrato vivo de los endpoints implementados.',
     },
@@ -356,6 +358,17 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           responses: { '200': { description: 'Métricas de capacidad' }, '403': { description: 'Sin permiso' } },
         },
       },
+      '/coordinators/invitation-info': {
+        post: {
+          tags: ['coordinators'],
+          summary: 'Previsualizar una invitación de coordinador por su token (público, para adaptar el onboarding)',
+          requestBody: jsonBody(invitationInfoSchema),
+          responses: {
+            '200': { description: 'Datos públicos de la invitación (nombre, email, estado)' },
+            '400': { description: 'Token inválido o vencido' },
+          },
+        },
+      },
       '/coordinators/accept-invitation': {
         post: {
           tags: ['coordinators'],
@@ -365,6 +378,21 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             '201': { description: 'Coordinador activado' },
             '400': { description: 'Invitación inválida o vencida' },
           },
+        },
+      },
+      '/admin/assignment-settings': {
+        get: {
+          tags: ['admin'],
+          summary: 'Leer el tope de casos activos por psicólogo (balanceo de carga, RF-2.5)',
+          security: bearer,
+          responses: { '200': { description: '{ max_active_caseload }' }, '403': { description: 'Sin permiso' } },
+        },
+        put: {
+          tags: ['admin'],
+          summary: 'Actualizar el tope de casos activos por psicólogo (admin, auditado)',
+          security: bearer,
+          requestBody: jsonBody(assignmentSettingsSchema),
+          responses: { '200': { description: '{ max_active_caseload } actualizado' }, '403': { description: 'Sin permiso' } },
         },
       },
       '/admin/crisis-lines': {

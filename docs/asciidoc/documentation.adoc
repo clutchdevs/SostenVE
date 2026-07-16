@@ -1,0 +1,64 @@
+= PPV — Programa de Psicólogos Voluntarios
+ClutchDevs <hola@clutchdevs.com>; Federación de Psicólogos de Venezuela
+:revnumber: v1.0.0
+:revdate: 2026-07-16
+:revremark: Documentación técnica oficial
+:description: Documentación técnica oficial de la plataforma PPV (Programa de Psicólogos Voluntarios)
+:keywords: PPV, psicología, crisis, Venezuela, serverless, Vercel, Supabase, Upstash, event-driven
+:organization: ClutchDevs
+:doctype: book
+:experimental:
+:reproducible:
+:icons: font
+:source-highlighter: rouge
+:listing-caption: Listado
+:table-caption: Tabla
+:figure-caption: Figura
+:sectnums:
+:sectnumlevels: 3
+:toc:
+:toclevels: 3
+:sourcedir: {docdir}
+ifndef::imagesdir[:imagesdir: images]
+ifdef::backend-pdf[]
+:pdf-themesdir: {sourcedir}/theme
+:pdf-theme: ppv
+:title-logo-image: image:clutchdevs-logo.png[pdfwidth=2.6in,align=center]
+:source-highlighter: rouge
+endif::[]
+
+// ─────────────────────────────────────────────────────────────
+// Documentación oficial de PPV — generada por ClutchDevs.
+// Portada: logo ClutchDevs · Pies de página: clutchdevs.com
+// Los diagramas de arquitectura se derivan de los C4 del repo
+// (docs/architecture/*) y se generan en docs/asciidoc/images/.
+// ─────────────────────────────────────────────────────────────
+
+[.text-center]
+*Plataforma de apoyo psicológico post-terremoto — Venezuela, 2026* +
+_Responsable de los datos: Federación de Psicólogos de Venezuela (FPV)_ +
+_Desarrollo: ClutchDevs · https://clutchdevs.com[clutchdevs.com]_
+
+<<<
+
+include::sections/01-resumen-ejecutivo.adoc[]
+
+include::sections/02-arquitectura.adoc[]
+
+include::sections/03-integraciones.adoc[]
+
+include::sections/04-event-driven.adoc[]
+
+include::sections/05-requisitos-y-reglas.adoc[]
+
+include::sections/06-seguridad-y-privacidad.adoc[]
+
+include::sections/07-api.adoc[]
+
+include::sections/08-despliegue-y-operacion.adoc[]
+
+include::sections/09-ai-dlc.adoc[]
+
+include::sections/10-referencias-y-docs.adoc[]
+
+include::sections/99-anexo-c4.adoc[]

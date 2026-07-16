@@ -22,7 +22,7 @@
                       │  serverless functions      │  pooler│  + RLS + backups     │
                       └───┬───────────────┬────────┘        └──────────────────────┘
         Vercel Cron ──────┘               │  ├─▶ Upstash Redis (presencia RF-2.5)
-        (*/2 min, CRON_SECRET)            │  ├─▶ SMTP (correos RF-2.2.4)
+        (diario, CRON_SECRET)             │  ├─▶ SMTP (correos RF-2.2.4)
                                           │  └─▶ Padrón FPV (validación, X-API-TOKEN)
 ```
 
@@ -31,8 +31,10 @@
 - **Base de datos**: proyecto Supabase (Postgres gestionado, con RLS y respaldos).
 - **Presencia en tiempo real**: Upstash Redis (REST) — en dev es memoria; en prod **debe** ser Upstash
   (serverless = múltiples instancias, no comparten memoria).
-- **Cron**: Vercel Cron cada 2 min llama a `/api/v1/cron/check-sla` (asignación + escalado SLA), protegido
-  por `CRON_SECRET` (ver [`apps/api/vercel.json`](../../apps/api/vercel.json)).
+- **Cron**: Vercel Cron **diario** (`0 0 * * *`, único permitido en el plan free) llama a
+  `/api/v1/cron/check-sla` (asignación + escalado SLA) como **respaldo**; el escalado real es **event-driven**
+  (se dispara cuando un psicólogo se conecta — ADR-0015). Protegido por `CRON_SECRET`
+  (ver [`apps/api/vercel.json`](../../apps/api/vercel.json)).
 - **Correo**: proveedor SMTP (Gmail/Brevo/SendGrid…).
 - **Padrón FPV**: servicio externo (`https://api.sistema.fpv.org.ve`) para validar cédula + nº FPV.
 
@@ -160,8 +162,8 @@ production:
   email: # …(como en 5.2)…
   presence:
     provider: "upstash"
-    heartbeat_ttl_seconds: 65
-    heartbeat_interval_seconds: 30
+    heartbeat_ttl_seconds: 130
+    heartbeat_interval_seconds: 60
 ```
 
 ---
@@ -195,7 +197,8 @@ production:
 3. **Environment Variables**: cargar **todas** las de la sección 4.1 (para *Production*, y opcionalmente
    *Preview*).
 4. **Cron**: ya está declarado en [`vercel.json`](../../apps/api/vercel.json)
-   (`*/2 * * * *` → `/api/v1/cron/check-sla`). Vercel envía el `CRON_SECRET` como `Authorization: Bearer`.
+   (`0 0 * * *` diario → `/api/v1/cron/check-sla`, respaldo del escalado event-driven — ADR-0015).
+   Vercel envía el `CRON_SECRET` como `Authorization: Bearer`.
 5. (Opcional) Dominio `api.ppv.org.ve`.
 
 ---
@@ -237,7 +240,7 @@ production:
 - [ ] SMTP real probado (llega un correo de bienvenida/reset de verdad).
 - [ ] `FPV_API_TOKEN` válido → un registro real se valida contra el padrón.
 - [ ] Dominios conectados (web + api) con HTTPS.
-- [ ] Cron corriendo (ver logs de Vercel Cron cada 2 min).
+- [ ] Cron diario corriendo (ver logs de Vercel Cron, `0 0 * * *`) como respaldo del escalado event-driven.
 - [ ] Líneas de crisis reales cargadas en `/admin/lineas` (las del seed son de prueba).
 
 ---

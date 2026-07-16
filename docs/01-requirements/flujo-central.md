@@ -118,9 +118,10 @@ ponderado resultante define la prioridad.
    dentro de su categoría — ver ADR-0008).
 2. **SLA de 10 minutos (RF-3.2):** desde que un caso de riesgo alto queda disponible, un voluntario
    tiene 10 minutos para presionar **"Aceptar caso"**.
-3. **Escalamiento automático (RF-3.3):** si nadie acepta en 10 minutos, el sistema escala. El
-   temporizador **no** vive en memoria: un **Vercel Cron Job** revisa la BD cada 1-2 minutos y
-   dispara el escalamiento (ver ADR-0009).
+3. **Escalamiento automático (RF-3.3):** si nadie acepta en 10 minutos, el sistema escala y **reasigna el
+   caso a otro voluntario disponible** distinto del que no aceptó. El temporizador **no** vive en memoria y,
+   por el límite de un cron/día del plan free de Vercel, el escalado es **event-driven**: se dispara cuando un
+   psicólogo se pone en línea, con el **Vercel Cron diario** como respaldo (ver ADR-0009, ADR-0015).
 4. **Webhook de Rescate Activo (RF-3.4):** **fuera del MVP — diseño de Fase 3.**
 
 ## 4. Reglas de negocio (invariantes)
