@@ -1,6 +1,6 @@
 {
   "name": "@ppv/web",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "description": "PPV frontend — Next.js PWA (intake, psychologist portal, coordinator panel)",
   "scripts": {
