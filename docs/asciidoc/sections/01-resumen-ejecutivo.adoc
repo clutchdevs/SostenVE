@@ -1,0 +1,66 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+== Resumen ejecutivo
+
+*PPV (Programa de Psicólogos Voluntarios)* es una plataforma web de apoyo psicológico creada
+para responder al doblete sísmico del *24 de junio de 2026* (epicentro San Felipe / Yumare,
+Yaracuy; magnitudes 7.2 y 7.5), que dejó cientos de fallecidos, miles de heridos y una caída
+intermitente de electricidad y telecomunicaciones en el occidente de Venezuela.
+
+El nombre y las políticas los define la *Federación de Psicólogos de Venezuela (FPV)*, dueña y
+responsable de los datos. El desarrollo y la operación técnica son responsabilidad de *ClutchDevs*.
+
+=== Visión
+
+Conectar de forma *rápida, priorizada y segura* a las personas afectadas con psicólogos
+voluntarios disponibles, asegurando que *ninguna persona en riesgo de vida dependa de que un
+voluntario revise la plataforma a tiempo*: ante riesgo alto, las líneas de crisis se muestran de
+inmediato, antes e independientemente de cualquier asignación.
+
+=== A quién sirve (actores)
+
+[cols="1,3",options="header"]
+|===
+| Actor | Rol
+| Solicitante | Víctima, familiar o voluntario/rescatista que pide apoyo. Llena el formulario dentro de la app.
+| Psicólogo voluntario | Atiende los casos que se le asignan; registra diagnóstico, notas y cierre clínico.
+| Psicólogo verificador | Da de alta y valida a cada voluntario contra el padrón real de la FPV.
+| Coordinador de turno | Monitorea el panel, prioriza el riesgo alto, reasigna y cierra casos.
+| Federación (FPV) | Define políticas y es dueña de los datos; no opera el sistema día a día.
+|===
+
+=== Qué hace la plataforma
+
+* *Solicitud offline-first:* formulario dentro de la PWA que guarda el borrador localmente y
+  reintenta el envío al recuperar conexión, con aviso de consentimiento no bloqueante y guías de
+  Primeros Auxilios Psicológicos (PAP) de autoayuda.
+* *Triage determinístico:* clasifica el riesgo (alto / moderado / seguimiento) con un catálogo de
+  tags clínicos ponderados y un índice de urgencia. No usa ML ni biometría (ver <<arquitectura>>).
+* *Fail-safe de crisis:* ante riesgo alto muestra las líneas de crisis de inmediato, incluso con
+  el backend caído (se cachean en el cliente).
+* *Asignación automática* por especialidad, *presencia en vivo* y *balanceo de carga*, con
+  *SLA de aceptación* y *escalamiento orientado a eventos* que reasigna a otro voluntario
+  disponible al vencer (ver <<event-driven>>).
+* *Portales* de psicólogo, coordinador y administrador, con control de acceso por rol.
+* *Registro de voluntarios* validado contra el *padrón real de la FPV*, con alta automática y
+  credenciales por correo.
+* *Seguridad y cumplimiento:* cifrado en reposo de campos clínicos, seudonimización de PII,
+  bitácora de auditoría inmutable y control de acceso por rol (ver <<seguridad>>).
+
+=== Niveles de riesgo
+
+[cols="1,2,3",options="header"]
+|===
+| Nivel | Significado | Acción del sistema
+| `riesgo_alto` | Ideación suicida o señales de brote psicótico | Líneas de crisis de inmediato; caso urgente en el panel de coordinador; SLA con escalamiento.
+| `riesgo_moderado` | Apoyo pronto, sin riesgo vital inmediato | Asignación automática prioritaria dentro de su categoría.
+| `seguimiento` | Apoyo no urgente | Asignación por orden de llegada; cola visible y honesta.
+| `cerrado` | Caso atendido y finalizado | Archivado, sujeto a la política de retención de la FPV.
+|===
+
+=== Estado
+
+La plataforma está *desplegada y disponible en `main`* (MVP/piloto). El go-live formal de
+producción con datos clínicos reales a escala está sujeto a decisiones de la FPV (plan de Supabase
+con respaldos, provisión de credenciales del padrón y del correo). El detalle vive en el
+<<referencias, índice de documentación>> y en el `CHANGELOG.md` del repositorio.

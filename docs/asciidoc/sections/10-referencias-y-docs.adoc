@@ -1,0 +1,74 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[referencias]]
+== Índice de documentación del repositorio
+
+Toda la documentación de PPV vive en el repositorio, versionada junto al código. Este es el índice
+maestro; las rutas son relativas a la raíz del repo.
+
+=== 00 · Project
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `docs/00-project/charter.md` | Charter del proyecto (visión, principios no negociables).
+| `docs/00-project/glossary.md` | Glosario de términos.
+| `docs/00-project/data-classification.md` | Clasificación de datos (restringido/clínico).
+| `docs/00-project/decisiones-infraestructura.md` | Respaldo del análisis de infraestructura.
+| `docs/00-project/adr/000X-*.md` | *ADRs* 0001–0016 (decisiones arquitectónicas).
+|===
+
+=== 01 · Requirements
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `docs/01-requirements/flujo-central.md` | Flujo central (intake → triage → derivación → asignación → SLA → cierre).
+| `docs/01-requirements/prd-cobertura-y-brechas.md` | Cobertura y brechas frente al PRD de la FPV.
+| `docs/01-requirements/decisiones-interpretacion.md` | Decisiones de interpretación del PRD.
+|===
+
+=== 02 · Design
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `docs/02-design/architecture.md` | Arquitectura (estilo, componentes, modelo de datos).
+| `docs/02-design/api-contracts.md` | Contratos de API y reglas de negocio implementadas.
+| `docs/02-design/openapi.yaml` | Contrato OpenAPI de *diseño* (el vivo es `/api/v1/openapi.json`).
+| `docs/02-design/threat-model.md` | Modelo de amenazas STRIDE/DREAD.
+| `docs/architecture/c4-*.md` | Diagramas C4 (contexto, contenedores, componentes) en Mermaid.
+|===
+
+=== 03 · Implementation · 04 · Testing
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `docs/03-implementation/backlog.md` | Backlog de implementación y estado (incluye la ronda de QA + Federación).
+| `docs/04-testing/manual-de-usuario.md` | Manual de usuario con capturas de pantalla.
+| `docs/04-testing/seed-data.md` | Datos de prueba y cómo funciona la asignación automática.
+| `docs/04-testing/README.md` | Estrategia de pruebas (unidad/integración, Playwright e2e, carga).
+|===
+
+=== 05 · Deployment · 06 · Monitoring
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `docs/05-deployment/guia-de-despliegue.md` | Guía de despliegue paso a paso.
+| `docs/05-deployment/plan-ambiente-provisional.md` | Ambiente provisional (staging) y notas de cron.
+| `docs/05-deployment/plan-de-instalacion.md` | Plan de instalación.
+| `docs/06-monitoring/README.md` | Observabilidad: métricas de SLA y alertas.
+|===
+
+=== Raíz del repositorio
+
+[cols="2,3",options="header"]
+|===
+| Documento | Contenido
+| `README.md` | Portada del proyecto, features, estado por fase y enlaces.
+| `CHANGELOG.md` | Historial de cambios (Keep a Changelog + SemVer).
+| `.ai-dlc/` | Gates y plantillas de la metodología AI-DLC (ver <<ai-dlc>>).
+| `docs/asciidoc/` | *Este documento* (fuente AsciiDoc + tema + imágenes).
+|===

@@ -1,0 +1,97 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[arquitectura]]
+== Arquitectura
+
+=== Estilo: serverless, sin proceso persistente
+
+PPV es una *aplicación web (PWA) serverless*, diseñada para ser mantenible por un equipo pequeño y
+operar con costo bajo. Frontend y backend viven en *Vercel* (funciones por request, sin un proceso
+corriendo 24/7) y todo el estado persistente vive en *Supabase (PostgreSQL)*. La única pieza
+"programada" es un *Vercel Cron diario*, que actúa como respaldo (ver <<event-driven>>).
+
+.Stack tecnológico
+[cols="1,2",options="header"]
+|===
+| Capa | Tecnología
+| Frontend | Next.js (App Router) + Tailwind, empaquetado como PWA
+| Backend | Hono (TypeScript) con *Clean Architecture / DDD* (casos de uso, puertos y adaptadores), desplegado como funciones serverless en `/api/*`
+| Base de datos | PostgreSQL gestionado en Supabase (RLS, cifrado por columna, auditoría inmutable)
+| Presencia en vivo | Upstash Redis vía API REST (adaptador en memoria en dev/tests)
+| Validación de voluntarios | Padrón real de la FPV por HTTP, tras un adaptador con Circuit Breaker
+| Correo | SMTP configurable por entorno (Gmail / Brevo / SendGrid…)
+|===
+
+La separación en *puertos y adaptadores* es lo que permite cambiar de infraestructura sin tocar la
+lógica de negocio: la presencia, el correo y el padrón son *puertos* con más de una implementación,
+seleccionables por configuración.
+
+=== Contexto del sistema (C4 nivel 1)
+
+El sistema recibe solicitudes, hace triage, deriva a líneas de crisis, asigna casos y guarda las
+historias clínicas. Las líneas de crisis son *destinos de derivación*, no integraciones técnicas: el
+sistema solo muestra su contacto.
+
+.Contexto — actores y sistema
+image::arch-context.png[Diagrama de contexto,align=center,pdfwidth=6.2in]
+
+La *FPV* aparece como actor dueño de los datos (no como sistema externo): define políticas y es la
+responsable legal de la información clínica.
+
+=== Contenedores e integraciones (C4 nivel 2)
+
+.Contenedores del sistema y sus integraciones
+image::arch-containers.png[Diagrama de contenedores,align=center,pdfwidth=6.6in]
+
+* El *frontend* prioriza la carga rápida con conexión intermitente, el guardado local/reintento del
+  formulario y las *líneas de crisis cacheadas en el cliente* para no depender de la latencia del
+  backend en el momento crítico.
+* El *backend* es stateless: orquesta triage, asignación/cola, validación de voluntarios y ruteo de
+  líneas de crisis. Todo el estado está en Supabase.
+* Cada dependencia externa (Supabase, Upstash, padrón FPV, SMTP) se detalla en <<integraciones>>.
+
+=== Componentes internos del backend (C4 nivel 3)
+
+El backend se organiza en dos motores lógicos —no son servicios separados, sino módulos dentro del
+mismo despliegue.
+
+==== Motor de triage
+
+Embudo de baja fricción, *determinístico* (reglas, no ML): aplica tags clínicos ponderados y un
+score de urgencia para clasificar el riesgo. Si cualquier condición de riesgo alto se cumple
+(ideación suicida, señales de brote psicótico), el resultado es `riesgo_alto` y se muestran las
+líneas de crisis de inmediato.
+
+.Componentes — motor de triage
+image::comp-triage.png[Componentes de triage,align=center,pdfwidth=4.3in]
+
+==== Motor de asignación y cola
+
+Decide asignar o encolar según riesgo y disponibilidad. Solo asigna a psicólogos *en línea*
+(presencia en vivo) y aplica *balanceo de carga* (elige al de menor carga y respeta un tope
+configurable). Un caso de riesgo alto excede el tope solo cuando todos están llenos. Para evitar
+asignaciones duplicadas cuando varios disparadores corren a la vez, cada caso pasa por un *claim
+atómico* a nivel de fila.
+
+.Componentes — motor de asignación y cola
+image::comp-asignacion.png[Componentes de asignación,align=center,pdfwidth=6.4in]
+
+[NOTE]
+====
+Los diagramas de esta sección se derivan de los *diagramas C4 canónicos* del repositorio
+(`docs/architecture/*.md`, en Mermaid). La versión C4 original se incluye en el
+<<anexo-c4, Anexo A>>.
+====
+
+=== Modelo de datos (alto nivel)
+
+[cols="1,3",options="header"]
+|===
+| Entidad | Contenido
+| `usuarios` | Psicólogos y coordinadores: nombre, cédula profesional, especialidad, contacto, país/ciudad de residencia, disponibilidad, rol, credenciales (hash), estado de validación FPV.
+| `casos` | Solicitante (nombre, contacto, tipo, edad), rama (roja/verde), tags/síntomas + respuesta de urgencia (Likert) + score, nivel de riesgo, estado, zona, modalidad, marca de tiempo del SLA. El `pseudonym_id` (HMAC del teléfono) es único *por caso abierto* (un caso abierto por persona); el contacto (PII) se separa y solo se revela al aceptar.
+| `asignaciones` | Relación caso–psicólogo, fecha, canal de contacto, marca de "aceptado".
+| `notas_clinicas` | Caso, psicólogo autor, fecha, diagnóstico, contenido (cifrado por columna).
+| `lineas_de_respaldo` | Nombre, número, cobertura horaria (24 h) y días de la semana, prioridad, activa; editable sin tocar código desde el panel de admin.
+| `assignment_settings` | Fila única con el tope de casos por psicólogo (editable en runtime, default 6).
+|===

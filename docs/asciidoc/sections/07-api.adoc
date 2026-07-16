@@ -1,0 +1,565 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[api]]
+== API
+
+=== Contrato vivo (fuente de verdad)
+
+La API es un backend *Hono* montado bajo el base path *`/api/v1`*. El *contrato vivo* se genera en
+código a partir de los *esquemas Zod de validación* (vía `zod-to-json-schema`), por lo que los
+cuerpos de las peticiones *no pueden desincronizarse* de la validación real:
+
+[cols="1,2",options="header"]
+|===
+| Recurso | URL
+| Especificación OpenAPI 3.1 | `GET /api/v1/openapi.json`
+| Swagger UI ("Try it out") | `GET /api/v1/docs`
+|===
+
+[TIP]
+====
+El archivo `docs/02-design/openapi.yaml` es el contrato *de diseño* (fase 02) y usa nomenclatura en
+español; puede ir por detrás del runtime. Ante cualquier duda, *la fuente de verdad es
+`/api/v1/openapi.json`* (rutas en inglés bajo `/api/v1`).
+====
+
+=== Convenciones
+
+* *Base URL:* todas las rutas cuelgan de `/api/v1` (p. ej. `POST /api/v1/auth/login`). En este
+  capítulo las rutas se escriben relativas a ese base path.
+* *Formato:* JSON en peticiones y respuestas (`Content-Type: application/json`).
+* *Idempotencia:* `POST /intake/red-branch` acepta el header opcional `Idempotency-Key` (reintentos
+  seguros del formulario offline-first).
+* *Localización:* valores de dominio en español (p. ej. `nivel_riesgo: "riesgo_alto"`).
+
+==== Headers
+
+[cols="1,2",options="header"]
+|===
+| Header | Cuándo
+| `Content-Type: application/json` | En todo `POST`/`PUT`/`PATCH` con cuerpo.
+| `Authorization: Bearer <JWT>` | Endpoints autenticados (personal). Token de `POST /auth/login`.
+| `X-Cron-Secret: <CRON_SECRET>` | Solo `GET/POST /cron/check-sla`.
+| `Idempotency-Key: <uuid>` | Opcional, solo `POST /intake/red-branch`.
+|===
+
+==== Formato de error
+
+Todos los errores comparten una envoltura uniforme:
+
+[source,json]
+----
+{ "error": { "code": "VALIDATION_ERROR", "message": "Invalid request", "details": { } } }
+----
+
+[cols="1,2",options="header"]
+|===
+| Código HTTP | Significado
+| 400 `VALIDATION_ERROR` | Cuerpo inválido; `details` trae el detalle de Zod.
+| 401 | No autenticado / token inválido o secreto de cron inválido.
+| 403 | Autenticado pero sin permiso para el recurso (rol o caso ajeno).
+| 404 `NOT_FOUND` | Recurso inexistente.
+| 409 | Conflicto de estado (p. ej. aceptar/cerrar un caso en estado inválido).
+| 422 `DOMAIN_RULE_VIOLATION` | Regla clínica violada (p. ej. TEPT < 4 semanas).
+| 429 | Límite de tasa (intake y login).
+| 500 `INTERNAL_ERROR` | Error inesperado (nunca filtra detalles).
+|===
+
+=== Autenticación
+
+* *`bearerAuth`* (JWT): personal autenticado (psicólogo, coordinador, admin). El token se obtiene en
+  `POST /auth/login`. Cada request revalida la *versión del token* contra la cuenta (se invalida al
+  reloguear o cambiar contraseña — RF-2.7).
+* *`cronSecret`* (`X-Cron-Secret`): solo el endpoint de cron.
+* Los endpoints de *intake, líneas de crisis, consentimiento y PAP* son públicos (el solicitante no
+  tiene cuenta).
+
+=== Salud y meta
+
+==== `GET /health`
+Liveness del servicio. Público.
+
+[source,json]
+----
+// 200
+{ "status": "ok", "app": "PPV", "uptime_seconds": 1234 }
+----
+
+==== `GET /openapi.json` · `GET /docs`
+Especificación OpenAPI 3.1 y Swagger UI. Público.
+
+=== Intake (solicitante)
+
+Rutas públicas, *limitadas por tasa* (`intake_requests_per_minute`, 10/min por IP).
+
+==== `POST /intake/triage`
+Pregunta Likert inicial; devuelve la rama.
+
+[source,json]
+----
+// Request
+{ "respuesta_likert": 1 }
+
+// 200
+{ "rama": "roja" }   // "roja" (riesgo alto) | "verde"
+----
+
+==== `POST /intake/red-branch`
+Rama Roja: crea el caso de riesgo alto y devuelve las líneas de crisis. Header opcional
+`Idempotency-Key`. `sub_canal: "llamar"` no crea caso.
+
+[source,json]
+----
+// Request
+{
+  "sub_canal": "whatsapp-silencioso",   // llamar | recibir-llamada | whatsapp-silencioso
+  "nombre": "María",                     // opcional
+  "contacto": "+584141234567",           // +58 obligatorio para los canales de contacto
+  "edad": 34,                            // obligatorio (0–120)
+  "respuesta_likert": 1                  // opcional (1–5)
+}
+
+// 201
+{
+  "caso_id": "c1a2...",
+  "rama": "roja",
+  "nivel_riesgo": "riesgo_alto",
+  "score_urgencia": 12,
+  "lineas_crisis": {
+    "activa": { "name": "LAPSI", "phone": "+584242907338" },
+    "respaldo": [ { "name": "VEN-911", "phone": "911" } ]
+  }
+}
+----
+
+==== `POST /intake/green-branch`
+Rama Verde: clasifica por tags y crea el caso.
+
+[source,json]
+----
+// Request
+{
+  "nombre": "Pedro",                     // opcional
+  "contacto": "+584141234567",           // +58 obligatorio
+  "tipo_solicitante": "familiar",        // victima | familiar | voluntario (opcional)
+  "estado": "Yaracuy", "ciudad": "San Felipe",  // opcionales (componen la zona)
+  "modalidad": "distancia",              // presencial | distancia (opcional)
+  "metodo_contacto": "whatsapp",         // whatsapp | llamada (opcional)
+  "edad": 28,                            // obligatorio
+  "tags": ["ansiedad", "insomnio"],
+  "cambio_habitos": ["sueno", "alimentacion"],
+  "respuesta_likert": 3                  // opcional
+}
+
+// 201
+{ "caso_id": "c9f8...", "rama": "verde", "nivel_riesgo": "riesgo_moderado", "score_urgencia": 5 }
+----
+
+=== Líneas de crisis, consentimiento y PAP (público)
+
+==== `GET /crisis-lines/active`
+Línea activa según la hora (ruteo dinámico, BD con fallback a config).
+
+[source,json]
+----
+// 200
+{
+  "activa": { "name": "LAPSI", "phone": "+584242907338" },
+  "respaldo": [ { "name": "VEN-911", "phone": "911" } ]
+}
+----
+
+==== `GET /consent/active` · `GET /consent/requester`
+Texto y versión del consentimiento del *psicólogo* (RF-2.1.1) y del aviso al *solicitante* (issue #1).
+
+[source,json]
+----
+// 200
+{ "version": "v1.0.0-fpv", "updated_at": "2026-07-01", "text": "Consentimiento Informado…" }
+----
+
+==== `GET /pap`
+Guías de Primeros Auxilios Psicológicos (autoayuda).
+
+[source,json]
+----
+// 200
+{
+  "version": "v0.1.0-draft",
+  "updated_at": "2026-06-30",
+  "guides": [
+    { "id": "respiracion", "title": "Respiración para calmar la angustia",
+      "summary": "…", "steps": ["Inhala por la nariz contando hasta 4.", "…"] }
+  ]
+}
+----
+
+=== Autenticación y contraseña
+
+==== `POST /auth/login`
+Login de personal. Público (rate-limited: bloqueo tras 5 intentos por 15 min).
+
+[source,json]
+----
+// Request
+{ "email": "psico@ppv.test", "contrasena": "••••••••" }
+
+// 200
+{ "token": "eyJ…", "refresh_token": "eyJ…", "rol": "psychologist",
+  "roles": ["psychologist", "coordinator"] }
+// 401 credenciales inválidas
+----
+
+==== `POST /auth/change-password`
+Cambia la propia contraseña. *Bearer*. Invalida la sesión actual (reautenticar).
+
+[source,json]
+----
+// Request
+{ "contrasena_actual": "••••••••", "contrasena_nueva": "N7#vClaveFuerte" }
+// 204  ·  400 (nueva == actual)  ·  401 (actual incorrecta)
+----
+
+La `contrasena_nueva` exige ≥ 12 caracteres con minúscula, mayúscula, número y símbolo.
+
+==== `POST /auth/forgot-password`
+Solicita recuperación. Respuesta uniforme (sin enumeración de cuentas).
+
+[source,json]
+----
+// Request
+{ "email": "psico@ppv.test" }
+// 202 (se envía correo si la cuenta existe)
+----
+
+==== `POST /auth/reset-password`
+Restablece con token de un solo uso (TTL 60 min).
+
+[source,json]
+----
+// Request
+{ "token": "abc123", "contrasena": "N7#vClaveFuerte" }
+// 204  ·  400 (token inválido o expirado)
+----
+
+=== Voluntarios
+
+==== `POST /volunteers/register`
+Registro de voluntario (validación FPV vía adapter). Público.
+
+[source,json]
+----
+// Request (extracto)
+{
+  "nombre": "Ana Pérez",
+  "tipo_documento": "V", "numero_documento": "12345678",
+  "numero_fpv": "FPV-9988",
+  "email": "ana@correo.com", "telefono": "+584141234567",
+  "universidad": "UCV", "anio_egreso": 2015, "colegio": "Colegio de Caracas",
+  "pais_residencia": "Venezuela", "ciudad_residencia": "Caracas",
+  "especialidad": "clinica",
+  "modalidad": ["distancia"],
+  "disponibilidad_horaria": [ { "dia": "lunes", "bloque": "manana" } ],
+  "pap": true, "pap_detalle": "Curso PAP OPS 2025",
+  "consentimiento": true, "consentimiento_version": "v1.0.0-fpv"
+}
+
+// 202
+{ "voluntario_id": "v123", "estado_validacion": "active" }  // active | pending_approval
+// 422 FPV_NOT_REGISTERED (no figura en el padrón)
+----
+
+==== `GET /volunteers`
+Lista de voluntarios. *Bearer* (coordinador/admin). Query `status`.
+
+[cols="1,2",options="header"]
+|===
+| Query | Valores
+| `status` | `active` \| `pending_approval` \| `inactive` \| `all` (def. `pending_approval`)
+|===
+
+[source,json]
+----
+// 200
+[ { "id": "v123", "nombre": "Ana Pérez", "cedula_profesional": "FPV-9988",
+    "email": "ana@correo.com", "especialidad": "clinica", "rol": "psychologist",
+    "roles": ["psychologist"], "estado": "active", "motivo_excepcion": null,
+    "en_linea": true, "creado_en": "2026-07-10T12:00:00.000Z" } ]
+----
+
+==== `GET /volunteers/{id}`
+Detalle completo del postulante (revisión del coordinador). *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// 200 — presentVolunteer + :
+{ "…": "…campos de la lista…",
+  "telefono": "+584141234567", "documento": "V-12345678",
+  "universidad": "UCV", "anio_egreso": 2015, "colegio": "Colegio de Caracas",
+  "pais_residencia": "Venezuela", "ciudad_residencia": "Caracas",
+  "modalidad": ["distancia"], "disponibilidad_horaria": [ { "dia": "lunes", "bloque": "manana" } ],
+  "pap": true, "pap_detalle": "…", "consentimiento_version": "v1.0.0-fpv",
+  "consentimiento_aceptado_en": "2026-07-10T12:00:00.000Z" }
+// 404 NOT_FOUND
+----
+
+==== `POST /volunteers/me/presence`
+Latido / toggle de disponibilidad. *Bearer*. `true` refresca el TTL online; `false` marca offline.
+En la *transición* offline→online dispara la asignación/escalado event-driven (ver <<event-driven>>).
+
+[source,json]
+----
+// Request
+{ "disponible": true }
+// 204
+----
+
+==== `POST /volunteers/{id}/approve` · `POST /volunteers/{id}/reject`
+Aprobar/activar o rechazar/suspender un voluntario. *Bearer* (coordinador/admin). Sin cuerpo.
+
+[source,json]
+----
+// 200 { "ok": true }   ·  403 sin permiso  ·  404 no encontrado
+----
+
+==== `GET /volunteers/{id}/notes` · `POST /volunteers/{id}/notes`
+Notas confidenciales sobre un voluntario (RF-2.4). *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// POST Request
+{ "contenido": "Entrevista OK, disponible fines de semana." }
+// 201 (nota creada)  ·  GET 200 → lista de notas (más recientes primero)
+----
+
+=== Casos
+
+==== `GET /cases`
+Lista de casos. *Bearer* (personal). El *psicólogo* ve los suyos con contacto del solicitante
+(revelado solo si el caso está aceptado/cerrado); *coordinador/admin* ven todos, sin PII, con el
+psicólogo asignado.
+
+[source,json]
+----
+// 200 (psicólogo) — cada elemento:
+{ "caso_id": "c1a2", "rama": "verde", "nivel_riesgo": "riesgo_moderado", "score_urgencia": 5,
+  "estado": "aceptado", "tipo_solicitante": "familiar", "zona": "San Felipe, Yaracuy",
+  "modalidad": "distancia", "metodo_contacto": "whatsapp", "edad": 28, "cambio_habitos": ["sueno"],
+  "sintomas": ["ansiedad"], "urgencia_respuesta": 3,
+  "creado_en": "2026-07-15T10:00:00.000Z", "sla_vence_en": null,
+  "nombre": "Pedro", "contacto": "+584141234567" }
+
+// 200 (coordinador) — igual, pero sin nombre/contacto y con:
+//   "asignado_a": "Ana Pérez"
+----
+
+==== `GET /cases/{id}`
+Detalle con notas y cierre. *Bearer*. El psicólogo asignado ve identidad; coordinador/admin acceso
+auditado sin PII.
+
+[source,json]
+----
+// 200
+{
+  "caso": { "caso_id": "c1a2", "…": "…resumen…" },
+  "contacto": { "nombre": "Pedro", "contacto": "+584141234567" },   // null si no revelado
+  "notas": [ { "id": "n1", "diagnostico": "…", "contenido": "…",
+               "autor_id": "v123", "creada_en": "…" } ],
+  "cierre": null
+}
+// 403 caso ajeno  ·  404 no encontrado
+----
+
+==== `POST /cases/{id}/accept`
+El psicólogo asignado acepta el caso (solo desde `asignado`; detiene el SLA). *Bearer* (psicólogo).
+
+[source,json]
+----
+// 200 { "ok": true }   ·  403 caso ajeno  ·  409 estado inválido
+----
+
+==== `POST /cases/{id}/notes`
+Registra una nota clínica. *Bearer* (psicólogo). Aplica reglas clínicas (RF-4.2.9).
+
+[source,json]
+----
+// Request
+{ "contenido": "Sesión inicial…", "diagnostico": "Reacción a estrés agudo",
+  "tept_diagnostico": false, "crisis_psicotica_aguda": false }
+
+// 201
+{ "nota": { "id": "n1", "diagnostico": "…", "contenido": "…", "autor_id": "v123", "creada_en": "…" },
+  "derivacion": { "…": "…" } }
+// 422 DOMAIN_RULE_VIOLATION (p. ej. TEPT < 4 semanas)
+----
+
+==== `POST /cases/{id}/close`
+Cierre clínico estructurado (Módulo 4; solo desde `aceptado`, terminal). *Bearer* (psicólogo).
+
+[source,json]
+----
+// Request
+{
+  "contacto": true,
+  "sexo": "femenino",
+  "sintomas": ["ansiedad", "insomnio"], "otro_sintoma": null,
+  "medio_contacto": "whatsapp",
+  "tecnicas": ["escucha_activa", "respiracion"],
+  "motivo_cierre": "objetivos_cumplidos",
+  "derivacion_tipo": "seguimiento",                       // urgente | seguimiento | ninguna
+  "derivacion_destino": ["psicologia", "psiquiatria"],    // multiselección; sin "ambos"
+  "minutos": 45,                                          // entero, 1–6000
+  "comentario": "…"
+}
+
+// 201
+{ "cierre": { "contacto": true, "minutos": 45, "derivacion_destino": ["psicologia","psiquiatria"],
+              "creada_en": "…", "…": "…" } }
+// 403 caso ajeno  ·  409 estado inválido / ya cerrado
+----
+
+Destinos de `derivacion_destino`: `psicologia`, `psiquiatria`, `medicina`, `proteccion_ninos`,
+`proteccion_mujer`.
+
+==== `POST /cases/{id}/reassign`
+Reasignar a un psicólogo activo concreto. *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// Request
+{ "voluntario_id": "v456" }
+// 200 { "ok": true }  ·  400 destino no es psicólogo activo  ·  409 caso cerrado
+----
+
+==== `POST /cases/{id}/coordinator-close`
+Cierre administrativo del caso. *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// Request
+{ "motivo": "estancado" }   // estancado | duplicado | resuelto_externamente | solicitud_tercero | otro
+// 200 { "ok": true }  ·  409 ya cerrado
+----
+
+=== Coordinación
+
+==== `GET /coordinator/capacity`
+Capacidad y casos sin atender. *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// 200
+{ "casos_sin_asignar": 4, "riesgo_alto_sin_atender": 1,
+  "en_cola_por_categoria": { "riesgo_alto": 1, "riesgo_moderado": 2, "seguimiento": 1 } }
+----
+
+==== `POST /coordinators/invitation-info`
+Previsualiza una invitación por su token (público, adapta el onboarding).
+
+[source,json]
+----
+// Request
+{ "token": "inv_abc" }
+// 200 { "nombre": "Luis", "email": "luis@correo.com", "estado": "pendiente" }
+// 400 token inválido o vencido
+----
+
+==== `POST /coordinators/accept-invitation`
+Activa el rol de coordinador en la cuenta del email invitado (RF-2.6). El token basta.
+
+[source,json]
+----
+// Request
+{ "token": "inv_abc" }
+// 201 (coordinador activado)  ·  400 invitación inválida o vencida
+----
+
+=== Administración
+
+==== `GET /admin/assignment-settings` · `PUT /admin/assignment-settings`
+Tope de casos activos por psicólogo (balanceo de carga). *Bearer* (admin; PUT auditado).
+
+[source,json]
+----
+// GET 200 → { "max_active_caseload": 6 }
+// PUT Request → { "max_active_caseload": 8 }
+// PUT 200 → { "max_active_caseload": 8 }
+----
+
+==== `GET /admin/crisis-lines` · `POST /admin/crisis-lines`
+Listar / crear líneas de crisis (auditado). *Bearer* (admin).
+
+[source,json]
+----
+// POST Request
+{ "nombre": "LAPSI", "telefono": "+584242907338", "cobertura": "Nacional",
+  "hora_inicio": 8, "hora_fin": 2,                     // ventana nocturna: fin <= inicio
+  "dias_semana": ["lunes","martes","miercoles","jueves","viernes"],  // omitir = todos los días
+  "prioridad": 1, "activa": true }
+
+// 201 / 200 (item)
+{ "id": "l1", "nombre": "LAPSI", "telefono": "+584242907338", "cobertura": "Nacional",
+  "hora_inicio": 8, "hora_fin": 2, "dias_semana": ["lunes","…"], "prioridad": 1, "activa": true }
+----
+
+==== `PATCH /admin/crisis-lines/{id}` · `DELETE /admin/crisis-lines/{id}`
+Actualizar (parcial) / desactivar (soft-delete) una línea (auditado). *Bearer* (admin). El cuerpo del
+PATCH admite los mismos campos que el POST (todos opcionales); `null` en `dias_semana`/`hora_*`
+limpia a "todos los días" / sin horario.
+
+==== `GET /admin/coordinators/invitations` · `POST /admin/coordinators/invitations`
+Listar / crear invitaciones de coordinador (auditado; el token se devuelve una sola vez). *Bearer*
+(admin).
+
+[source,json]
+----
+// POST Request
+{ "nombre": "Luis", "email": "luis@correo.com" }
+// 201
+{ "id": "inv1", "nombre": "Luis", "email": "luis@correo.com", "estado": "pendiente",
+  "vence_en": "…", "aceptada_en": null, "creada_en": "…", "token": "inv_abc" }
+----
+
+==== `DELETE /admin/coordinators/invitations/{id}`
+Revocar una invitación pendiente (auditado). *Bearer* (admin). `409` si no está pendiente.
+
+==== `GET /admin/audit`
+Consulta la bitácora de auditoría (paginada, con actor resuelto). *Bearer* (admin).
+
+[cols="1,2",options="header"]
+|===
+| Query | Uso
+| `accion` / `registro` / `usuario` | Filtros opcionales.
+| `limit` (1–200) / `offset` (≥ 0) | Paginación.
+|===
+
+[source,json]
+----
+// 200
+{ "total": 120, "items": [
+  { "id": "a1", "usuario_id": "v123", "usuario_nombre": "Ana Pérez", "usuario_cedula": "FPV-9988",
+    "rol": "admin", "registro_afectado": "assignment_settings",
+    "accion": "assignment_caseload_cap_set:8", "creado_en": "…" } ] }
+----
+
+=== Operación
+
+==== `GET /metrics`
+Métricas de SLA (tiempo de asignación por riesgo), cola y uptime. *Bearer* (coordinador/admin).
+
+[source,json]
+----
+// 200
+{ "generated_at": "…", "uptime_seconds": 1234,
+  "tiempo_asignacion": {
+    "riesgo_alto": { "count": 10, "p50_seconds": 45, "p95_seconds": 300, "avg_seconds": 80 },
+    "riesgo_moderado": null, "seguimiento": null } }
+----
+
+==== `GET /cron/check-sla` · `POST /cron/check-sla`
+Barrido de SLA + asignación (respaldo del escalado event-driven). Header `X-Cron-Secret`.
+
+[source,json]
+----
+// 200 { "escalated": 1, "assigned": 3 }  ·  401 secreto inválido
+----

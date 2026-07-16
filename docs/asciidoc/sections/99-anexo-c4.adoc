@@ -1,0 +1,25 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[appendix]
+[[anexo-c4]]
+== Anexo A — Diagramas C4 canónicos
+
+Los diagramas de la sección <<arquitectura>> se derivan de los *diagramas C4 canónicos* del
+repositorio (`docs/architecture/*.md`, en notación C4 sobre Mermaid). Se incluyen aquí en su forma
+original como referencia.
+
+=== C4 · Nivel 1 — Contexto
+
+image::c4-context.png[C4 Contexto,align=center,pdfwidth=3.4in]
+
+=== C4 · Nivel 2 — Contenedores
+
+image::c4-container.png[C4 Contenedores,align=center,pdfwidth=4.0in]
+
+=== C4 · Nivel 3 — Componentes: triage
+
+image::c4-component-triage.png[C4 Componentes triage,align=center,pdfwidth=4.2in]
+
+=== C4 · Nivel 3 — Componentes: asignación
+
+image::c4-component-asignacion.png[C4 Componentes asignación,align=center,pdfwidth=4.6in]

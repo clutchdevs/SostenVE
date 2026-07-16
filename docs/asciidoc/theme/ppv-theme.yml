@@ -1,0 +1,90 @@
+# Tema PDF para la documentación oficial de PPV — ClutchDevs
+# Uso: asciidoctor-pdf -a pdf-themesdir=theme -a pdf-theme=ppv ...
+extends: default
+
+font:
+  catalog:
+    merge: true
+
+base:
+  font-color: 222222
+  font-size: 10.5
+
+role:
+  # Etiqueta de dato restringido / advertencia
+  danger:
+    font-color: B42318
+    font-style: bold
+  ok:
+    font-color: 116329
+    font-style: bold
+  muted:
+    font-color: 6B7078
+
+# Enlaces en azul de marca
+link:
+  font-color: 1F6FEB
+
+heading:
+  font-color: 0B3D6B
+  font-style: bold
+
+# Portada
+title-page:
+  logo:
+    top: 22%
+  title:
+    top: 55%
+    font-color: 0B3D6B
+    font-size: 30
+  subtitle:
+    font-color: 1F6FEB
+    font-size: 15
+  authors:
+    font-color: 222222
+    font-size: 11
+  revision:
+    font-color: 6B7078
+
+header:
+  font-color: 999999
+  height: 0.8in
+  padding: [10, 3, 0, 3]
+  recto:
+    columns: "<40% =20% >40%"
+    right:
+      content: '_{organization}_'
+    center:
+      content: 'image:logo.png[pdfwidth=0.9in]'
+  verso:
+    columns: $header_recto_columns
+    left:
+      content: $header_recto_right_content
+    center:
+      content: $header_recto_center_content
+
+footer:
+  height: 0.6in
+  font-color: 6B7078
+  font-size: 8
+  recto:
+    columns: "<50% >50%"
+    left:
+      content: 'clutchdevs.com'
+    right:
+      content: '{section-or-chapter-title} | {page-number}'
+  verso:
+    columns: $footer_recto_columns
+    left:
+      content: '{page-number} | {chapter-title}'
+    right:
+      content: 'clutchdevs.com'
+
+page:
+  layout: portrait
+  margin: [0.85in, 0.67in, 0.9in, 0.67in]
+  size: Letter
+
+code:
+  font-size: 8.5
+  background-color: F5F7FA

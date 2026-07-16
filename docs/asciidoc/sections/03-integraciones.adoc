@@ -1,0 +1,85 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[integraciones]]
+== Integraciones
+
+PPV tiene *cuatro dependencias externas*, todas accedidas por HTTP/REST o TLS —ninguna requiere un
+proceso persistente ni una cola de mensajes. Cada una está detrás de un *puerto* con al menos dos
+implementaciones (real y un stub/adaptador para dev y tests).
+
+[cols="1,1,2",options="header"]
+|===
+| Integración | Uso | Notas
+| Supabase (PostgreSQL) | Todo el estado persistente | Pooler TLS, RLS, cifrado por columna, auditoría (ADR-0002)
+| Upstash Redis | Presencia en vivo de psicólogos | API REST, sin conexión persistente (ADR-0014)
+| Padrón FPV | Validar cédula + nº FPV al registrarse | HTTP tras Circuit Breaker (ADR-0013)
+| SMTP | Correo transaccional | Bienvenida, credenciales, invitación, reset (ADR-0007)
+|===
+
+=== Supabase (PostgreSQL)
+
+Base de datos gestionada, *aislada del cPanel de la Federación* para reducir el radio de impacto
+ante un compromiso. El backend serverless accede vía *connection pooler* sobre TLS. Sobre esta base
+se construyen el control de acceso por rol (RLS), el cifrado por columna de los campos clínicos, la
+seudonimización de PII y la bitácora de auditoría inmutable (ver <<seguridad>>).
+
+[WARNING]
+====
+El MVP usa el *plan gratuito de Supabase*, que *no incluye respaldos automáticos* y, por tanto, no
+cumple el NFR 6.2 de la FPV (respaldo cada 6 h). Es *deuda técnica explícita*: debe resolverse antes
+de operar con datos clínicos reales a escala (ADR-0002).
+====
+
+=== Upstash Redis — presencia en tiempo real
+
+La *presencia en vivo* (qué psicólogo está `Online` ahora) es la pieza que hace posible no asignar
+un caso de riesgo vital a alguien ausente. Se resuelve con *Upstash Redis*, un Redis gestionado al
+que se accede por su *API REST con `fetch`* —sin dependencias de cliente ni conexiones persistentes,
+lo que encaja con el modelo serverless (una función no puede mantener un socket abierto entre
+invocaciones).
+
+.Cómo funciona
+* Al iniciar sesión, el psicólogo queda `Online`. La PWA envía un *latido (heartbeat)* cada
+  `heartbeat_interval_seconds` (*60 s* en la configuración actual) al endpoint autenticado
+  `POST /volunteers/me/presence`.
+* Cada latido escribe una clave `presence:{id}` con `SET … EX <ttl>`, donde el TTL es
+  `heartbeat_ttl_seconds` (*130 s*). Si dejan de llegar latidos (se cae la red, se cierra la
+  pestaña, se va la luz), la clave *se autoexpira* y el psicólogo pasa a offline sin que nadie tenga
+  que marcarlo.
+* El *toggle de disponibilidad* comparte el mismo endpoint: `disponible: true` refresca el TTL;
+  `disponible: false` marca offline de inmediato (pausa manual).
+* La escritura usa `SET … EX <ttl> GET`, que devuelve el valor previo. Así el backend sabe si el
+  latido representa una *transición* offline→online: ese es el "evento" que dispara la asignación
+  (ver <<event-driven>>).
+
+.Puerto `PresenceStore` con dos implementaciones
+[cols="1,3",options="header"]
+|===
+| Implementación | Cuándo
+| `UpstashPresenceStore` | Producción. Redis de Upstash por REST; credenciales `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
+| `MemoryPresenceStore` | Dev y tests (default). Mapa en memoria de proceso; *no* sirve en serverless (cada instancia tendría su propio mapa) — por eso producción *debe* usar Upstash.
+|===
+
+La lista de voluntarios del coordinador anota `en_linea` a partir de esta misma presencia, y el
+filtro *"Disponibles ahora"* la usa para mostrar solo a quien puede tomar un caso.
+
+=== Padrón FPV — validación de voluntarios
+
+El registro de un psicólogo se valida contra el *padrón real de la FPV* (`cédula + nº FPV`) mediante
+una llamada HTTP detrás de un adaptador con *Circuit Breaker* (ADR-0013), para que una caída o
+lentitud del padrón no tumbe el registro:
+
+* *No encontrado definitivo* (`fpv_not_found`) → el registro se *rechaza* (HTTP 422), sin crear
+  cuenta.
+* *Licencia hallada pero no activa* → va a *revisión manual* del coordinador (la persona existe).
+* *Fallo transitorio* (padrón caído / timeout / token inválido, `fpv_unreachable`) → *fallback a
+  pendiente de aprobación*, para no bloquear a alguien legítimo por una caída puntual.
+
+=== SMTP — correo transaccional
+
+El envío de correo (bienvenida + credenciales, invitación de coordinador tokenizada, recuperación de
+contraseña, aviso de registro en revisión) usa un `SmtpNotifier` configurable por entorno
+(`EMAIL_PROVIDER`, `SMTP_HOST/PORT/USERNAME/FROM/PASSWORD`), con `secure` derivado del puerto
+(465 = SSL, 587/2525 = STARTTLS). El default en dev/tests es `log` (no envía). *El envío de correo
+es no-fatal*: si el SMTP falla, la cuenta igual se crea/activa y se registra un `warn` —el voluntario
+puede recuperar credenciales con "olvidé mi contraseña".
