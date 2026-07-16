@@ -17,6 +17,10 @@ function makeCase(id: string, urgencyScore: number, createdAt: Date): CaseRecord
   };
 }
 
+function highRiskCase(id: string, createdAt = new Date()): CaseRecord {
+  return { ...makeCase(id, 100, createdAt), riskLevel: RiskLevel.HIGH };
+}
+
 function makeVolunteer(id: string): Volunteer {
   return {
     id,
@@ -46,6 +50,7 @@ function deps(
   const assignedTo: Array<{ caseId: string; volunteerId: string }> = [];
   const statusUpdates: string[] = [];
   const claimAttempts: string[] = [];
+  const slaResets: Array<{ caseId: string; date: Date | null }> = [];
   const d = {
     cases: {
       // Only PENDING drives the queue; the other statuses feed the caseload count
@@ -59,6 +64,9 @@ function deps(
       },
       async updateStatus(id: string) {
         statusUpdates.push(id);
+      },
+      async updateSlaExpiresAt(id: string, date: Date | null) {
+        slaResets.push({ caseId: id, date });
       },
     },
     volunteers: {
@@ -90,8 +98,9 @@ function deps(
       async notifyAssigned() {},
       async notifyEscalated() {},
     },
+    config: { sla: { high_risk_assignment_minutes: 10 } },
   } as unknown as AssignmentDeps;
-  return { d, assignedOrder, assignedTo, statusUpdates, claimAttempts };
+  return { d, assignedOrder, assignedTo, statusUpdates, claimAttempts, slaResets };
 }
 
 describe('assignPendingCases — urgency ordering (RF-1.5)', () => {
@@ -239,5 +248,34 @@ describe('assignPendingCases — load balancing (RF-2.5)', () => {
 
     expect(assigned).toBe(1);
     expect(assignedOrder).toEqual(['crisis']); // only the crisis got through
+  });
+});
+
+describe('assignPendingCases — SLA reassignment excludes the previous volunteer (#159)', () => {
+  const NOW = new Date('2026-07-15T12:00:00Z');
+
+  it('reassigns an escalated high-risk case to a DIFFERENT online volunteer and resets its SLA', async () => {
+    const { d, assignedTo, slaResets } = deps(
+      [highRiskCase('c1', NOW)],
+      [makeVolunteer('a'), makeVolunteer('b')],
+    );
+    // 'a' let the SLA expire → excluded for this reassignment.
+    const assigned = await assignPendingCases(d, new Map([['c1', 'a']]), NOW);
+
+    expect(assigned).toBe(1);
+    expect(assignedTo).toEqual([{ caseId: 'c1', volunteerId: 'b' }]);
+    // Fresh acceptance window so the sweep does not re-escalate it instantly.
+    expect(slaResets).toHaveLength(1);
+    expect(slaResets[0]!.caseId).toBe('c1');
+    expect(slaResets[0]!.date!.getTime()).toBe(NOW.getTime() + 10 * 60_000);
+  });
+
+  it('keeps the case queued (does not reassign back) when the excluded volunteer is the only one online', async () => {
+    const { d, assignedTo, slaResets } = deps([highRiskCase('c1', NOW)], [makeVolunteer('a')]);
+    const assigned = await assignPendingCases(d, new Map([['c1', 'a']]), NOW);
+
+    expect(assigned).toBe(0);
+    expect(assignedTo).toEqual([]);
+    expect(slaResets).toEqual([]);
   });
 });

@@ -17,7 +17,8 @@ export interface CaseClosure {
   techniques: string[];
   closeReason?: string;
   referralType?: string;
-  referralDestination?: string;
+  /** One or more referral destinations (#158): a patient may be referred to several. */
+  referralDestinations: string[];
   minutes: number;
   comment?: string;
   createdAt: Date;
@@ -36,7 +37,7 @@ export interface NewCaseClosure {
   techniques?: string[];
   closeReason?: string;
   referralType?: string;
-  referralDestination?: string;
+  referralDestinations?: string[];
   minutes: number;
   comment?: string;
 }

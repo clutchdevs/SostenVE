@@ -147,7 +147,7 @@ export function presentCaseClosure(closure: CaseClosure | null) {
     tecnicas: closure.techniques,
     motivo_cierre: closure.closeReason ?? null,
     derivacion_tipo: closure.referralType ?? null,
-    derivacion_destino: closure.referralDestination ?? null,
+    derivacion_destino: closure.referralDestinations,
     minutos: closure.minutes,
     comentario: closure.comment ?? null,
     creada_en: closure.createdAt.toISOString(),

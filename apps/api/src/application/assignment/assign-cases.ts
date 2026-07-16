@@ -21,8 +21,18 @@ import type { AssignmentDeps } from './ports.js';
  * for new (non-high-risk) cases, and the least-loaded eligible one is chosen. The
  * in-run counter is updated after each assignment so a single sweep spreads work
  * out instead of piling it on the first volunteer.
+ *
+ * `excludeByCase` (#159): when the SLA sweep just escalated a case, it maps that
+ * caseId → the psychologist who failed to accept, so this pass reassigns it to a
+ * DIFFERENT available volunteer and resets the high-risk acceptance SLA (otherwise
+ * the sweep would re-escalate it immediately). If the excluded one is the only
+ * volunteer online, the case stays queued rather than going back to them.
  */
-export async function assignPendingCases(deps: AssignmentDeps): Promise<number> {
+export async function assignPendingCases(
+  deps: AssignmentDeps,
+  excludeByCase: ReadonlyMap<string, string> = new Map(),
+  now: Date = new Date(),
+): Promise<number> {
   const pending = await deps.cases.listByStatus('PENDING');
   if (pending.length === 0) {
     return 0;
@@ -57,8 +67,14 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
   };
 
   for (const caseRecord of pending) {
+    // On an SLA reassignment (#159), drop the psychologist who let the SLA expire
+    // so the case goes to someone else. If they were the only one online, no
+    // candidate remains and the case stays queued.
+    const excludeId = excludeByCase.get(caseRecord.id);
+    const candidates = excludeId ? available.filter((v) => v.id !== excludeId) : available;
+
     const volunteer = selectVolunteerForCase(
-      available,
+      candidates,
       {
         age: caseRecord.age,
         requiresChildSpecialty: caseRecord.requiresChildSpecialty,
@@ -99,6 +115,14 @@ export async function assignPendingCases(deps: AssignmentDeps): Promise<number> 
         caseId: caseRecord.id,
         error: error instanceof Error ? error.message : String(error),
       });
+    }
+
+    // A reassigned high-risk case (its SLA just expired) needs a FRESH acceptance
+    // window, or it would be re-escalated before the new assignee can accept (#159)
+    // — the same reset the coordinator's manual reassignment does.
+    if (excludeId && caseRecord.riskLevel === RiskLevel.HIGH) {
+      const slaMs = deps.config.sla.high_risk_assignment_minutes * 60_000;
+      await deps.cases.updateSlaExpiresAt(caseRecord.id, new Date(now.getTime() + slaMs));
     }
 
     // Count this case against the volunteer's load so the next iteration balances

@@ -3,6 +3,7 @@ import { getConfig } from '../../../config/index.js';
 import { registerVolunteer } from '../../../application/volunteer/register-volunteer.js';
 import { approveVolunteer, rejectVolunteer } from '../../../application/volunteer/manage-volunteer.js';
 import { assignPendingCases } from '../../../application/assignment/assign-cases.js';
+import { processQueue } from '../../../application/assignment/process-queue.js';
 import { releaseUnacceptedOnPause } from '../../../application/assignment/release-on-pause.js';
 import { logger } from '../../../shared/logger.js';
 import {
@@ -162,14 +163,16 @@ export function createVolunteerRouter(): Hono {
     const presence = getPresenceStore();
     if (body.disponible) {
       const cameOnline = await presence.markOnline(user.sub, getConfig().presence.heartbeat_ttl_seconds);
-      // Event-driven assignment (RF-2.5): only on the offline→online transition
-      // (not every heartbeat), drain any queued cases to the newly available
-      // psychologist. Best-effort — a failure must not fail the heartbeat.
+      // Event-driven SLA + assignment (RF-2.5): only on the offline→online
+      // transition (not every heartbeat), escalate any case whose acceptance SLA
+      // expired — reassigning it to a DIFFERENT available psychologist (#159) — and
+      // drain pending cases to the newly available one. The daily Vercel cron is
+      // the periodic backstop. Best-effort — a failure must not fail the heartbeat.
       if (cameOnline) {
         try {
-          await assignPendingCases(getAssignmentDeps());
+          await processQueue(getAssignmentDeps());
         } catch (error) {
-          logger.warn('event-driven assignment on presence failed (cron will retry)', {
+          logger.warn('event-driven processQueue on presence failed (cron will retry)', {
             error: error instanceof Error ? error.message : String(error),
           });
         }

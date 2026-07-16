@@ -45,8 +45,11 @@ export function ClosureSummary({ cierre }: { cierre: CaseClosureView }) {
             />
             <Row label="Motivo de cierre" value={labelOf(CLOSE_REASONS, cierre.motivo_cierre)} />
             <Row label="Derivación" value={labelOf(REFERRAL_TYPES, cierre.derivacion_tipo)} />
-            {cierre.derivacion_destino && (
-              <Row label="Destino" value={labelOf(REFERRAL_DESTINATIONS, cierre.derivacion_destino)} />
+            {cierre.derivacion_destino.length > 0 && (
+              <Row
+                label="Destino"
+                value={cierre.derivacion_destino.map((d) => labelOf(REFERRAL_DESTINATIONS, d)).join(', ')}
+              />
             )}
             {cierre.comentario && <Row label="Comentario" value={cierre.comentario} />}
           </>

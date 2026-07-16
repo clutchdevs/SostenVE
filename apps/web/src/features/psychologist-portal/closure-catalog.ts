@@ -58,10 +58,11 @@ export const REFERRAL_TYPES: Option[] = [
   { code: 'seguimiento', label: 'Seguimiento posterior' },
 ];
 
+// #158: multiple destinations are allowed, so the combined "ambos" option is gone
+// (mark Psicología and Psiquiatría separately).
 export const REFERRAL_DESTINATIONS: Option[] = [
   { code: 'psicologia', label: 'Psicología' },
   { code: 'psiquiatria', label: 'Psiquiatría' },
-  { code: 'ambos', label: 'Psicología y Psiquiatría' },
   { code: 'medicina', label: 'Medicina' },
   { code: 'proteccion_ninos', label: 'Protección de niños' },
   { code: 'proteccion_mujer', label: 'Protección de la mujer' },
