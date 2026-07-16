@@ -23,7 +23,7 @@ export interface ClosureSubmission {
   tecnicas: string[];
   motivo_cierre?: string;
   derivacion_tipo?: string;
-  derivacion_destino?: string;
+  derivacion_destino: string[];
   minutos: number;
   comentario?: string;
 }
@@ -50,7 +50,7 @@ export function ClinicalClosureForm({
   const [techniques, setTechniques] = useState<string[]>([]);
   const [closeReason, setCloseReason] = useState('');
   const [referralType, setReferralType] = useState('ninguna');
-  const [referralDestination, setReferralDestination] = useState('');
+  const [referralDestinations, setReferralDestinations] = useState<string[]>([]);
   // Attention time in whole minutes, minimum 1 (#131; was decimal hours).
   const [minutes, setMinutes] = useState(5);
   const [comment, setComment] = useState('');
@@ -77,7 +77,7 @@ export function ClinicalClosureForm({
               tecnicas: techniques,
               motivo_cierre: closeReason || undefined,
               derivacion_tipo: referralType || undefined,
-              derivacion_destino: needsDestination ? referralDestination || undefined : undefined,
+              derivacion_destino: needsDestination ? referralDestinations : [],
               minutos: minutes,
               comentario: comment || undefined,
             }
@@ -86,6 +86,7 @@ export function ClinicalClosureForm({
               motivo_no_contacto: noContactReason || undefined,
               sintomas: [],
               tecnicas: [],
+              derivacion_destino: [],
               minutos: minutes,
             },
       );
@@ -182,15 +183,12 @@ export function ClinicalClosureForm({
             </select>
           </label>
           {needsDestination && (
-            <label className="block text-sm">
-              Destino de la derivación
-              <select className="mt-1 w-full rounded-md border px-3 py-2" value={referralDestination} onChange={(e) => setReferralDestination(e.target.value)}>
-                <option value="">Selecciona…</option>
-                {REFERRAL_DESTINATIONS.map((o) => (
-                  <option key={o.code} value={o.code}>{o.label}</option>
-                ))}
-              </select>
-            </label>
+            <Chips
+              label="Destino de la derivación (puede ser más de uno)"
+              options={REFERRAL_DESTINATIONS}
+              selected={referralDestinations}
+              onToggle={(c) => setReferralDestinations((d) => toggle(d, c))}
+            />
           )}
           <label className="block text-sm">
             Comentario de evolución (máx. 1500)

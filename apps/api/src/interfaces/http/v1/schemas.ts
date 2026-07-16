@@ -183,9 +183,11 @@ export const caseClosureSchema = z.object({
   tecnicas: z.array(z.string().min(1)).default([]),
   motivo_cierre: z.string().min(1).optional(),
   derivacion_tipo: z.enum(['urgente', 'seguimiento', 'ninguna']).optional(),
+  // One or more destinations (#158); "ambos" removed — psicología/psiquiatría are
+  // now selected individually.
   derivacion_destino: z
-    .enum(['psicologia', 'psiquiatria', 'ambos', 'medicina', 'proteccion_ninos', 'proteccion_mujer'])
-    .optional(),
+    .array(z.enum(['psicologia', 'psiquiatria', 'medicina', 'proteccion_ninos', 'proteccion_mujer']))
+    .default([]),
   // Attention time in whole minutes, minimum 1 (#131; was decimal hours).
   minutos: z.number().int().min(1).max(6000),
   comentario: z.string().max(1500).optional(),

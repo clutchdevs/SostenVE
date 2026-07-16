@@ -14,7 +14,7 @@ export interface CaseClosureInput {
   techniques?: string[];
   closeReason?: string;
   referralType?: string;
-  referralDestination?: string;
+  referralDestinations?: string[];
   minutes: number;
   comment?: string;
 }
@@ -65,7 +65,7 @@ export async function recordCaseClosure(
     techniques: input.techniques ?? [],
     closeReason: input.closeReason,
     referralType: input.referralType,
-    referralDestination: input.referralDestination,
+    referralDestinations: input.referralDestinations ?? [],
     minutes: input.minutes,
     comment: input.comment,
   });

@@ -181,16 +181,22 @@ describe.skipIf(!dbAvailable)('case management & coordinator (e2e)', () => {
         contacto: true,
         sintomas: ['ansiedad_estres_agudo'],
         tecnicas: ['pap'],
-        motivo_cierre: 'finalizado',
-        derivacion_tipo: 'ninguna',
+        motivo_cierre: 'referido_externo',
+        derivacion_tipo: 'urgente',
+        // #158: multiple referral destinations.
+        derivacion_destino: ['psicologia', 'psiquiatria'],
         minutos: 30,
       }),
     });
     expect(close1.status).toBe(201);
     const row = await pg.query('select status from cases where id = $1', [caseId]);
     expect(row.rows[0]?.status).toBe('cerrado');
-    const closure = await pg.query('select id from case_closures where case_id = $1', [caseId]);
+    const closure = await pg.query<{ referral_destinations: string[] }>(
+      'select referral_destinations from case_closures where case_id = $1',
+      [caseId],
+    );
     expect(closure.rowCount).toBe(1);
+    expect(closure.rows[0]?.referral_destinations).toEqual(['psicologia', 'psiquiatria']);
 
     const close2 = await authed(`/api/v1/cases/${caseId}/close`, token, {
       method: 'POST',
