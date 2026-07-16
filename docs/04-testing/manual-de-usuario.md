@@ -160,6 +160,13 @@ El detalle también **se auto-refresca**, así que si el caso cambia de estado l
 *Detalle del caso: al aceptar se revela el contacto; se ven los síntomas y "¿Cómo se siente?" del
 solicitante, y el cierre se registra en minutos.*
 
+En el cierre, si marcas una **derivación** (Urgente o Seguimiento), el **destino** permite elegir
+**varios** especialistas a la vez.
+
+<p align="center"><img src="img/13-cierre-derivacion.png" alt="Destino de la derivación (multiselección)" width="900"></p>
+
+*Destino de la derivación: se pueden marcar varios especialistas para un mismo paciente.*
+
 > 💡 **Qué probar:** ponte disponible, recibe un caso, comprueba que el teléfono está censurado,
 > acéptalo (aparece el contacto y las respuestas del solicitante), agrega una nota y ciérralo con los
 > minutos de atención. Verifica que sale de "Activos" y aparece en "Cerrados".
