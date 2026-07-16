@@ -41,7 +41,7 @@
 1. Entra a `https://TU-WEB.vercel.app`.
 2. Toca el botón grande **"Necesito apoyo psicológico"**.
 
-<p align="center"><img src="img/01-landing.png" alt="Pantalla de inicio" width="900"></p>
+<p align="center"><img src="img/01-landing.png" alt="Pantalla de inicio" width="360"></p>
 
 *Pantalla de inicio: el botón azul es la acción principal para quien busca ayuda.*
 
