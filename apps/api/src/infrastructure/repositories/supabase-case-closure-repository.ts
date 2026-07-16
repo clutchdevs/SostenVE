@@ -20,7 +20,7 @@ interface CaseClosureRow {
   techniques: string[];
   close_reason: string | null;
   referral_type: string | null;
-  referral_destination: string | null;
+  referral_destinations: string[] | null;
   minutes: number;
   comment_encrypted: string | null;
   created_at: string;
@@ -49,7 +49,7 @@ export class SupabaseCaseClosureRepository implements CaseClosureRepository {
         techniques: input.techniques ?? [],
         close_reason: input.closeReason ?? null,
         referral_type: input.referralType ?? null,
-        referral_destination: input.referralDestination ?? null,
+        referral_destinations: input.referralDestinations ?? [],
         minutes: input.minutes,
         comment_encrypted: input.comment ? encrypt(input.comment) : null,
       })
@@ -84,7 +84,7 @@ export class SupabaseCaseClosureRepository implements CaseClosureRepository {
       techniques: row.techniques ?? [],
       closeReason: row.close_reason ?? undefined,
       referralType: row.referral_type ?? undefined,
-      referralDestination: row.referral_destination ?? undefined,
+      referralDestinations: row.referral_destinations ?? [],
       minutes: Number(row.minutes),
       comment: row.comment_encrypted ? decrypt(row.comment_encrypted) : undefined,
       createdAt: new Date(row.created_at),

@@ -128,7 +128,7 @@ export function createCasesRouter(): Hono {
           techniques: body.tecnicas,
           closeReason: body.motivo_cierre,
           referralType: body.derivacion_tipo,
-          referralDestination: body.derivacion_destino,
+          referralDestinations: body.derivacion_destino,
           minutes: body.minutos,
           comment: body.comentario,
         },

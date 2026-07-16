@@ -51,7 +51,7 @@ export interface CaseClosureView {
   tecnicas: string[];
   motivo_cierre: string | null;
   derivacion_tipo: string | null;
-  derivacion_destino: string | null;
+  derivacion_destino: string[];
   minutos: number;
   comentario: string | null;
   creada_en: string;
