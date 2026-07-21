@@ -56,6 +56,14 @@ export const appConfigSchema = z.object({
     // Informational consent/privacy notice shown on every requester screen
     // (issue #1). Non-blocking by design so it never adds friction to the
     // high-risk path; text is provisional pending FPV validation.
+    // Confidentiality + accountability notice shown in the closed-case reports
+    // section (issue #169, ADR-0017): states in-place that the Federation owns this
+    // data, decides who accesses it and takes custody of anything downloaded.
+    reports: z.object({
+      version: z.string().min(1),
+      updated_at: z.string().min(1),
+      text: z.string().min(1),
+    }),
     requester: z.object({
       version: z.string().min(1),
       updated_at: z.string().min(1),

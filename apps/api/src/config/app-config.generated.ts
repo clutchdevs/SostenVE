@@ -53,6 +53,11 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         "version": "v1.0.0-fpv",
         "updated_at": "2026-07-03",
         "text": "🚨 ¿Es una emergencia o crisis inmediata?\nLlama directamente a nuestra Línea de Ayuda Psicológica: 0424 290.7338\n(todos los días, 8:00 am a 2:00 am) o la Línea de Apoyo Psicológico Gratuito\ndel Colegio de Miranda 0412.7840112 fuera de ese horario. Este formulario es\nsolo para atención NO inmediata.\n\nServicio Gratuito y Voluntario: Impulsado por la FPV y Colegios de Psicólogos\npara brindar primeros auxilios psicológicos y restablecer tu equilibrio\nemocional.\n\nTerceros: Si solicitas el apoyo para un familiar, asegúrate de ingresar los\ndatos de la persona que recibirá la atención, no los tuyos.\n\nConfidencialidad Absoluta: Garantizamos que el manejo de toda tu información\nestará estrictamente protegido.\n"
+      },
+      "reports": {
+        "version": "v0.1.0-draft",
+        "updated_at": "2026-07-21",
+        "text": "Confidencialidad y responsabilidad de la información\n\nEsta sección contiene información clínica de los casos atendidos, reproducida\ntal como fue registrada por el profesional que cerró cada caso.\n\nLa Federación Psicológica de Venezuela es la titular y responsable de estos\ndatos. Define quién accede —otorgando y revocando la condición de coordinador—\ny asume la custodia y el uso de la información que aquí se consulta o descarga.\n\nEl reporte no incluye los campos de nombre ni teléfono del solicitante. Sin\nembargo, los campos de texto libre (como el comentario de cierre) se muestran\ntal como fueron escritos y pueden contener detalles sensibles o identificables.\nTrátelos con el mismo cuidado que una historia clínica.\n\nAl descargar el archivo, la información sale de los controles de seguridad del\nsistema (cifrado, control de acceso y auditoría). Desde ese momento, su\nresguardo, uso y eliminación son responsabilidad de la Federación y de la\npersona que realiza la descarga.\n\nEl uso de estos datos se limita a fines de gestión, calidad del servicio e\ninvestigación institucional, conforme al consentimiento informado aceptado por\nlos voluntarios.\n\nTodo acceso y toda descarga quedan registrados en la bitácora de auditoría.\n"
       }
     },
     "pap": {
@@ -247,6 +252,11 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         "version": "v1.0.0-fpv",
         "updated_at": "2026-07-03",
         "text": "🚨 ¿Es una emergencia o crisis inmediata?\nLlama directamente a nuestra Línea de Ayuda Psicológica: 0424 290.7338\n(todos los días, 8:00 am a 2:00 am) o la Línea de Apoyo Psicológico Gratuito\ndel Colegio de Miranda 0412.7840112 fuera de ese horario. Este formulario es\nsolo para atención NO inmediata.\n\nServicio Gratuito y Voluntario: Impulsado por la FPV y Colegios de Psicólogos\npara brindar primeros auxilios psicológicos y restablecer tu equilibrio\nemocional.\n\nTerceros: Si solicitas el apoyo para un familiar, asegúrate de ingresar los\ndatos de la persona que recibirá la atención, no los tuyos.\n\nConfidencialidad Absoluta: Garantizamos que el manejo de toda tu información\nestará estrictamente protegido.\n"
+      },
+      "reports": {
+        "version": "v0.1.0-draft",
+        "updated_at": "2026-07-21",
+        "text": "Confidencialidad y responsabilidad de la información\n\nEsta sección contiene información clínica de los casos atendidos, reproducida\ntal como fue registrada por el profesional que cerró cada caso.\n\nLa Federación Psicológica de Venezuela es la titular y responsable de estos\ndatos. Define quién accede —otorgando y revocando la condición de coordinador—\ny asume la custodia y el uso de la información que aquí se consulta o descarga.\n\nEl reporte no incluye los campos de nombre ni teléfono del solicitante. Sin\nembargo, los campos de texto libre (como el comentario de cierre) se muestran\ntal como fueron escritos y pueden contener detalles sensibles o identificables.\nTrátelos con el mismo cuidado que una historia clínica.\n\nAl descargar el archivo, la información sale de los controles de seguridad del\nsistema (cifrado, control de acceso y auditoría). Desde ese momento, su\nresguardo, uso y eliminación son responsabilidad de la Federación y de la\npersona que realiza la descarga.\n\nEl uso de estos datos se limita a fines de gestión, calidad del servicio e\ninvestigación institucional, conforme al consentimiento informado aceptado por\nlos voluntarios.\n\nTodo acceso y toda descarga quedan registrados en la bitácora de auditoría.\n"
       }
     },
     "pap": {
@@ -441,6 +451,11 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         "version": "v1.0.0-fpv",
         "updated_at": "2026-07-03",
         "text": "🚨 ¿Es una emergencia o crisis inmediata?\nLlama directamente a nuestra Línea de Ayuda Psicológica: 0424 290.7338\n(todos los días, 8:00 am a 2:00 am) o la Línea de Apoyo Psicológico Gratuito\ndel Colegio de Miranda 0412.7840112 fuera de ese horario. Este formulario es\nsolo para atención NO inmediata.\n\nServicio Gratuito y Voluntario: Impulsado por la FPV y Colegios de Psicólogos\npara brindar primeros auxilios psicológicos y restablecer tu equilibrio\nemocional.\n\nTerceros: Si solicitas el apoyo para un familiar, asegúrate de ingresar los\ndatos de la persona que recibirá la atención, no los tuyos.\n\nConfidencialidad Absoluta: Garantizamos que el manejo de toda tu información\nestará estrictamente protegido.\n"
+      },
+      "reports": {
+        "version": "v0.1.0-draft",
+        "updated_at": "2026-07-21",
+        "text": "Confidencialidad y responsabilidad de la información\n\nEsta sección contiene información clínica de los casos atendidos, reproducida\ntal como fue registrada por el profesional que cerró cada caso.\n\nLa Federación Psicológica de Venezuela es la titular y responsable de estos\ndatos. Define quién accede —otorgando y revocando la condición de coordinador—\ny asume la custodia y el uso de la información que aquí se consulta o descarga.\n\nEl reporte no incluye los campos de nombre ni teléfono del solicitante. Sin\nembargo, los campos de texto libre (como el comentario de cierre) se muestran\ntal como fueron escritos y pueden contener detalles sensibles o identificables.\nTrátelos con el mismo cuidado que una historia clínica.\n\nAl descargar el archivo, la información sale de los controles de seguridad del\nsistema (cifrado, control de acceso y auditoría). Desde ese momento, su\nresguardo, uso y eliminación son responsabilidad de la Federación y de la\npersona que realiza la descarga.\n\nEl uso de estos datos se limita a fines de gestión, calidad del servicio e\ninvestigación institucional, conforme al consentimiento informado aceptado por\nlos voluntarios.\n\nTodo acceso y toda descarga quedan registrados en la bitácora de auditoría.\n"
       }
     },
     "pap": {
@@ -635,6 +650,11 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
         "version": "v1.0.0-fpv",
         "updated_at": "2026-07-03",
         "text": "🚨 ¿Es una emergencia o crisis inmediata?\nLlama directamente a nuestra Línea de Ayuda Psicológica: 0424 290.7338\n(todos los días, 8:00 am a 2:00 am) o la Línea de Apoyo Psicológico Gratuito\ndel Colegio de Miranda 0412.7840112 fuera de ese horario. Este formulario es\nsolo para atención NO inmediata.\n\nServicio Gratuito y Voluntario: Impulsado por la FPV y Colegios de Psicólogos\npara brindar primeros auxilios psicológicos y restablecer tu equilibrio\nemocional.\n\nTerceros: Si solicitas el apoyo para un familiar, asegúrate de ingresar los\ndatos de la persona que recibirá la atención, no los tuyos.\n\nConfidencialidad Absoluta: Garantizamos que el manejo de toda tu información\nestará estrictamente protegido.\n"
+      },
+      "reports": {
+        "version": "v0.1.0-draft",
+        "updated_at": "2026-07-21",
+        "text": "Confidencialidad y responsabilidad de la información\n\nEsta sección contiene información clínica de los casos atendidos, reproducida\ntal como fue registrada por el profesional que cerró cada caso.\n\nLa Federación Psicológica de Venezuela es la titular y responsable de estos\ndatos. Define quién accede —otorgando y revocando la condición de coordinador—\ny asume la custodia y el uso de la información que aquí se consulta o descarga.\n\nEl reporte no incluye los campos de nombre ni teléfono del solicitante. Sin\nembargo, los campos de texto libre (como el comentario de cierre) se muestran\ntal como fueron escritos y pueden contener detalles sensibles o identificables.\nTrátelos con el mismo cuidado que una historia clínica.\n\nAl descargar el archivo, la información sale de los controles de seguridad del\nsistema (cifrado, control de acceso y auditoría). Desde ese momento, su\nresguardo, uso y eliminación son responsabilidad de la Federación y de la\npersona que realiza la descarga.\n\nEl uso de estos datos se limita a fines de gestión, calidad del servicio e\ninvestigación institucional, conforme al consentimiento informado aceptado por\nlos voluntarios.\n\nTodo acceso y toda descarga quedan registrados en la bitácora de auditoría.\n"
       }
     },
     "pap": {
