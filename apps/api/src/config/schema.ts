@@ -39,6 +39,11 @@ export const appConfigSchema = z.object({
   intake: z.object({
     idempotency_ttl_hours: z.number().int().positive(),
   }),
+  // Care is remote-only, so the modality is a constant of the service rather than
+  // something the requester picks. Stamped on every case at intake (issue #169).
+  service: z.object({
+    modality: z.enum(['presencial', 'distancia']),
+  }),
   crisis_lines: z.object({
     routing: z.array(crisisLineRoutingSchema).min(1),
     backup_lines: z.array(backupLineSchema),
@@ -56,6 +61,14 @@ export const appConfigSchema = z.object({
     // Informational consent/privacy notice shown on every requester screen
     // (issue #1). Non-blocking by design so it never adds friction to the
     // high-risk path; text is provisional pending FPV validation.
+    // Confidentiality + accountability notice shown in the closed-case reports
+    // section (issue #169, ADR-0017): states in-place that the Federation owns this
+    // data, decides who accesses it and takes custody of anything downloaded.
+    reports: z.object({
+      version: z.string().min(1),
+      updated_at: z.string().min(1),
+      text: z.string().min(1),
+    }),
     requester: z.object({
       version: z.string().min(1),
       updated_at: z.string().min(1),

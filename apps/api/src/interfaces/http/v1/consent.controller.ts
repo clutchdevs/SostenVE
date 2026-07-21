@@ -32,5 +32,17 @@ export function createConsentRouter(): Hono {
     });
   });
 
+  // Confidentiality + accountability notice for the closed-case reports section
+  // (issue #169). Served like the others so the FPV can reword it without a code
+  // change and the wording in force stays versioned.
+  router.get('/reports', (c) => {
+    const { reports } = getConfig().consent;
+    return c.json({
+      version: reports.version,
+      updated_at: reports.updated_at,
+      text: reports.text,
+    });
+  });
+
   return router;
 }

@@ -51,7 +51,10 @@ enabled = true
 sql_paths = ['./seed.sql']
 
 [realtime]
-enabled = true
+# Off: the app does not use Supabase Realtime. Live presence runs on Upstash Redis
+# (ADR-0014) and the panels refresh by polling (`ui.data_refresh_seconds`). Turning it
+# on again is a one-line change if a feature ever needs subscriptions.
+enabled = false
 # Bind realtime via either IPv4 or IPv6. (default: IPv4)
 # ip_version = "IPv6"
 # The maximum length in bytes of HTTP request headers. (default: 4096)
@@ -79,12 +82,15 @@ port = 54324
 # sender_name = "Admin"
 
 [storage]
-enabled = true
+# Off: the app stores no files or images — clinical data lives in Postgres columns
+# (encrypted, ADR-0004). Leaving Storage on started an S3-compatible endpoint plus
+# imgproxy for nothing, and printed S3 access keys on every `supabase start`.
+enabled = false
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
 [storage.image_transformation]
-enabled = true
+enabled = false
 
 # Uncomment to configure local storage buckets
 # [storage.buckets.images]

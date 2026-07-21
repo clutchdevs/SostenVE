@@ -9,6 +9,7 @@ import { SupabaseAssignmentSettingsRepository } from '../../../infrastructure/re
 import { SupabaseAuditLogRepository } from '../../../infrastructure/repositories/supabase-audit-log-repository.js';
 import { SupabaseClinicalNoteRepository } from '../../../infrastructure/repositories/supabase-clinical-note-repository.js';
 import { SupabaseCaseClosureRepository } from '../../../infrastructure/repositories/supabase-case-closure-repository.js';
+import { SupabaseClosedCaseReportRepository } from '../../../infrastructure/repositories/supabase-closed-case-report-repository.js';
 import { SupabaseCrisisLineRepository } from '../../../infrastructure/repositories/supabase-crisis-line-repository.js';
 import { SupabaseCoordinatorInvitationRepository } from '../../../infrastructure/repositories/supabase-coordinator-invitation-repository.js';
 import { SupabasePasswordResetTokenRepository } from '../../../infrastructure/repositories/supabase-password-reset-token-repository.js';
@@ -19,6 +20,7 @@ import { LogAssignmentNotifier } from '../../../infrastructure/notifications/log
 import type { AssignmentDeps } from '../../../application/assignment/ports.js';
 import type { PresenceStore } from '../../../application/presence/ports.js';
 import type { CaseDeps } from '../../../application/cases/ports.js';
+import type { ReportDeps } from '../../../application/reports/ports.js';
 import type { CrisisLineDeps } from '../../../application/crisis-line/manage-crisis-lines.js';
 import type { InvitationDeps } from '../../../application/coordinator/manage-invitations.js';
 import type { AcceptInvitationDeps } from '../../../application/coordinator/accept-invitation.js';
@@ -216,6 +218,20 @@ export function getPasswordFlowContainer(): PasswordFlowContainer {
 }
 
 let caseCached: CaseDeps | null = null;
+
+let reportCached: ReportDeps | null = null;
+
+/** Closed-case report (issue #169). Read-only + audit; no PII repositories wired in. */
+export function getReportDeps(): ReportDeps {
+  if (reportCached === null) {
+    const client = forService();
+    reportCached = {
+      reports: new SupabaseClosedCaseReportRepository(client),
+      audit: new SupabaseAuditLogRepository(client),
+    };
+  }
+  return reportCached;
+}
 
 export function getCaseDeps(): CaseDeps {
   if (caseCached === null) {

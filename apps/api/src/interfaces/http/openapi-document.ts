@@ -1,5 +1,4 @@
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import type { ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 import {
   acceptInvitationSchema,
   addNoteSchema,
@@ -25,22 +24,49 @@ import {
 
 /**
  * OpenAPI 3.1 document for the live API. Built in code and reusing the Zod
- * request schemas (via zod-to-json-schema) so request bodies stay in sync with
- * validation. Served at GET /api/v1/openapi.json and rendered by Swagger UI at
+ * request schemas (via Zod's native `toJSONSchema`) so request bodies stay in sync
+ * with validation. Served at GET /api/v1/openapi.json and rendered by Swagger UI at
  * /api/v1/docs. `servers.url` is relative so "Try it out" hits the same origin.
  */
 function jsonBody(schema: ZodType, required = true) {
+  // `draft-2020-12` is the dialect OpenAPI 3.1 uses. `io: 'input'` emits the shape a CLIENT
+  // sends (fields with a `.default()` are optional on input), not the parsed output.
+  const { $schema: _dialect, ...jsonSchema } = z.toJSONSchema(schema, {
+    target: 'draft-2020-12',
+    io: 'input',
+  }) as Record<string, unknown>;
   return {
     required,
-    content: {
-      'application/json': {
-        schema: zodToJsonSchema(schema, { target: 'openApi3' }),
-      },
-    },
+    content: { 'application/json': { schema: jsonSchema } },
   };
 }
 
 const bearer = [{ bearerAuth: [] }];
+
+/**
+ * Closed-case report filters (issue #169). Shared by the JSON view and both downloads so
+ * the file always matches what the coordinator is looking at.
+ */
+const closedCaseFilterParams = [
+  { name: 'desde', in: 'query', required: false, description: 'Fecha de cierre desde (YYYY-MM-DD o ISO)', schema: { type: 'string' } },
+  { name: 'hasta', in: 'query', required: false, description: 'Fecha de cierre hasta (YYYY-MM-DD o ISO)', schema: { type: 'string' } },
+  {
+    name: 'nivel_riesgo',
+    in: 'query',
+    required: false,
+    schema: { type: 'string', enum: ['riesgo_alto', 'riesgo_moderado', 'seguimiento'] },
+  },
+  { name: 'voluntario_id', in: 'query', required: false, description: 'Psicólogo que cerró el caso', schema: { type: 'string' } },
+  { name: 'motivo_cierre', in: 'query', required: false, schema: { type: 'string' } },
+  {
+    name: 'derivacion_tipo',
+    in: 'query',
+    required: false,
+    schema: { type: 'string', enum: ['urgente', 'seguimiento', 'ninguna'] },
+  },
+  { name: 'limit', in: 'query', required: false, description: 'Solo la vista JSON (1–500)', schema: { type: 'integer' } },
+  { name: 'offset', in: 'query', required: false, schema: { type: 'integer' } },
+];
 
 const idParam = {
   name: 'id',
@@ -70,6 +96,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       { name: 'cases' },
       { name: 'coordinator' },
       { name: 'coordinators' },
+      { name: 'reports' },
       { name: 'admin' },
       { name: 'monitoring' },
       { name: 'cron' },
@@ -141,6 +168,14 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         get: {
           tags: ['consent'],
           summary: 'Aviso de consentimiento/privacidad del solicitante (issue #1, no bloqueante)',
+          responses: { '200': { description: 'version + updated_at + text' } },
+        },
+      },
+      '/consent/reports': {
+        get: {
+          tags: ['consent'],
+          summary:
+            'Aviso de confidencialidad y responsabilidad de la sección de reportes (issue #169). Declara que la FPV es titular de los datos y asume la custodia de lo descargado',
           responses: { '200': { description: 'version + updated_at + text' } },
         },
       },
@@ -452,6 +487,56 @@ export function buildOpenApiDocument(): Record<string, unknown> {
             '200': { description: 'Invitación revocada' },
             '404': { description: 'No encontrada' },
             '409': { description: 'La invitación no está pendiente' },
+            '403': { description: 'Sin permiso' },
+          },
+        },
+      },
+      '/reports/closed-cases': {
+        get: {
+          tags: ['reports'],
+          summary:
+            'Reporte de casos cerrados (coordinador/admin, paginado). Reproduce el cierre tal como se guardó, con etiquetas legibles y SIN los campos de identidad del solicitante. Cada consulta se audita (ADR-0017)',
+          security: bearer,
+          parameters: closedCaseFilterParams,
+          responses: {
+            '200': { description: '{ total, limit, offset, items[] } de casos cerrados' },
+            '400': { description: 'Filtros inválidos' },
+            '403': { description: 'Sin permiso (un psicólogo solo ve sus propios casos)' },
+          },
+        },
+      },
+      '/reports/closed-cases.xlsx': {
+        get: {
+          tags: ['reports'],
+          summary:
+            'Descarga el reporte como libro de Excel con formato (encabezado fijo, anchos y tipos reales de fecha/número). Mismos filtros que la vista; cada descarga se audita',
+          security: bearer,
+          parameters: closedCaseFilterParams,
+          responses: {
+            '200': {
+              description: 'Archivo .xlsx (adjunto)',
+              content: {
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                  schema: { type: 'string', format: 'binary' },
+                },
+              },
+            },
+            '403': { description: 'Sin permiso' },
+          },
+        },
+      },
+      '/reports/closed-cases.csv': {
+        get: {
+          tags: ['reports'],
+          summary:
+            'Descarga el reporte como CSV (BOM UTF-8 para Excel en es-VE), para importar a otras herramientas. Mismos filtros; cada descarga se audita',
+          security: bearer,
+          parameters: closedCaseFilterParams,
+          responses: {
+            '200': {
+              description: 'Archivo .csv (adjunto)',
+              content: { 'text/csv': { schema: { type: 'string' } } },
+            },
             '403': { description: 'Sin permiso' },
           },
         },

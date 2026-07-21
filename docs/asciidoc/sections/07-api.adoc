@@ -143,7 +143,8 @@ Rama Verde: clasifica por tags y crea el caso.
   "contacto": "+584141234567",           // +58 obligatorio
   "tipo_solicitante": "familiar",        // victima | familiar | voluntario (opcional)
   "estado": "Yaracuy", "ciudad": "San Felipe",  // opcionales (componen la zona)
-  "modalidad": "distancia",              // presencial | distancia (opcional)
+  "modalidad": "distancia",              // aceptado por compatibilidad, pero ignorado:
+                                         // el servidor lo estampa desde `service.modality`
   "metodo_contacto": "whatsapp",         // whatsapp | llamada (opcional)
   "edad": 28,                            // obligatorio
   "tags": ["ansiedad", "insomnio"],
@@ -176,6 +177,15 @@ Texto y versión del consentimiento del *psicólogo* (RF-2.1.1) y del aviso al *
 ----
 // 200
 { "version": "v1.0.0-fpv", "updated_at": "2026-07-01", "text": "Consentimiento Informado…" }
+----
+
+==== `GET /consent/reports`
+Aviso de confidencialidad y responsabilidad que encabeza la sección de reportes (issue #169). Deja constancia, en el mismo lugar donde se descargan los datos, de que la Federación es titular de esa información, decide quién accede y asume la custodia de lo que se exporte.
+
+[source,json]
+----
+// 200
+{ "version": "v0.1.0-draft", "updated_at": "2026-07-21", "text": "La información de casos cerrados…" }
 ----
 
 ==== `GET /pap`
@@ -473,6 +483,53 @@ Activa el rol de coordinador en la cuenta del email invitado (RF-2.6). El token 
 { "token": "inv_abc" }
 // 201 (coordinador activado)  ·  400 invitación inválida o vencida
 ----
+
+=== Reportes de casos cerrados
+
+Solicitados por la Federación (issue #169, ADR-0017) para revisar y descargar el trabajo ya cerrado. Los tres endpoints comparten filtros, formato y reglas, y solo cambian en cómo entregan el resultado.
+
+*Bearer* (coordinador/admin). Un psicólogo recibe `403`: su acceso sigue limitado a los casos que atendió.
+
+Tres decisiones gobiernan esta sección:
+
+* *Sin identidad del solicitante.* El reporte nunca hace `join` con `case_contacts`; el nombre y el contacto son estructuralmente inalcanzables desde aquí. Lo demás se entrega tal como quedó guardado, incluidos los campos clínicos descifrados.
+* *Todo acceso queda auditado.* Cada consulta y cada descarga escriben en la bitácora inmutable el actor, los filtros aplicados y cuántas filas se llevaron (`closed_case_report_view:…` / `closed_case_report_download:…`). Es la trazabilidad que hace aceptable una exportación masiva.
+* *Etiquetas legibles, no códigos.* Es un reporte que lee un psicólogo: `finalizado` sale como "Proceso finalizado (objetivos cumplidos)", `ansiedad_estres_agudo` como "Ansiedad / estrés agudo". Un código todavía sin catalogar se presenta humanizado (`algun_motivo_nuevo` → "Algun motivo nuevo") en lugar de filtrar el valor crudo.
+
+[cols="1,2",options="header"]
+|===
+| Query | Uso
+| `desde` / `hasta` | Rango por fecha de cierre (`YYYY-MM-DD` o ISO).
+| `nivel_riesgo` | `riesgo_alto` \| `riesgo_moderado` \| `seguimiento`.
+| `voluntario_id` | Psicólogo que cerró el caso.
+| `motivo_cierre` | Código del motivo de cierre.
+| `derivacion_tipo` | `urgente` \| `seguimiento` \| `ninguna`.
+| `limit` (1–500) / `offset` | Solo la vista JSON. Las descargas ignoran la paginación y traen todo lo filtrado, con un tope de 5000 filas que la interfaz avisa cuando se alcanza.
+|===
+
+Un filtro inválido responde `400` con el detalle de validación.
+
+==== `GET /reports/closed-cases`
+Vista paginada que alimenta la tabla del panel de coordinación.
+
+[source,json]
+----
+// 200
+{ "total": 128, "limit": 100, "offset": 0, "items": [
+  { "casoId": "c-123", "cerradoEn": "2026-07-18T14:20:00Z", "psicologo": "Ana Pérez",
+    "nivelRiesgo": "Riesgo moderado", "modalidad": "A distancia", "sexo": "Femenino", "edad": 34,
+    "zona": "San Felipe, Yaracuy", "sintomas": ["Ansiedad / estrés agudo"],
+    "tecnicas": ["Primeros Auxilios Psicológicos (PAP)"], "minutos": 45,
+    "motivoCierre": "Proceso finalizado (objetivos cumplidos)",
+    "derivacionTipo": "Seguimiento posterior", "derivacionDestinos": ["Psicología"],
+    "comentario": "…" } ] }
+----
+
+==== `GET /reports/closed-cases.xlsx`
+Descarga principal: libro de Excel con formato — encabezado fijo y resaltado, anchos por columna, ajuste de texto en los campos largos y tipos reales de fecha y número, de modo que las columnas se puedan ordenar y filtrar sin limpiar nada a mano.
+
+==== `GET /reports/closed-cases.csv`
+La misma información en texto plano con BOM UTF-8, para que Excel en `es-VE` respete los acentos y para importarla a otras herramientas.
 
 === Administración
 
