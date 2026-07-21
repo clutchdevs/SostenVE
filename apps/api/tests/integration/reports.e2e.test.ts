@@ -93,7 +93,7 @@ describe.skipIf(!dbAvailable)('closed-case report (e2e)', () => {
     await pg.query(
       `insert into case_closures (case_id, author_volunteer_id, contacted, sex, symptoms,
                                   techniques, close_reason, referral_type, referral_destinations, minutes)
-       values ($1, $2, true, 'femenino', '{ansiedad}', '{escucha_activa}', 'objetivos_cumplidos',
+       values ($1, $2, true, 'femenino', '{ansiedad_estres_agudo}', '{pap}', 'finalizado',
                'seguimiento', '{psicologia}', 45)`,
       [id, authorId],
     );
@@ -110,11 +110,24 @@ describe.skipIf(!dbAvailable)('closed-case report (e2e)', () => {
     });
     expect(res.status).toBe(200);
 
-    const body = (await res.json()) as { total: number; items: Record<string, unknown>[] };
+    const body = (await res.json()) as {
+      total: number;
+      items: (Record<string, unknown> & { sintomas?: string[]; tecnicas?: string[]; derivacionDestinos?: string[] })[];
+    };
     const row = body.items.find((r) => r.caso_id === caseId || r.casoId === caseId);
     expect(row).toBeTruthy();
-    // The closure is reproduced as stored (ADR-0017).
-    expect(row).toMatchObject({ minutos: 45, sexo: 'femenino', motivoCierre: 'objetivos_cumplidos' });
+    // Coded columns come back as the wording the professional saw in the form, not as
+    // database codes — this is a report a psychologist reads.
+    expect(row).toMatchObject({
+      minutos: 45,
+      sexo: 'Femenino',
+      motivoCierre: 'Proceso finalizado (objetivos cumplidos)',
+      nivelRiesgo: 'Riesgo moderado',
+      derivacionTipo: 'Seguimiento posterior',
+    });
+    expect(row?.sintomas).toContain('Ansiedad / estrés agudo');
+    expect(row?.tecnicas).toContain('Primeros Auxilios Psicológicos (PAP)');
+    expect(row?.derivacionDestinos).toContain('Psicología');
 
     // The requester's identity must not appear anywhere in the payload.
     const raw = JSON.stringify(body);
@@ -211,6 +224,25 @@ describe.skipIf(!dbAvailable)('closed-case report (e2e)', () => {
     // The row still comes back, with the rest of its data intact.
     expect(row?.minutos).toBe(45);
     expect(row?.comentario).toContain('no se pudo descifrar');
+  });
+
+  it('keeps an unmapped code readable instead of leaking the raw value', async () => {
+    // Catalogues grow. A code the report does not know yet must still read as words,
+    // never as `algun_motivo_nuevo`.
+    const author = await seedVolunteer('psychologist');
+    const caseId = await seedClosedCase(author);
+    await pg.query('update case_closures set close_reason = $1 where case_id = $2', [
+      'algun_motivo_nuevo',
+      caseId,
+    ]);
+    const coordinatorId = await seedVolunteer('coordinator');
+
+    const res = await app.request('/api/v1/reports/closed-cases?limit=200', {
+      headers: { Authorization: `Bearer ${await tokenFor(coordinatorId, 'coordinator')}` },
+    });
+    const body = (await res.json()) as { items: { casoId: string; motivoCierre: string }[] };
+    const row = body.items.find((r) => r.casoId === caseId);
+    expect(row?.motivoCierre).toBe('Algun motivo nuevo');
   });
 
   it('rejects an invalid filter', async () => {

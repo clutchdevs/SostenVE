@@ -39,6 +39,11 @@ export const appConfigSchema = z.object({
   intake: z.object({
     idempotency_ttl_hours: z.number().int().positive(),
   }),
+  // Care is remote-only, so the modality is a constant of the service rather than
+  // something the requester picks. Stamped on every case at intake (issue #169).
+  service: z.object({
+    modality: z.enum(['presencial', 'distancia']),
+  }),
   crisis_lines: z.object({
     routing: z.array(crisisLineRoutingSchema).min(1),
     backup_lines: z.array(backupLineSchema),

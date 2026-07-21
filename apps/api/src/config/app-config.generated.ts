@@ -17,6 +17,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     "intake": {
       "idempotency_ttl_hours": 24
     },
+    "service": {
+      "modality": "distancia"
+    },
     "crisis_lines": {
       "routing": [
         {
@@ -215,6 +218,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "intake": {
       "idempotency_ttl_hours": 24
+    },
+    "service": {
+      "modality": "distancia"
     },
     "crisis_lines": {
       "routing": [
@@ -415,6 +421,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     "intake": {
       "idempotency_ttl_hours": 24
     },
+    "service": {
+      "modality": "distancia"
+    },
     "crisis_lines": {
       "routing": [
         {
@@ -613,6 +622,9 @@ export const CONFIG_SECTIONS: Record<string, unknown> = {
     },
     "intake": {
       "idempotency_ttl_hours": 24
+    },
+    "service": {
+      "modality": "distancia"
     },
     "crisis_lines": {
       "routing": [

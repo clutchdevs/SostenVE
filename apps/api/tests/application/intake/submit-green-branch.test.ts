@@ -14,6 +14,7 @@ function deps(): { deps: IntakeDeps; upsert: ReturnType<typeof vi.fn> } {
       triage: { orange_tags_threshold_for_escalation: 3, likert_critical_option: 1 },
       sla: { high_risk_assignment_minutes: 15 },
       crisis_lines: { routing: [], backup_lines: [] },
+      service: { modality: 'distancia' },
     },
     pseudonymSalt: 'salt',
   } as unknown as IntakeDeps;
