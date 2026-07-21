@@ -17,6 +17,7 @@ import { createCoordinatorRouter } from '../src/interfaces/http/v1/coordinator.c
 import { createCoordinatorOnboardingRouter } from '../src/interfaces/http/v1/coordinator-onboarding.controller.js';
 import { createAdminRouter } from '../src/interfaces/http/v1/admin.controller.js';
 import { createMonitoringRouter } from '../src/interfaces/http/v1/monitoring.controller.js';
+import { createReportsRouter } from '../src/interfaces/http/v1/reports.controller.js';
 import { createDocsRouter } from '../src/interfaces/http/v1/docs.controller.js';
 import { configureSessionValidation } from '../src/interfaces/http/middleware/auth.js';
 import { getVolunteerContainer } from '../src/interfaces/http/v1/dependencies.js';
@@ -72,6 +73,7 @@ app.route('/coordinator', createCoordinatorRouter());
 app.route('/coordinators', createCoordinatorOnboardingRouter());
 app.route('/admin', createAdminRouter());
 app.route('/metrics', createMonitoringRouter());
+app.route('/reports', createReportsRouter());
 app.route('/cron', createCronRouter());
 app.route('/', createDocsRouter());
 

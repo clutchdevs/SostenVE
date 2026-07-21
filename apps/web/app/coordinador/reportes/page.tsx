@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 import { AuthRequired } from '../../../src/components/auth-required';
 import { KpiSkeleton, RowSkeleton } from '../../../src/components/skeleton';
 import { apiFetch, ApiError } from '../../../src/lib/api-client';
+import { ClosedCasesReport } from '../../../src/features/coordinator/closed-cases-report';
 import type { Capacity } from '../../../src/lib/types';
+
+const TABS = [
+  { key: 'cola', label: 'Cola actual' },
+  { key: 'cerrados', label: 'Casos cerrados' },
+] as const;
 
 const CATEGORY: { key: string; label: string; bar: string }[] = [
   { key: 'HIGH', label: 'Riesgo alto', bar: 'bg-accent-coral' },
@@ -13,6 +19,7 @@ const CATEGORY: { key: string; label: string; bar: string }[] = [
 ];
 
 export default function ReportsPage() {
+  const [tab, setTab] = useState<(typeof TABS)[number]['key']>('cola');
   const [capacity, setCapacity] = useState<Capacity | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState('');
@@ -35,8 +42,29 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="font-serif text-3xl font-semibold text-ink">Reportes</h1>
-        <p className="mt-1 text-sm text-slate-600">Estado operativo de la cola en este momento.</p>
+        <p className="mt-1 text-sm text-slate-600">
+          Estado operativo de la cola y reporte de los casos ya cerrados.
+        </p>
       </header>
+
+      <nav className="flex gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              t.key === tab
+                ? 'border-navy bg-navy text-white'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === 'cerrados' && <ClosedCasesReport onAuthError={() => setNeedsAuth(true)} />}
 
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-risk-high">
@@ -44,7 +72,7 @@ export default function ReportsPage() {
         </p>
       )}
 
-      {!capacity && !error && (
+      {tab === 'cola' && !capacity && !error && (
         <>
           <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <KpiSkeleton />
@@ -55,7 +83,7 @@ export default function ReportsPage() {
         </>
       )}
 
-      {capacity && (
+      {tab === 'cola' && capacity && (
         <>
           <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Stat value={capacity.casos_sin_asignar} label="Sin asignar" className="text-accent-amber" />

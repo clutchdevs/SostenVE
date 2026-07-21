@@ -47,6 +47,9 @@
 |---|---|---|
 | `GET` | `/api/casos?estado=&prioridad=` | Listar todos los casos; prioridad visual de riesgo alto sin atender. |
 | `GET` | `/api/capacidad` | Panel de capacidad: casos sin asignar en tiempo real. |
+| `GET` | `/api/v1/reports/closed-cases` | Reporte de casos cerrados, paginado y filtrable (fecha, riesgo, psicólogo, motivo de cierre, derivación). Sin identidad del solicitante; cada consulta se audita (ADR-0017). |
+| `GET` | `/api/v1/reports/closed-cases.xlsx` | Misma información en **Excel con formato**; cada descarga se audita. |
+| `GET` | `/api/v1/reports/closed-cases.csv` | Misma información en CSV (BOM UTF-8); cada descarga se audita. |
 
 ### Administrador (rol `administrador`)
 | Método | Ruta | Descripción |

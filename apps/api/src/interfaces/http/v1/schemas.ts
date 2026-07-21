@@ -255,6 +255,19 @@ export const invitationInfoSchema = z.object({
   token: z.string().min(1),
 });
 
+// Closed-case report filters (issue #169). All optional and combinable; the CSV
+// download reuses the exact same shape so "what you see is what you download".
+export const closedCasesQuerySchema = z.object({
+  desde: z.string().min(1).optional(),
+  hasta: z.string().min(1).optional(),
+  nivel_riesgo: z.enum(['riesgo_alto', 'riesgo_moderado', 'seguimiento']).optional(),
+  voluntario_id: z.string().min(1).optional(),
+  motivo_cierre: z.string().min(1).optional(),
+  derivacion_tipo: z.enum(['urgente', 'seguimiento', 'ninguna']).optional(),
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 export const auditQuerySchema = z.object({
   accion: z.string().min(1).optional(),
   registro: z.string().min(1).optional(),

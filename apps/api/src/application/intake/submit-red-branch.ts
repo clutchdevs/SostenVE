@@ -2,6 +2,8 @@ import { generatePseudonymId } from '../../domain/identity/pseudonym.js';
 import { RED_BRANCH_URGENCY, RiskLevel } from '../../domain/triage/index.js';
 import { toInternationalVePhone } from '../../shared/phone.js';
 import { getActiveCrisisLine } from './get-active-crisis-line.js';
+import type { Modality } from '../../domain/case/case.js';
+import { modalityFromDb } from '../../infrastructure/repositories/enum-maps.js';
 import type { IntakeCaseResult, IntakeDeps } from './types.js';
 
 export type RedBranchSubChannel = 'llamar' | 'recibir-llamada' | 'whatsapp-silencioso';
@@ -52,6 +54,8 @@ export async function submitRedBranch(
     status: 'PENDING',
     age: input.age,
     urgencyAnswer: input.likert,
+    // Remote-only service: the modality is a constant, not a requester choice (#169).
+    preferredModality: modalityFromDb[deps.config.service.modality] as Modality,
     slaExpiresAt: new Date(now.getTime() + slaMs),
   });
 

@@ -23,6 +23,15 @@ default: &default
     # este lapso. Ver ADR-0016.
     idempotency_ttl_hours: 24
 
+  service:
+    # La atención es 100% REMOTA (WhatsApp / llamada telefónica): no existe atención
+    # presencial, así que la modalidad no se le pregunta al solicitante — se registra
+    # como constante en cada caso creado. Se guarda por caso (y no solo se muestra)
+    # para que, si algún día se ofrece atención presencial, el histórico conserve la
+    # modalidad real con la que fue atendido. En ese escenario esto pasaría a ser una
+    # pregunta del intake. Valores: presencial | distancia.
+    modality: "distancia"
+
   crisis_lines:
     routing:
       - name: "LAPSI"
@@ -95,6 +104,40 @@ default: &default
 
         Confidencialidad Absoluta: Garantizamos que el manejo de toda tu información
         estará estrictamente protegido.
+
+    # Aviso de confidencialidad y RESPONSABILIDAD mostrado en la sección de reportes
+    # de casos cerrados (issue #169, ADR-0017). Deja constancia en el punto de uso de
+    # que la FPV es la titular de estos datos: define quién accede y asume la custodia
+    # de lo que se descargue. Redacción PROVISIONAL pendiente de aprobación de la FPV;
+    # sube `version` cuando cambie el texto.
+    reports:
+      version: "v0.1.0-draft"
+      updated_at: "2026-07-21"
+      text: |
+        Confidencialidad y responsabilidad de la información
+
+        Esta sección contiene información clínica de los casos atendidos, reproducida
+        tal como fue registrada por el profesional que cerró cada caso.
+
+        La Federación Psicológica de Venezuela es la titular y responsable de estos
+        datos. Define quién accede —otorgando y revocando la condición de coordinador—
+        y asume la custodia y el uso de la información que aquí se consulta o descarga.
+
+        El reporte no incluye los campos de nombre ni teléfono del solicitante. Sin
+        embargo, los campos de texto libre (como el comentario de cierre) se muestran
+        tal como fueron escritos y pueden contener detalles sensibles o identificables.
+        Trátelos con el mismo cuidado que una historia clínica.
+
+        Al descargar el archivo, la información sale de los controles de seguridad del
+        sistema (cifrado, control de acceso y auditoría). Desde ese momento, su
+        resguardo, uso y eliminación son responsabilidad de la Federación y de la
+        persona que realiza la descarga.
+
+        El uso de estos datos se limita a fines de gestión, calidad del servicio e
+        investigación institucional, conforme al consentimiento informado aceptado por
+        los voluntarios.
+
+        Todo acceso y toda descarga quedan registrados en la bitácora de auditoría.
 
   pap:
     # Guías de Primeros Auxilios Psicológicos (autoayuda asíncrona) para el

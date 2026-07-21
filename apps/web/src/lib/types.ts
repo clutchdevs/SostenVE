@@ -152,3 +152,42 @@ export interface CoordinatorInvitationView {
 export interface CoordinatorInvitationCreated extends CoordinatorInvitationView {
   token: string;
 }
+
+/** One closed case in the Federation's report (issue #169). No requester identity by design. */
+export interface ClosedCaseReportRow {
+  casoId: string;
+  rama: string;
+  nivelRiesgo: string;
+  scoreUrgencia: number;
+  tipoSolicitante: string | null;
+  zona: string | null;
+  modalidad: string | null;
+  metodoContacto: string | null;
+  edad: number | null;
+  sintomasIntake: string[];
+  cambioHabitos: string[];
+  urgenciaRespuesta: number | null;
+  creadoEn: string;
+  cerradoEn: string;
+  psicologo: string | null;
+  contacto: boolean;
+  motivoNoContacto: string | null;
+  sexo: string | null;
+  destinatario: string | null;
+  sintomas: string[];
+  otroSintoma: string | null;
+  medioContacto: string | null;
+  tecnicas: string[];
+  motivoCierre: string | null;
+  derivacionTipo: string | null;
+  derivacionDestinos: string[];
+  minutos: number;
+  comentario: string | null;
+}
+
+export interface ClosedCaseReportPage {
+  total: number;
+  limit: number;
+  offset: number;
+  items: ClosedCaseReportRow[];
+}

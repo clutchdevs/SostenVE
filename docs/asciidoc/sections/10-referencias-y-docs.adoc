@@ -15,7 +15,7 @@ maestro; las rutas son relativas a la raíz del repo.
 | `docs/00-project/glossary.md` | Glosario de términos.
 | `docs/00-project/data-classification.md` | Clasificación de datos (restringido/clínico).
 | `docs/00-project/decisiones-infraestructura.md` | Respaldo del análisis de infraestructura.
-| `docs/00-project/adr/000X-*.md` | *ADRs* 0001–0016 (decisiones arquitectónicas).
+| `docs/00-project/adr/000X-*.md` | *ADRs* 0001–0017 (decisiones arquitectónicas).
 |===
 
 === 01 · Requirements

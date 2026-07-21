@@ -4,6 +4,7 @@ import { classifyRisk, computeUrgencyIndex, isHighRisk } from '../../domain/tria
 import { getCatalogTag, requiresChildSpecialty } from '../../domain/triage/triage-catalog.js';
 import { toInternationalVePhone } from '../../shared/phone.js';
 import type { ContactMethod, Modality, RequesterType } from '../../domain/case/case.js';
+import { modalityFromDb } from '../../infrastructure/repositories/enum-maps.js';
 import { getActiveCrisisLine } from './get-active-crisis-line.js';
 import type { IntakeCaseResult, IntakeDeps } from './types.js';
 
@@ -70,7 +71,8 @@ export async function submitGreenBranch(
     requesterType: input.requesterType,
     zone: input.zone,
     region: input.region,
-    preferredModality: input.modality,
+    // Remote-only service: the modality is a constant, not a requester choice (#169).
+    preferredModality: modalityFromDb[deps.config.service.modality] as Modality,
     preferredContactMethod: input.contactMethod,
     age: input.age,
     habitChanges: input.habitChanges,
