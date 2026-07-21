@@ -30,6 +30,8 @@ const dbAvailable = await canConnect();
 describe.skipIf(!dbAvailable)('monitoring metrics (e2e)', () => {
   let app: Hono;
   let signToken: typeof import('../../src/shared/security/jwt.js').signToken;
+  let pg: Client;
+  const volunteerIds: string[] = [];
 
   beforeAll(async () => {
     process.env.SUPABASE_URL = SUPABASE_URL;
@@ -39,16 +41,40 @@ describe.skipIf(!dbAvailable)('monitoring metrics (e2e)', () => {
     process.env.JWT_SECRET ??= 'test-secret-value-at-least-32-bytes-long!!';
     app = (await import('../../api/index.js')).app;
     signToken = (await import('../../src/shared/security/jwt.js')).signToken;
+    pg = new Client({ connectionString: DB_URL });
+    await pg.connect();
   });
-  afterAll(async () => {});
 
-  function token(role: string) {
-    return signToken({ sub: randomUUID(), role, tokenVersion: 1 }, { ttlSeconds: 300, type: 'access' });
+  afterAll(async () => {
+    if (!pg) return;
+    if (volunteerIds.length) await pg.query('delete from volunteers where id = any($1)', [volunteerIds]);
+    await pg.end();
+  });
+
+  /**
+   * In-place session validation (RF-2.7) compares the token's version against the account's
+   * current one, so a token only authenticates if its `sub` is a real volunteer row — a
+   * synthetic id is rejected with 401 before any role check runs.
+   */
+  async function seedVolunteer(role: string): Promise<string> {
+    const res = await pg.query<{ id: string }>(
+      `insert into volunteers (full_name, professional_id, role, password_hash, status)
+       values ('Staff', $1, $2, 'x', 'active') returning id`,
+      [`FPV-${randomUUID().slice(0, 8)}`, role],
+    );
+    const id = res.rows[0]!.id;
+    volunteerIds.push(id);
+    return id;
+  }
+
+  async function tokenFor(role: string) {
+    const id = await seedVolunteer(role);
+    return signToken({ sub: id, role, tokenVersion: 1 }, { ttlSeconds: 300, type: 'access' });
   }
 
   it('returns the metrics snapshot to a coordinator', async () => {
     const res = await app.request('/api/v1/metrics', {
-      headers: { Authorization: `Bearer ${await token('coordinator')}` },
+      headers: { Authorization: `Bearer ${await tokenFor('coordinator')}` },
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -67,7 +93,7 @@ describe.skipIf(!dbAvailable)('monitoring metrics (e2e)', () => {
 
   it('blocks a psychologist (403) and the health probe stays public', async () => {
     const denied = await app.request('/api/v1/metrics', {
-      headers: { Authorization: `Bearer ${await token('psychologist')}` },
+      headers: { Authorization: `Bearer ${await tokenFor('psychologist')}` },
     });
     expect(denied.status).toBe(403);
 

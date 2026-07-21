@@ -175,8 +175,17 @@ describe.skipIf(!dbAvailable)('volunteer registration & auth (e2e)', () => {
   });
 
   it('lets an admin approve a pending volunteer and reject another', async () => {
+    // In-place session validation (RF-2.7) resolves the token's version from the account, so the
+    // admin must exist as a real row — a synthetic `sub` is rejected with 401 before the role check.
+    const adminEmail = `admin-${randomUUID().slice(0, 8)}@example.com`;
+    emails.push(adminEmail);
+    const seededAdmin = await pg.query<{ id: string }>(
+      `insert into volunteers (full_name, professional_id, email, role, password_hash, status)
+       values ('Admin', $1, $2, 'admin', 'x', 'active') returning id`,
+      [`FPV-${randomUUID().slice(0, 8)}`, adminEmail],
+    );
     const adminToken = await signToken(
-      { sub: randomUUID(), role: 'admin', tokenVersion: 1 },
+      { sub: seededAdmin.rows[0]!.id, role: 'admin', tokenVersion: 1 },
       { ttlSeconds: 300, type: 'access' },
     );
     const auth = { Authorization: `Bearer ${adminToken}` };
