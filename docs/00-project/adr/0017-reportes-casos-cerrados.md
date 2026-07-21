@@ -37,8 +37,17 @@ falta un mecanismo de permisos adicional.
    de la FPV: si van a ver el reporte, quieren el dato como está.
 3. **No se incluyen los campos estructurados de identidad del solicitante** (nombre, teléfono). Se mantiene
    sin cambios la política del issue #25.
-4. **Formato:** JSON paginado para la vista + **CSV descargable** con BOM UTF-8 (para que Excel en `es-VE`
-   no rompa los acentos).
+4. **Formato:** JSON paginado para la vista + descarga en **Excel con formato** (`.xlsx`) como opción
+   principal — encabezado fijo, anchos por columna y tipos reales de fecha/número, para que se pueda
+   ordenar y filtrar sin limpiar el archivo a mano — y **CSV** con BOM UTF-8 como alternativa plana para
+   importar a otras herramientas (el BOM evita que Excel en `es-VE` rompa los acentos).
+7. **Los códigos se traducen a etiquetas legibles** (`finalizado` → "Proceso finalizado (objetivos
+   cumplidos)"). Es un reporte que lee un psicólogo, no un volcado de base de datos; un código aún no
+   catalogado se humaniza en lugar de mostrarse crudo.
+8. **La modalidad es una constante del servicio** (`service.modality: distancia`), no un dato del
+   solicitante: la atención siempre fue 100 % remota, el formulario nunca envió el campo y todos los casos
+   quedaron en `NULL`. El intake la estampa desde configuración y una migración rellena el histórico, para
+   que la columna del reporte diga la verdad en vez de aparecer vacía.
 5. **Toda consulta y toda descarga se registran en la bitácora de auditoría** (quién, cuándo, qué filtros,
    cuántas filas), con el mismo criterio que la lectura clínica del #25.
 6. El **disclaimer de confidencialidad** vive en `app.config.yml` (versionado con `version`/`updated_at`) y

@@ -12,6 +12,12 @@ completo vive en `docs/02-design/threat-model.md` (ver <<referencias>>).
 La *FPV es la responsable y dueña de los datos* (ADR-0003). ClutchDevs es el proveedor de la
 plataforma, no operador de los datos. Las decisiones de retención y políticas las define la FPV.
 
+Esto se vuelve concreto en los *reportes de casos cerrados* (ADR-0017): la Federación pidió el
+acceso, invita ella misma a los coordinadores que lo tendrán y asume la custodia de todo archivo
+descargado, que sale de los controles de la plataforma en el momento en que se guarda en un equipo.
+La sección lo declara *in situ* con un aviso servido por `GET /consent/reports`, para que quien
+descarga lo lea justo donde ocurre.
+
 === Controles implementados
 
 [cols="1,2",options="header"]
@@ -23,6 +29,7 @@ plataforma, no operador de los datos. Las decisiones de retención y políticas 
 | Contacto oculto | El nombre y contacto del solicitante solo se revelan al psicólogo *tras aceptar* el caso.
 | Control de acceso por rol | RLS en Supabase; un psicólogo solo ve/escribe notas de *sus* casos.
 | Auditoría inmutable | Bitácora de accesos a datos clínicos, inmodificable (ADR-0012).
+| Exportación acotada y trazable | El reporte de casos cerrados se limita a coordinador/admin, *nunca* incluye la identidad del solicitante (no consulta la tabla de contactos) y registra en la bitácora cada consulta y cada descarga con los filtros usados y el número de filas.
 | Seguridad de sesión | Cambio/reseteo de contraseña, expiración por inactividad, invalidación de sesiones duplicadas (bump de `token_version`).
 | Endpoint de cron | Protegido por *secreto compartido* (`CRON_SECRET`), no por auth de usuario.
 |===

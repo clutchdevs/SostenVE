@@ -149,9 +149,10 @@ configuración y tres secciones que heredan y sobrescriben lo justo:
 | `triage` | Umbrales del triage (p. ej. `orange_tags_threshold_for_escalation: 3`, opción Likert crítica).
 | `sla` | `high_risk_assignment_minutes: 10` (ventana de aceptación) y `warning_threshold_minutes: 5` (aviso "por vencer").
 | `intake` | `idempotency_ttl_hours: 24` (ventana de idempotencia de la rama roja, ADR-0016).
+| `service` | `modality: distancia`. La atención es 100 % remota (WhatsApp / llamada), así que la modalidad es una *constante del servicio* y no algo que el solicitante elija: el intake la estampa en cada caso (issue #169).
 | `crisis_lines` | Ruteo horario de líneas y respaldos (fallback si la BD no responde).
 | `clinical_records` | Regla TEPT (`tept_diagnosis_block_days: 30`) y fecha del evento sísmico.
-| `consent` | Textos *oficiales de la FPV* del consentimiento del psicólogo y del aviso al solicitante (+ `version`).
+| `consent` | Textos *oficiales de la FPV*: consentimiento del psicólogo, aviso al solicitante y aviso de responsabilidad de la sección de reportes (+ `version` cada uno).
 | `pap` | Guías de Primeros Auxilios Psicológicos (contenido servido por `GET /pap`).
 | `fpv` | Verificador (`http`/`dummy`), `base_url`, timeout y *circuit breaker* del padrón.
 | `email` | Proveedor, remitente y URLs de correo (login/invitación/reset).
