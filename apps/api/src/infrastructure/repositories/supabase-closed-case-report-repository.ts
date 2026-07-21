@@ -5,7 +5,11 @@ import type {
   ClosedCaseReportRepository,
   ClosedCaseReportRow,
 } from '../../application/reports/ports.js';
+import { logger } from '../../shared/logger.js';
 import { decrypt } from '../../shared/security/encryption.js';
+
+/** Shown in place of a field that exists but cannot be decrypted with the current key. */
+const UNDECRYPTABLE = '[no se pudo descifrar]';
 
 /**
  * Closed-case report reads (issue #169, ADR-0017).
@@ -131,14 +135,38 @@ export class SupabaseClosedCaseReportRepository implements ClosedCaseReportRepos
       sexo: row.sex,
       destinatario: row.recipient,
       sintomas: row.symptoms ?? [],
-      otroSintoma: row.other_symptom_encrypted ? decrypt(row.other_symptom_encrypted) : null,
+      otroSintoma: this.safeDecrypt(row.other_symptom_encrypted, 'other_symptom', row.case_id),
       medioContacto: row.contact_medium,
       tecnicas: row.techniques ?? [],
       motivoCierre: row.close_reason,
       derivacionTipo: row.referral_type,
       derivacionDestinos: row.referral_destinations ?? [],
       minutos: row.minutes,
-      comentario: row.comment_encrypted ? decrypt(row.comment_encrypted) : null,
+      comentario: this.safeDecrypt(row.comment_encrypted, 'comment', row.case_id),
     };
+  }
+
+  /**
+   * Decrypts a column without letting one bad row sink the whole report.
+   *
+   * A report is a bulk read: if a single value cannot be decrypted — an ENCRYPTION_KEY
+   * rotation, a partially migrated row — throwing would turn the entire export into a
+   * 500 and leave the Federation with nothing. Degrade that one field instead, keep the
+   * other 27 columns and every other row, and log it so the cause is visible. The marker
+   * is deliberately visible rather than null: the reader must be able to tell "there was
+   * something here we could not read" from "this was empty".
+   */
+  private safeDecrypt(value: string | null, field: string, caseId: string): string | null {
+    if (!value) return null;
+    try {
+      return decrypt(value);
+    } catch (error) {
+      logger.warn('closed-case report: undecryptable field', {
+        caseId,
+        field,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return UNDECRYPTABLE;
+    }
   }
 }

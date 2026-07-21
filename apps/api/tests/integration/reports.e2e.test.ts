@@ -172,6 +172,29 @@ describe.skipIf(!dbAvailable)('closed-case report (e2e)', () => {
     expect(anonymous.status).toBe(401);
   });
 
+  it('degrades an undecryptable field instead of failing the whole report', async () => {
+    // Simulates a row encrypted under a different key (a rotation, a partial migration).
+    // A bulk read must not become a 500 because of one bad value.
+    const author = await seedVolunteer('psychologist');
+    const caseId = await seedClosedCase(author);
+    await pg.query('update case_closures set comment_encrypted = $1 where case_id = $2', [
+      'no-es-un-payload-cifrado-valido',
+      caseId,
+    ]);
+    const coordinatorId = await seedVolunteer('coordinator');
+
+    const res = await app.request('/api/v1/reports/closed-cases?limit=200', {
+      headers: { Authorization: `Bearer ${await tokenFor(coordinatorId, 'coordinator')}` },
+    });
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as { items: { casoId: string; comentario: string | null; minutos: number }[] };
+    const row = body.items.find((r) => r.casoId === caseId);
+    // The row still comes back, with the rest of its data intact.
+    expect(row?.minutos).toBe(45);
+    expect(row?.comentario).toContain('no se pudo descifrar');
+  });
+
   it('rejects an invalid filter', async () => {
     const coordinatorId = await seedVolunteer('coordinator');
     const res = await app.request('/api/v1/reports/closed-cases?nivel_riesgo=inventado', {
