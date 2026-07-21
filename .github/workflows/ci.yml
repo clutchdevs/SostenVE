@@ -24,8 +24,12 @@ jobs:
       # Fail on high/critical vulnerabilities in PRODUCTION dependencies only.
       # Dev-only advisories (e.g. node-tar via the Supabase CLI) are tracked by
       # Dependabot and must not break the build.
+      #
+      # Runs through scripts/audit-prod.mjs rather than `npm audit` directly: an
+      # unfixable advisory can be excused by name, with a reason and an expiry
+      # date, instead of lowering the threshold for every dependency.
       - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+        run: npm run audit:prod
 
       - name: Lint
         run: npm run lint
