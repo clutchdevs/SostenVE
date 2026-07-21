@@ -1,5 +1,4 @@
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import type { ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 import {
   acceptInvitationSchema,
   addNoteSchema,
@@ -25,18 +24,20 @@ import {
 
 /**
  * OpenAPI 3.1 document for the live API. Built in code and reusing the Zod
- * request schemas (via zod-to-json-schema) so request bodies stay in sync with
- * validation. Served at GET /api/v1/openapi.json and rendered by Swagger UI at
+ * request schemas (via Zod's native `toJSONSchema`) so request bodies stay in sync
+ * with validation. Served at GET /api/v1/openapi.json and rendered by Swagger UI at
  * /api/v1/docs. `servers.url` is relative so "Try it out" hits the same origin.
  */
 function jsonBody(schema: ZodType, required = true) {
+  // `draft-2020-12` is the dialect OpenAPI 3.1 uses. `io: 'input'` emits the shape a CLIENT
+  // sends (fields with a `.default()` are optional on input), not the parsed output.
+  const { $schema: _dialect, ...jsonSchema } = z.toJSONSchema(schema, {
+    target: 'draft-2020-12',
+    io: 'input',
+  }) as Record<string, unknown>;
   return {
     required,
-    content: {
-      'application/json': {
-        schema: zodToJsonSchema(schema, { target: 'openApi3' }),
-      },
-    },
+    content: { 'application/json': { schema: jsonSchema } },
   };
 }
 
