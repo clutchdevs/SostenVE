@@ -122,6 +122,24 @@ describe.skipIf(!dbAvailable)('closed-case report (e2e)', () => {
     expect(raw).not.toContain(REQUESTER_PHONE);
   });
 
+  it('downloads a formatted Excel workbook', async () => {
+    const author = await seedVolunteer('psychologist');
+    await seedClosedCase(author);
+    const coordinatorId = await seedVolunteer('coordinator');
+
+    const res = await app.request('/api/v1/reports/closed-cases.xlsx', {
+      headers: { Authorization: `Bearer ${await tokenFor(coordinatorId, 'coordinator')}` },
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('spreadsheetml.sheet');
+    expect(res.headers.get('content-disposition')).toContain('.xlsx');
+
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    // xlsx is a zip: "PK". Guards against silently shipping something Excel cannot open.
+    expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b]);
+    expect(bytes.length).toBeGreaterThan(1000);
+  });
+
   it('downloads a CSV with the same data and an attachment header', async () => {
     const author = await seedVolunteer('psychologist');
     await seedClosedCase(author);

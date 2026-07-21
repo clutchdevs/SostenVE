@@ -90,14 +90,14 @@ export function ClosedCasesReport({ onAuthError }: { onAuthError: () => void }) 
     void load();
   }, [load]);
 
-  // The CSV needs the auth header and arrives as a file, so it cannot go through
-  // apiFetch (which parses JSON). Same filters as the table, minus pagination.
+  // The workbook needs the auth header and arrives as a binary file, so it cannot go
+  // through apiFetch (which parses JSON). Same filters as the table, minus pagination.
   async function download() {
     setDownloading(true);
     setError('');
     try {
       const query = buildQuery(risk, from, to);
-      const res = await fetch(`${API_BASE_URL}/reports/closed-cases.csv?${query}`, {
+      const res = await fetch(`${API_BASE_URL}/reports/closed-cases.xlsx?${query}`, {
         headers: { Authorization: `Bearer ${getToken() ?? ''}`, 'X-Active-Role': 'coordinator' },
       });
       if (!res.ok) throw new Error(String(res.status));
@@ -105,7 +105,7 @@ export function ClosedCasesReport({ onAuthError }: { onAuthError: () => void }) 
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `reporte-casos-cerrados-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `reporte-casos-cerrados-${new Date().toISOString().slice(0, 10)}.xlsx`;
       link.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -175,7 +175,7 @@ export function ClosedCasesReport({ onAuthError }: { onAuthError: () => void }) 
           className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-navy bg-navy px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-50"
         >
           <Download className="h-4 w-4" aria-hidden />
-          {downloading ? 'Descargando…' : 'Descargar CSV'}
+          {downloading ? 'Descargando…' : 'Descargar Excel'}
         </button>
       </div>
 

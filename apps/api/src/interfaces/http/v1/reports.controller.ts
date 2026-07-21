@@ -5,6 +5,7 @@ import type { ClosedCaseFilters } from '../../../application/reports/ports.js';
 import { ValidationError } from '../../../shared/errors/api-error.js';
 import { getAuthUser, requireAuth } from '../middleware/auth.js';
 import { closedCasesToCsv, csvFilename } from './closed-case-csv.js';
+import { closedCasesToXlsx, xlsxFilename } from './closed-case-xlsx.js';
 import { getReportDeps } from './dependencies.js';
 import { closedCasesQuerySchema } from './schemas.js';
 
@@ -36,6 +37,29 @@ export function createReportsRouter(): Hono {
     return c.json({ total: page.total, limit: filters.limit, offset: filters.offset, items: page.rows });
   });
 
+  // Excel is the primary download: the audience opens this to read it, and a typed
+  // workbook sorts, filters and sums correctly, which a flat CSV cannot do.
+  router.get('/closed-cases.xlsx', requireAuth({ roles: REPORT_ROLES }), async (c) => {
+    const { filters } = parseFilters(c, CSV_MAX_ROWS);
+    const user = getAuthUser(c);
+    const page = await listClosedCases(
+      filters,
+      { id: user.sub, role: user.role },
+      'download',
+      getReportDeps(),
+    );
+    const workbook = await closedCasesToXlsx(page.rows);
+    return new Response(new Uint8Array(workbook), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${xlsxFilename()}"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  });
+
+  // CSV stays for anyone importing this into another tool.
   router.get('/closed-cases.csv', requireAuth({ roles: REPORT_ROLES }), async (c) => {
     // The download must match the table the coordinator is looking at, so it takes the
     // same filters and simply lifts the page size.
